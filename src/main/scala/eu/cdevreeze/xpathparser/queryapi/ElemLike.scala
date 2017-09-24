@@ -24,7 +24,7 @@ import scala.reflect.ClassTag
  *
  * @author Chris de Vreeze
  */
-trait ElemLike[E <: ElemApi[E]] extends ElemApi[E] { self: E =>
+trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
   import ElemApi.anyElem
 
