@@ -8,3 +8,4 @@ temp/
 .history
 .worksheet
 scalastyle-config.xml
+/bin/
