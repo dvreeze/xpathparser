@@ -1,0 +1,10 @@
+.cache*
+.classpath
+.project
+.settings/
+project/
+target/
+temp/
+.history
+.worksheet
+scalastyle-config.xml
