@@ -505,7 +505,7 @@ class ParseXPathTest extends FunSuite {
 
   test("testNonTrivialForExpr") {
     // Example from https://github.com/Saxonica/XT-Speedo
-    // This one helped finding and solving a few bugs in the parser.
+    // This one helped find and solve a few bugs in the parser.
 
     val exprString = """for $w in //text()/tokenize(., '\W+')[.!=''] return lower-case($w)"""
 
