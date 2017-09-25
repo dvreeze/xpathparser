@@ -83,6 +83,10 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     children.flatMap(_.filterElemsOrSelf(p))
   }
 
+  final def findAllElems: immutable.IndexedSeq[E] = {
+    filterElems(_ => true)
+  }
+
   final def findAllElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
     filterElemsOfType(cls)(anyElem)
   }
@@ -103,6 +107,10 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
   final def filterElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E] = {
     // Recursive calls
     immutable.IndexedSeq(self).filter(p) ++ children.flatMap(_.filterElemsOrSelf(p))
+  }
+
+  final def findAllElemsOrSelf: immutable.IndexedSeq[E] = {
+    filterElemsOrSelf(_ => true)
   }
 
   final def findAllElemsOrSelfOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
@@ -128,7 +136,7 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElems(p).headOption
   }
 
-  final def findAnyElemOfType[A <: E](cls: ClassTag[A]): Option[A] = {
+  final def findFirstElemOfType[A <: E](cls: ClassTag[A]): Option[A] = {
     findElemOfType(cls)(anyElem)
   }
 
@@ -151,7 +159,7 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElemsOrSelf(p).headOption
   }
 
-  final def findAnyElemOrSelfOfType[A <: E](cls: ClassTag[A]): Option[A] = {
+  final def findFirstElemOrSelfOfType[A <: E](cls: ClassTag[A]): Option[A] = {
     findElemOrSelfOfType(cls)(anyElem)
   }
 

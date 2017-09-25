@@ -25,7 +25,9 @@ import eu.cdevreeze.xpathparser.ast.URIQualifiedName
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AdditionOp
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AxisStep
+import eu.cdevreeze.xpathparser.ast.XPathExpressions.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.ExprSingle
+import eu.cdevreeze.xpathparser.ast.XPathExpressions.ForExpr
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.ForwardAxisStep
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.FunctionCall
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.GeneralComp
@@ -33,7 +35,9 @@ import eu.cdevreeze.xpathparser.ast.XPathExpressions.IfExpr
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.LetExpr
+import eu.cdevreeze.xpathparser.ast.XPathExpressions.Predicate
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.SimpleNameTest
+import eu.cdevreeze.xpathparser.ast.XPathExpressions.StepExpr
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.StringLiteral
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.UnaryOp
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.ValueComp
@@ -42,6 +46,14 @@ import eu.cdevreeze.xpathparser.common.EName
 
 /**
  * XPath parsing test case.
+ *
+ * Some sources for test XPath expressions were:
+ * <ul>
+ * <li>https://github.com/Saxonica/XT-Speedo</li>
+ * <li>https://en.wikibooks.org/wiki/XQuery/XPath</li>
+ * <li>https://www.w3.org/TR/xpath-30</li>
+ * <li>http://www.nltaxonomie.nl/nt12/kvk/</li>
+ * </ul>
  *
  * @author Chris de Vreeze
  */
@@ -398,14 +410,14 @@ class ParseXPathTest extends FunSuite {
 
     assertSuccess(parseResult)
 
-    val letExprOption = parseResult.get.value.findAnyElemOrSelfOfType(classTag[LetExpr])
+    val letExprOption = parseResult.get.value.findFirstElemOrSelfOfType(classTag[LetExpr])
 
     assertResult(true) {
       letExprOption.isDefined
     }
 
     assertResult(true) {
-      letExprOption.get.simpleLetBindings.head.expr.findAnyElemOrSelfOfType(classTag[InlineFunctionExpr]).nonEmpty
+      letExprOption.get.simpleLetBindings.head.expr.findFirstElemOrSelfOfType(classTag[InlineFunctionExpr]).nonEmpty
     }
 
     assertResult(1) {
@@ -489,6 +501,38 @@ class ParseXPathTest extends FunSuite {
     val parseResult = xpathExpr.parse(exprString)
 
     assertFailure(parseResult)
+  }
+
+  test("testNonTrivialForExpr") {
+    // Example from https://github.com/Saxonica/XT-Speedo
+    // This one helped finding and solving a few bugs in the parser.
+
+    val exprString = """for $w in //text()/tokenize(., '\W+')[.!=''] return lower-case($w)"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ForExpr]).size
+    }
+
+    val forExpr = parseResult.get.value.findAllElemsOrSelfOfType(classTag[ForExpr]).head
+
+    assertResult(2) {
+      forExpr.simpleForBindings.head.expr.findAllTopmostElemsOrSelfOfType(classTag[StepExpr]).size
+    }
+
+    val predicate =
+      forExpr.simpleForBindings.head.expr.findAllElemsOrSelfOfType(classTag[Predicate]).head
+
+    assertResult(true) {
+      predicate.findFirstElemOfType(classTag[ContextItemExpr.type]).nonEmpty
+    }
+
+    assertResult(Some("")) {
+      predicate.findFirstElemOfType(classTag[StringLiteral]).map(_.value)
+    }
   }
 
   // TODO Many tests with syntactically incorrect XPath expressions

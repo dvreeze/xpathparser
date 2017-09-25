@@ -76,6 +76,11 @@ trait ElemApi[E <: ElemApi[E]] {
   def filterElems(p: E => Boolean): immutable.IndexedSeq[E]
 
   /**
+   * Finds all descendant elements.
+   */
+  def findAllElems: immutable.IndexedSeq[E]
+
+  /**
    * Finds all descendant elements of the given element type.
    */
   def findAllElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A]
@@ -92,6 +97,11 @@ trait ElemApi[E <: ElemApi[E]] {
    * several methods are implemented directly or indirectly in terms of this one.
    */
   def filterElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E]
+
+  /**
+   * Finds all descendant-or-self elements.
+   */
+  def findAllElemsOrSelf: immutable.IndexedSeq[E]
 
   /**
    * Finds all descendant-or-self elements of the given element type.
@@ -113,7 +123,7 @@ trait ElemApi[E <: ElemApi[E]] {
   /**
    * Finds the first descendant element of the given element type, if any, returning an optional result.
    */
-  def findAnyElemOfType[A <: E](cls: ClassTag[A]): Option[A]
+  def findFirstElemOfType[A <: E](cls: ClassTag[A]): Option[A]
 
   /**
    * Finds the first descendant element of the given element type obeying the given predicate, if any,
@@ -131,7 +141,7 @@ trait ElemApi[E <: ElemApi[E]] {
   /**
    * Finds the first descendant-or-self element of the given element type, if any, returning an optional result.
    */
-  def findAnyElemOrSelfOfType[A <: E](cls: ClassTag[A]): Option[A]
+  def findFirstElemOrSelfOfType[A <: E](cls: ClassTag[A]): Option[A]
 
   /**
    * Finds the first descendant-or-self element of the given element type obeying the given predicate, if any,

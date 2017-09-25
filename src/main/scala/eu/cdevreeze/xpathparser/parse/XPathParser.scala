@@ -255,7 +255,7 @@ object XPathParser {
     }
 
   private val simpleMapExpr: P[SimpleMapExpr] =
-    P(pathExpr.rep(min = 1, sep = "!")) map {
+    P(pathExpr.rep(min = 1, sep = "!" ~ !"=")) map {
       case exps => SimpleMapExpr(exps.toIndexedSeq)
     }
 
@@ -729,7 +729,11 @@ object XPathParser {
   }
 
   private def isDecimalLiteral(s: String): Boolean = {
+    // Note that it is important to differentiate between decimal literals on the one hand
+    // and context item expressions and abbreviated reverse steps on the other hand!
+
     s.nonEmpty && (s.count(_ == '.') == 1) &&
+      s.exists(c => java.lang.Character.isDigit(c)) &&
       s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
   }
 
