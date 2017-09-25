@@ -112,6 +112,81 @@ object XPathParser {
       P(CharPred(_ != '"').!) map (_.ensuring(_.size == 1))
   }
 
+  /**
+   * "Tokenization" (for operator symbols), to distinguish between operator symbols that start with the same character, etc.
+   * No whitespace is skipped inside these symbol parsers.
+   *
+   * TODO Tokens for "keywords".
+   */
+  object Tokens {
+    import fastparse.all._
+
+    // Single and double slashes
+
+    val singleSlash: P[Unit] =
+      P("/" ~ !"/")
+
+    val doubleSlash: P[Unit] =
+      P("//")
+
+    // Exclamation marks and not-equals symbol
+
+    val exclamationMark: P[Unit] =
+      P("!" ~ !"=")
+
+    val notEqualsSymbol: P[Unit] =
+      P("!=")
+
+    // String concatenation and union symbols
+
+    val unionSymbol: P[Unit] =
+      P("|" ~ !"|")
+
+    val stringConcatSymbol: P[Unit] =
+      P("||")
+
+    // Symbols starting with less-than character
+
+    val lessThanSymbol: P[Unit] =
+      P("<" ~ !("=" | "<"))
+
+    val lessThanEqualsSymbol: P[Unit] =
+      P("<=")
+
+    val precedesSymbol: P[Unit] =
+      P("<<")
+
+    // Symbols starting with greater-than character
+
+    val greaterThanSymbol: P[Unit] =
+      P(">" ~ !("=" | ">"))
+
+    val greaterThanEqualsSymbol: P[Unit] =
+      P(">=")
+
+    val followsSymbol: P[Unit] =
+      P(">>")
+
+    // Single and double dots
+
+    val singleDot: P[Unit] =
+      P("." ~ !".")
+
+    val doubleDot: P[Unit] =
+      P("..")
+
+    // Single and double colons and assignment symbol
+
+    val singleColon: P[Unit] =
+      P(":" ~ !(":" | "="))
+
+    val doubleColon: P[Unit] =
+      P("::")
+
+    val assignmentSymbol: P[Unit] =
+      P(":=")
+  }
+
   private val White = WhitespaceApi.Wrapper {
     import fastparse.all._
 
@@ -136,6 +211,9 @@ object XPathParser {
       case exp => EnclosedExpr(exp)
     }
 
+  // The branches of exprSingle are easy to distinguish. All but one start with a different keyword.
+  // Anything else must be an orExpr (if parsing succeeds).
+
   private val exprSingle: P[ExprSingle] =
     P(forExpr | letExpr | quantifiedExpr | ifExpr | orExpr)
 
@@ -155,7 +233,7 @@ object XPathParser {
     }
 
   private val simpleLetBinding: P[SimpleLetBinding] =
-    P("$" ~ eqName ~ ":=" ~ exprSingle) map {
+    P("$" ~ eqName ~ Tokens.assignmentSymbol ~ exprSingle) map {
       case (eqn, exp) => SimpleLetBinding(eqn, exp)
     }
 
@@ -191,7 +269,7 @@ object XPathParser {
     }
 
   private val stringConcatExpr: P[StringConcatExpr] =
-    P(rangeExpr.rep(min = 1, sep = "||" ~/ Pass)) map {
+    P(rangeExpr.rep(min = 1, sep = Tokens.stringConcatSymbol ~/ Pass)) map {
       case exps => StringConcatExpr(exps.toIndexedSeq)
     }
 
@@ -214,7 +292,7 @@ object XPathParser {
     }
 
   private val unionExpr: P[UnionExpr] =
-    P(intersectExceptExpr ~ (StringIn("union", "|") ~/ intersectExceptExpr).rep) map {
+    P(intersectExceptExpr ~ (("union" | Tokens.unionSymbol) ~/ intersectExceptExpr).rep) map {
       case (expr, exprSeq) => UnionExpr(expr +: exprSeq.toIndexedSeq)
     }
 
@@ -255,9 +333,13 @@ object XPathParser {
     }
 
   private val simpleMapExpr: P[SimpleMapExpr] =
-    P(pathExpr.rep(min = 1, sep = "!" ~ !"=")) map {
+    P(pathExpr.rep(min = 1, sep = Tokens.exclamationMark)) map {
       case exps => SimpleMapExpr(exps.toIndexedSeq)
     }
+
+  // The branches of exprSingle are easy to distinguish, once we look ahead a bit, and mind constraint xgc:leading-lone-slash.
+  // We can clearly distinguish among a single slash, a double slash, and a start of a relativePathExpr
+  // (which cannot start with a slash, partly because an EQName cannot start with a slash).
 
   private val pathExpr: P[PathExpr] =
     P(slashOnlyPathExpr | pathExprStartingWithSingleSlash | pathExprStartingWithDoubleSlash | relativePathExpr)
@@ -267,8 +349,14 @@ object XPathParser {
   private val canStartRelativePathExpr: P[Unit] =
     P(canStartAxisStep | canStartPostfixExpr)
 
+  // The start of an axis step is easy to recognize, unless it is a nodeTest. The latter is a kindTest (easy to recognize),
+  // wildcard or EQName. The EQName variant makes it harder to distinguish an axisStep from a postfixExpr.
+
   private val canStartAxisStep: P[Unit] =
-    P(forwardAxis | reverseAxis).map(_ => ())
+    P(forwardAxis | reverseAxis | "@" | Tokens.doubleDot | nodeTest).map(_ => ())
+
+  // A postfix expression starts with a (string or numeric) literal, dollar sign, (opening) parenthesis, dot,
+  // NCName or URI-qualified name or the token "function". (Note that, like context items, decimal and double literals may start with dots.)
 
   private val canStartPostfixExpr: P[Unit] =
     P(literal | varRef | "(" | contextItemExpr | eqName | "function").map(_ => ())
@@ -277,7 +365,7 @@ object XPathParser {
   // See xgc:leading-lone-slash constraint.
 
   private val slashOnlyPathExpr: P[PathExpr] =
-    P("/" ~ !("/" | canStartRelativePathExpr)) map {
+    P(Tokens.singleSlash ~ !canStartRelativePathExpr) map {
       case _ => SlashOnlyPathExpr
     }
 
@@ -285,25 +373,31 @@ object XPathParser {
   // See xgc:leading-lone-slash constraint. Note that canStartRelativePathExpr implies that the next token is not a slash!
 
   private val pathExprStartingWithSingleSlash: P[PathExpr] =
-    P("/" ~ &(canStartRelativePathExpr) ~ relativePathExpr) map {
+    P(Tokens.singleSlash ~ &(canStartRelativePathExpr) ~ relativePathExpr) map {
       case expr => PathExprStartingWithSingleSlash(expr)
     }
 
   private val pathExprStartingWithDoubleSlash: P[PathExpr] =
-    P("//" ~ relativePathExpr) map {
+    P(Tokens.doubleSlash ~ relativePathExpr) map {
       case expr => PathExprStartingWithDoubleSlash(expr)
     }
 
-  // Distinguishing single from double slash
-
   private val relativePathExpr: P[RelativePathExpr] =
-    P(stepExpr ~ ((("/" ~ !"/") | "//").! ~/ relativePathExpr).?) map {
+    P(stepExpr ~ ((Tokens.singleSlash | Tokens.doubleSlash).! ~/ relativePathExpr).?) map {
       case (expr, None)            => SimpleRelativePathExpr(expr)
       case (expr, Some(opAndExpr)) => CompoundRelativePathExpr(expr, StepOp.parse(opAndExpr._1), opAndExpr._2)
     }
 
+  // TODO Disambiguate the 2 branches of a stepExpr. Note that both branches may start with an EQName.
+  // The difference is that an axisStep starting with an EQName only contains the EQName, whereas a postfixExpr may start but may never
+  // end with an EQName.
+
   private val stepExpr: P[StepExpr] =
     P(postfixExpr | axisStep)
+
+  // The 2 branches of an axisStep are relatively easy to distinguish. A reverseAxisStep is easy to recognize.
+  // A forwardAxisStep is easy to recognize if non-abbreviated, and otherwise it starts with a nodeTest, possibly
+  // preceded by "@".
 
   private val axisStep: P[AxisStep] =
     P(forwardAxisStep | reverseAxisStep)
@@ -340,7 +434,9 @@ object XPathParser {
     }
 
   private val forwardAxis: P[ForwardAxis] =
-    P(StringIn("child", "descendant", "attribute", "self", "descendant-or-self", "following-sibling", "following", "namespace").! ~ "::") map {
+    P(StringIn("child", "descendant", "attribute", "self", "descendant-or-self",
+      "following-sibling", "following", "namespace").! ~ Tokens.doubleColon) map {
+
       case "child"              => ForwardAxis.Child
       case "descendant"         => ForwardAxis.Descendant
       case "attribute"          => ForwardAxis.Attribute
@@ -355,7 +451,7 @@ object XPathParser {
     P(nonAbbrevReverseStep | abbrevReverseStep)
 
   private val abbrevReverseStep: P[AbbrevReverseStep.type] =
-    P("..") map (_ => AbbrevReverseStep)
+    P(Tokens.doubleDot) map (_ => AbbrevReverseStep)
 
   private val nonAbbrevReverseStep: P[NonAbbrevReverseStep] =
     P(reverseAxis ~/ nodeTest) map {
@@ -363,7 +459,7 @@ object XPathParser {
     }
 
   private val reverseAxis: P[ReverseAxis] =
-    P(StringIn("parent", "ancestor", "preceding-sibling", "preceding", "ancestor-or-self").! ~ "::") map {
+    P(StringIn("parent", "ancestor", "preceding-sibling", "preceding", "ancestor-or-self").! ~ Tokens.doubleColon) map {
       case "parent"            => ReverseAxis.Parent
       case "ancestor"          => ReverseAxis.Ancestor
       case "preceding-sibling" => ReverseAxis.PrecedingSibling
@@ -371,8 +467,12 @@ object XPathParser {
       case "ancestor-or-self"  => ReverseAxis.AncestorOrSelf
     }
 
+  // The 2 branches of a nodeTest are easy to distinguish.
+
   private val nodeTest: P[NodeTest] =
     P(kindTest | nameTest)
+
+  // The 2 branches of a nameTest are easy to distinguish.
 
   private val nameTest: P[NameTest] =
     P(simpleNameTest | wildcard)
@@ -550,6 +650,8 @@ object XPathParser {
 
   // Primary expressions
 
+  // The branches of a primaryExpr are relatively easy to distinguish. See above.
+
   private val primaryExpr: P[PrimaryExpr] =
     P(literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr)
 
@@ -584,7 +686,7 @@ object XPathParser {
     }
 
   private val contextItemExpr: P[ContextItemExpr.type] =
-    P(".") map (_ => ContextItemExpr)
+    P(Tokens.singleDot) map (_ => ContextItemExpr)
 
   // See xgc:reserved-function-names
   // TODO gn:parens
@@ -679,10 +781,11 @@ object XPathParser {
     P(("eq" | "ne" | "lt" | "le" | "gt" | "ge").!) map (s => ValueComp.parse(s))
 
   private val generalComp: P[GeneralComp] =
-    P(("=" | "!=" | "<" | "<=" | ">" | ">=").!) map (s => GeneralComp.parse(s))
+    P(("=" | Tokens.notEqualsSymbol | Tokens.lessThanSymbol | Tokens.lessThanEqualsSymbol |
+      Tokens.greaterThanSymbol | Tokens.greaterThanEqualsSymbol).!) map (s => GeneralComp.parse(s))
 
   private val nodeComp: P[NodeComp] =
-    P(("is" | "<<" | ">>").!) map (s => NodeComp.parse(s))
+    P(("is" | Tokens.precedesSymbol | Tokens.followsSymbol).!) map (s => NodeComp.parse(s))
 
   // Utility methods (and data)
 
