@@ -165,6 +165,53 @@ class VariableBindingTest extends FunSuite {
     assertBoundVariableNames(returnExpr, Set(EQName.QName("w")), Set(EQName.QName("w")))
   }
 
+  test("testLetExprWithFreeVars") {
+    // Example from the XPath 3.0 spec, adapted to contain some free variables
+
+    val exprString =
+      """let $f := function($a) { starts-with($a, $b) }
+        return local:filter(("Ethel", "Enid", "Gertrude", $c, $a), $f)"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertFreeVariableNames(parseResult.get.value, Set(
+      EQName.QName("b"),
+      EQName.QName("c"),
+      EQName.QName("a")))
+    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("a"), EQName.QName("f")))
+
+    val funcBody =
+      parseResult.get.value.findFirstElemOfType(classTag[InlineFunctionExpr]).get.body
+
+    assertFreeVariableNames(funcBody, Set(EQName.QName("a"), EQName.QName("b")))
+    assertBoundVariableNames(funcBody, Set())
+
+    assertFreeVariableNames(
+      funcBody,
+      Set(EQName.QName("b")),
+      Set(EQName.QName("a")))
+    assertBoundVariableNames(
+      funcBody,
+      Set(EQName.QName("a")),
+      Set(EQName.QName("a")))
+
+    val returnExpr = parseResult.get.value.findFirstElemOrSelfOfType(classTag[LetExpr]).get.returnExpr
+
+    assertFreeVariableNames(returnExpr, Set(EQName.QName("f"), EQName.QName("c"), EQName.QName("a")))
+    assertBoundVariableNames(returnExpr, Set())
+
+    assertFreeVariableNames(
+      returnExpr,
+      Set(EQName.QName("c"), EQName.QName("a")),
+      Set(EQName.QName("f")))
+    assertBoundVariableNames(
+      returnExpr,
+      Set(EQName.QName("f")),
+      Set(EQName.QName("f")))
+  }
+
   private def assertFreeVariableNames(
     elem: XPathElem,
     expectedVarNames: Set[EQName],
