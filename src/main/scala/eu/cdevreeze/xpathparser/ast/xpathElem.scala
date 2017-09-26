@@ -21,7 +21,7 @@ import scala.collection.immutable
 import eu.cdevreeze.xpathparser.queryapi.ElemLike
 
 /**
- * XPath 3.0 AST.
+ * XPath 3.0 AST. The root of the type hierarchy is XPathElem. It offers the ElemApi query API.
  *
  * The purpose of this AST is as follows:
  * <ul>
@@ -44,12 +44,33 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  */
 sealed trait XPathElem extends ElemLike[XPathElem] {
 
+  /**
+   * Returns the (immediate) child elements of this element.
+   */
   def children: immutable.IndexedSeq[XPathElem]
 }
 
 sealed trait LeafElem extends XPathElem {
 
   final def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq()
+}
+
+/**
+ * XPathElem that can introduce one or more variable bindings.
+ */
+sealed trait VariableBindingExpr extends XPathElem {
+
+  /**
+   * Returns the variable bindings introduced by this element.
+   */
+  def variableBindings: immutable.IndexedSeq[VariableBinding]
+
+  /**
+   * Returns the child elements affected by the bindings introduced by this (and "ancestor") elements.
+   * 
+   * Note that variables can be bound not just by variable bindings, but also by function parameters.
+   */
+  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem]
 }
 
 final case class XPathExpr(expr: Expr) extends XPathElem {
@@ -75,24 +96,36 @@ sealed trait ExprSingle extends XPathElem
 
 final case class ForExpr(
     simpleForBindings: immutable.IndexedSeq[SimpleForBinding],
-    returnExpr: ExprSingle) extends ExprSingle {
+    returnExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = simpleForBindings :+ returnExpr
+
+  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleForBindings
+
+  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
 }
 
 final case class LetExpr(
     simpleLetBindings: immutable.IndexedSeq[SimpleLetBinding],
-    returnExpr: ExprSingle) extends ExprSingle {
+    returnExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = simpleLetBindings :+ returnExpr
+
+  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleLetBindings
+
+  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
 }
 
 final case class QuantifiedExpr(
     quantifier: Quantifier,
     simpleBindings: immutable.IndexedSeq[SimpleBindingInQuantifiedExpr],
-    satisfiesExpr: ExprSingle) extends ExprSingle {
+    satisfiesExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = (quantifier +: simpleBindings) :+ satisfiesExpr
+
+  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleBindings
+
+  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(satisfiesExpr)
 }
 
 final case class IfExpr(
@@ -120,7 +153,10 @@ final case class SimpleComparisonExpr(stringConcatExpr: StringConcatExpr) extend
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(stringConcatExpr)
 }
 
-final case class CompoundComparisonExpr(stringConcatExpr1: StringConcatExpr, comp: Comp, stringConcatExpr2: StringConcatExpr) extends ComparisonExpr {
+final case class CompoundComparisonExpr(
+    stringConcatExpr1: StringConcatExpr,
+    comp: Comp,
+    stringConcatExpr2: StringConcatExpr) extends ComparisonExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(stringConcatExpr1, comp, stringConcatExpr2)
 }
@@ -161,7 +197,10 @@ final case class SimpleMultiplicativeExpr(expr: UnionExpr) extends Multiplicativ
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
 
-final case class CompoundMultiplicativeExpr(headExpr: UnionExpr, op: MultiplicativeOp, tailExpr: MultiplicativeExpr) extends MultiplicativeExpr {
+final case class CompoundMultiplicativeExpr(
+    headExpr: UnionExpr,
+    op: MultiplicativeOp,
+    tailExpr: MultiplicativeExpr) extends MultiplicativeExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
 }
@@ -178,7 +217,10 @@ final case class SimpleIntersectExceptExpr(expr: InstanceOfExpr) extends Interse
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
 
-final case class CompoundIntersectExceptExpr(headExpr: InstanceOfExpr, op: IntersectExceptOp, tailExpr: IntersectExceptExpr) extends IntersectExceptExpr {
+final case class CompoundIntersectExceptExpr(
+    headExpr: InstanceOfExpr,
+    op: IntersectExceptOp,
+    tailExpr: IntersectExceptExpr) extends IntersectExceptExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
 }
@@ -460,17 +502,27 @@ case object ArgumentPlaceholder extends Argument with LeafElem
 
 // Bindings
 
-final case class SimpleForBinding(varName: EQName, expr: ExprSingle) extends XPathElem {
+/**
+ * Binding of a variable name to an expression.
+ */
+sealed trait VariableBinding extends XPathElem {
+
+  def varName: EQName
+
+  def expr: ExprSingle
+}
+
+final case class SimpleForBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
 
-final case class SimpleLetBinding(varName: EQName, expr: ExprSingle) extends XPathElem {
+final case class SimpleLetBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
 
-final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle) extends XPathElem {
+final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
@@ -520,7 +572,9 @@ sealed trait FunctionTest extends ItemType
 
 case object AnyFunctionTest extends FunctionTest with LeafElem
 
-final case class TypedFunctionTest(argumentTypes: immutable.IndexedSeq[SequenceType], resultType: SequenceType) extends FunctionTest {
+final case class TypedFunctionTest(
+    argumentTypes: immutable.IndexedSeq[SequenceType],
+    resultType: SequenceType) extends FunctionTest {
 
   def children: immutable.IndexedSeq[XPathElem] = argumentTypes :+ resultType
 }

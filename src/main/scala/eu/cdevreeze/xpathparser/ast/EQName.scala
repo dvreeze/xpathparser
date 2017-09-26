@@ -29,10 +29,18 @@ object EQName {
 
   final case class QName(qname: common.QName) extends EQName {
 
+    def localPart: String = qname.localPart
+
+    def prefixOption: Option[String] = qname.prefixOption
+
     override def toString: String = qname.toString
   }
 
   final case class URIQualifiedName(ename: common.EName) extends EQName {
+
+    def namespaceUriOption: Option[String] = ename.namespaceUriOption
+
+    def localPart: String = ename.localPart
 
     override def toString: String = ename match {
       case common.EName(None, localPart)     => s"Q{}$localPart"
