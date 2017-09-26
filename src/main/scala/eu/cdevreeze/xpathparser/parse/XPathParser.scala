@@ -36,7 +36,7 @@ object XPathParser {
   // TODO Improve, improve, improve. Study XPath spec more closely, use FastParse in a better way,
   // make code complete and more robust, improve the AST class hierarchy, etc.
 
-  import eu.cdevreeze.xpathparser.ast.XPathExpressions._
+  import eu.cdevreeze.xpathparser.ast._
 
   object Names {
     import fastparse.all._

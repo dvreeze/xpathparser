@@ -21,26 +21,26 @@ import scala.reflect.classTag
 import org.scalatest.FunSuite
 
 import eu.cdevreeze.xpathparser.ast.EQName
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.AbbrevForwardStep
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.AdditionOp
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.AxisStep
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.ContextItemExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.ExprSingle
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.ForExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.ForwardAxisStep
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.FunctionCall
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.GeneralComp
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.IfExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.InlineFunctionExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.IntegerLiteral
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.LetExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.Predicate
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.SimpleNameTest
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.StepExpr
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.StringLiteral
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.UnaryOp
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.ValueComp
-import eu.cdevreeze.xpathparser.ast.XPathExpressions.VarRef
+import eu.cdevreeze.xpathparser.ast.AbbrevForwardStep
+import eu.cdevreeze.xpathparser.ast.AdditionOp
+import eu.cdevreeze.xpathparser.ast.AxisStep
+import eu.cdevreeze.xpathparser.ast.ContextItemExpr
+import eu.cdevreeze.xpathparser.ast.ExprSingle
+import eu.cdevreeze.xpathparser.ast.ForExpr
+import eu.cdevreeze.xpathparser.ast.ForwardAxisStep
+import eu.cdevreeze.xpathparser.ast.FunctionCall
+import eu.cdevreeze.xpathparser.ast.GeneralComp
+import eu.cdevreeze.xpathparser.ast.IfExpr
+import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
+import eu.cdevreeze.xpathparser.ast.IntegerLiteral
+import eu.cdevreeze.xpathparser.ast.LetExpr
+import eu.cdevreeze.xpathparser.ast.Predicate
+import eu.cdevreeze.xpathparser.ast.SimpleNameTest
+import eu.cdevreeze.xpathparser.ast.StepExpr
+import eu.cdevreeze.xpathparser.ast.StringLiteral
+import eu.cdevreeze.xpathparser.ast.UnaryOp
+import eu.cdevreeze.xpathparser.ast.ValueComp
+import eu.cdevreeze.xpathparser.ast.VarRef
 import eu.cdevreeze.xpathparser.common.EName
 
 /**
