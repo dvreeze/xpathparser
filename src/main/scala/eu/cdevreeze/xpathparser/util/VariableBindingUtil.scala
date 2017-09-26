@@ -18,11 +18,15 @@ package eu.cdevreeze.xpathparser.util
 
 import scala.collection.immutable
 
-import eu.cdevreeze.xpathparser.ast._
-import eu.cdevreeze.xpathparser.common._
+import eu.cdevreeze.xpathparser.ast.EQName
+import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
+import eu.cdevreeze.xpathparser.ast.VarRef
+import eu.cdevreeze.xpathparser.ast.VariableBinding
+import eu.cdevreeze.xpathparser.ast.VariableIntroducingExpr
+import eu.cdevreeze.xpathparser.ast.XPathElem
 
 /**
- * Utility to query for free and bound variable occurrences. It takes function parameters into account as well.
+ * Utility to query for free and bound variable occurrences. It takes (inline) function parameters into account as well.
  *
  * Note that in an XPath expression EQNames can play different roles: variable names (including function parameters),
  * function names, type names, and any kind of name in node tests (kind tests and name tests). This utility only cares
@@ -34,46 +38,83 @@ object VariableBindingUtil {
 
   /**
    * Returns all VarRef elements that are bound, given the passed inherited "introduced" variables and the variable bindings
-   * of and in the given element itself. Note that function parameters (for named and inline functions) must also
-   * be treated as "introduced" variables.
+   * of and in the given element itself. Note that function parameters (in inline functions) must also be treated as "introduced" variables.
+   * All bound VarRefs that are descendant-or-self elements of the parameter element are returned.
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
   def findAllBoundVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): immutable.IndexedSeq[VarRef] = {
-    val introducedVariables: Set[EQName] = inheritedIntroducedVariables.union(getOwnIntroducedVariables(elem))
+    // Many recursive calls are done below
 
-    ???
+    elem match {
+      case e @ VarRef(eqname) =>
+        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq(e) else immutable.IndexedSeq()
+      case e: VariableBinding =>
+        findAllBoundVariables(e.expr, inheritedIntroducedVariables)
+      case e: VariableIntroducingExpr =>
+        val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
+
+        val boundVariablesInBindings =
+          e.variableBindings.flatMap(b => findAllBoundVariables(b.expr, inheritedIntroducedVariables))
+
+        val boundVariablesUsingOwnBindings =
+          e.childrenAffectedByOwnVariableBindings.flatMap(che => findAllBoundVariables(che, introducedVariables))
+
+        boundVariablesInBindings ++ boundVariablesUsingOwnBindings
+      case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
+        val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
+
+        findAllBoundVariables(body, introducedVariables)
+      case e =>
+        e.children.flatMap(che => findAllBoundVariables(che, inheritedIntroducedVariables))
+    }
   }
 
   /**
    * Returns all VarRef elements that are free despite the passed inherited "introduced" variables and the variable bindings
-   * of and in the given element itself. Note that function parameters (for named and inline functions) must also
-   * be treated as "introduced" variables.
+   * of and in the given element itself. Note that function parameters (in inline functions) must also be treated as "introduced" variables.
+   * All free VarRefs that are descendant-or-self elements of the parameter element are returned.
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
   def findAllFreeVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): immutable.IndexedSeq[VarRef] = {
-    val introducedVariables: Set[EQName] = inheritedIntroducedVariables.union(getOwnIntroducedVariables(elem))
+    // Many recursive calls are done below
 
-    ???
+    elem match {
+      case e @ VarRef(eqname) =>
+        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq() else immutable.IndexedSeq(e)
+      case e: VariableBinding =>
+        findAllFreeVariables(e.expr, inheritedIntroducedVariables)
+      case e: VariableIntroducingExpr =>
+        val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
+
+        val freeVariablesInBindings =
+          e.variableBindings.flatMap(b => findAllFreeVariables(b.expr, inheritedIntroducedVariables))
+
+        val freeVariablesUsingOwnBindings =
+          e.childrenAffectedByOwnVariableBindings.flatMap(che => findAllFreeVariables(che, introducedVariables))
+
+        freeVariablesInBindings ++ freeVariablesUsingOwnBindings
+      case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
+        val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
+
+        findAllFreeVariables(body, introducedVariables)
+      case e =>
+        e.children.flatMap(che => findAllFreeVariables(che, inheritedIntroducedVariables))
+    }
   }
 
   /**
-   * Returns the variables introduced by this element itself (ignoring inherited ones and those introduced by descendant
-   * elements). As far as this function is concerned, variable bindings do not directly introduce any variables, but
-   * contribute to the variables introduced by their containing expressions.
+   * Returns `findAllBoundVariables(elem, Set())`.
    */
-  private def getOwnIntroducedVariables(elem: XPathElem): Set[EQName] = {
-    val ownIntroducedVariables: Set[EQName] =
-      elem match {
-        case e: VariableBindingExpr =>
-          e.variableBindings.map(_.varName).toSet
-        case InlineFunctionExpr(paramListOption, _, _) =>
-          paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet
-        case _ =>
-          Set()
-      }
+  def findAllBoundVariables(elem: XPathElem): immutable.IndexedSeq[VarRef] = {
+    findAllBoundVariables(elem, Set())
+  }
 
-    ownIntroducedVariables
+  /**
+   * Returns `findAllFreeVariables(elem, Set())`.
+   */
+  def findAllFreeVariables(elem: XPathElem): immutable.IndexedSeq[VarRef] = {
+    findAllFreeVariables(elem, Set())
   }
 }

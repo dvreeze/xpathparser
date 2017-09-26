@@ -58,7 +58,7 @@ sealed trait LeafElem extends XPathElem {
 /**
  * XPathElem that can introduce one or more variable bindings.
  */
-sealed trait VariableBindingExpr extends XPathElem {
+sealed trait VariableIntroducingExpr extends XPathElem {
 
   /**
    * Returns the variable bindings introduced by this element.
@@ -66,11 +66,10 @@ sealed trait VariableBindingExpr extends XPathElem {
   def variableBindings: immutable.IndexedSeq[VariableBinding]
 
   /**
-   * Returns the child elements affected by the bindings introduced by this (and "ancestor") elements.
-   * 
-   * Note that variables can be bound not just by variable bindings, but also by function parameters.
+   * Returns the children that are affected by the own (and other) variable bindings,
+   * in interpreting which variables are free and which are bounded.
    */
-  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem]
+  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem]
 }
 
 final case class XPathExpr(expr: Expr) extends XPathElem {
@@ -96,36 +95,36 @@ sealed trait ExprSingle extends XPathElem
 
 final case class ForExpr(
     simpleForBindings: immutable.IndexedSeq[SimpleForBinding],
-    returnExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
+    returnExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = simpleForBindings :+ returnExpr
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleForBindings
 
-  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
+  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
 }
 
 final case class LetExpr(
     simpleLetBindings: immutable.IndexedSeq[SimpleLetBinding],
-    returnExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
+    returnExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = simpleLetBindings :+ returnExpr
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleLetBindings
 
-  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
+  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
 }
 
 final case class QuantifiedExpr(
     quantifier: Quantifier,
     simpleBindings: immutable.IndexedSeq[SimpleBindingInQuantifiedExpr],
-    satisfiesExpr: ExprSingle) extends ExprSingle with VariableBindingExpr {
+    satisfiesExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
   def children: immutable.IndexedSeq[XPathElem] = (quantifier +: simpleBindings) :+ satisfiesExpr
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleBindings
 
-  def childElemsAffectedByVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(satisfiesExpr)
+  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(satisfiesExpr)
 }
 
 final case class IfExpr(
