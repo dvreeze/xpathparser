@@ -19,8 +19,7 @@ package eu.cdevreeze.xpathparser.parse
 import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.NCName
-import eu.cdevreeze.xpathparser.ast.QNameAsEQName
-import eu.cdevreeze.xpathparser.ast.URIQualifiedName
+import eu.cdevreeze.xpathparser.ast.EQName
 import fastparse.WhitespaceApi
 
 /**
@@ -54,20 +53,20 @@ object XPathParser {
     val eqName: P[EQName] =
       P(!"Q{" ~ qName | uriQualifiedName)
 
-    val qName: P[QNameAsEQName] =
+    val qName: P[EQName.QName] =
       P(ncName ~ (":" ~ ncName).?) map {
         case (s1, s2Opt) =>
           if (s2Opt.isEmpty) {
-            QNameAsEQName.parse(s1.name)
+            EQName.QName.parse(s1.name)
           } else {
-            QNameAsEQName.parse(s1.name + ":" + s2Opt.get.name)
+            EQName.QName.parse(s1.name + ":" + s2Opt.get.name)
           }
       }
 
-    val uriQualifiedName: P[URIQualifiedName] =
+    val uriQualifiedName: P[EQName.URIQualifiedName] =
       P("Q{" ~/ CharPred(c => isAllowedUriChar(c)).rep.! ~ "}" ~ ncName) map {
         case (uri, localPart) =>
-          URIQualifiedName.parse("Q{" + uri + "}" + localPart.name)
+          EQName.URIQualifiedName.parse("Q{" + uri + "}" + localPart.name)
       }
 
     private def isAllowedUriChar(c: Char): Boolean = {
@@ -790,22 +789,22 @@ object XPathParser {
   // Utility methods (and data)
 
   private val ReservedFunctionNames: Set[EQName] = Set(
-    QNameAsEQName("attribute"),
-    QNameAsEQName("comment"),
-    QNameAsEQName("document-node"),
-    QNameAsEQName("element"),
-    QNameAsEQName("empty-sequence"),
-    QNameAsEQName("function"),
-    QNameAsEQName("if"),
-    QNameAsEQName("item"),
-    QNameAsEQName("namespace-node"),
-    QNameAsEQName("node"),
-    QNameAsEQName("processing-instruction"),
-    QNameAsEQName("schema-attribute"),
-    QNameAsEQName("schema-element"),
-    QNameAsEQName("switch"),
-    QNameAsEQName("text"),
-    QNameAsEQName("typeswitch"))
+    EQName.QName("attribute"),
+    EQName.QName("comment"),
+    EQName.QName("document-node"),
+    EQName.QName("element"),
+    EQName.QName("empty-sequence"),
+    EQName.QName("function"),
+    EQName.QName("if"),
+    EQName.QName("item"),
+    EQName.QName("namespace-node"),
+    EQName.QName("node"),
+    EQName.QName("processing-instruction"),
+    EQName.QName("schema-attribute"),
+    EQName.QName("schema-element"),
+    EQName.QName("switch"),
+    EQName.QName("text"),
+    EQName.QName("typeswitch"))
 
   private def isPrefixWildcard(s: String): Boolean = {
     s.endsWith(":*") && NCName.canBeNCName(s.dropRight(2))

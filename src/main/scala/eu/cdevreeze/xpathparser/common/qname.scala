@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser.common
 
 /**
- * See the QName type in the yaidom project.
+ * Lexical qualified name. See the QName type in the yaidom project.
  *
  * @author Chris de Vreeze
  */
@@ -25,15 +25,6 @@ sealed trait QName extends Immutable with Serializable {
 
   def localPart: String
   def prefixOption: Option[String]
-
-  /**
-   * Partially validates the QName, throwing an exception if found not valid.
-   * If not found invalid, returns this.
-   *
-   * It is the responsibility of the user of this class to call this method, if needed.
-   * Fortunately, this method facilitates method chaining, because the QName itself is returned.
-   */
-  def validated: QName
 }
 
 final case class UnprefixedName(override val localPart: String) extends QName {
@@ -43,11 +34,6 @@ final case class UnprefixedName(override val localPart: String) extends QName {
 
   /** The `String` representation as it appears in XML, that is, the localPart */
   override def toString: String = localPart
-
-  override def validated: UnprefixedName = {
-    require(XmlStringUtils.isAllowedElementLocalName(localPart), s"'${localPart}' is not an allowed name in QName '${this}'")
-    this
-  }
 }
 
 final case class PrefixedName(prefix: String, override val localPart: String) extends QName {
@@ -58,12 +44,6 @@ final case class PrefixedName(prefix: String, override val localPart: String) ex
 
   /** The `String` representation as it appears in XML. For example, <code>xs:schema</code> */
   override def toString: String = s"${prefix}:${localPart}"
-
-  override def validated: PrefixedName = {
-    require(XmlStringUtils.isAllowedPrefix(prefix), s"'${prefix}' is not an allowed prefix name in QName '${this}'")
-    require(XmlStringUtils.isAllowedElementLocalName(localPart), s"'${localPart}' is not an allowed name in QName '${this}'")
-    this
-  }
 }
 
 object QName {

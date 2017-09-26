@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser
 
 /**
- * Common classes for expanded names and qualified names. Copied from the yaidom project, with permission.
+ * Common classes for expanded names and qualified names. Copied (and "trimmed") from the yaidom project, with permission.
  * Conversion from and to the yaidom counterparts is trivial, for example through the string representation.
  *
  * @author Chris de Vreeze

@@ -20,7 +20,7 @@ import javax.xml.XMLConstants
 import javax.xml.namespace.{ QName => JQName }
 
 /**
- * Expanded name. See the EName type in the yaidom project.
+ * Expanded name, containing a local part and optional namespace name. See the EName type in the yaidom project.
  *
  * @author Chris de Vreeze
  */
@@ -46,22 +46,6 @@ final case class EName(namespaceUriOption: Option[String], localPart: String) ex
   override def toString: String = namespaceUriOption match {
     case None        => localPart
     case Some(nsUri) => "{" + nsUri + "}" + localPart
-  }
-
-  /**
-   * Partially validates the EName, throwing an exception if found not valid.
-   * If not found invalid, returns this.
-   *
-   * It is the responsibility of the user of this class to call this method, if needed.
-   * Fortunately, this method facilitates method chaining, because the EName itself is returned.
-   */
-  // scalastyle:off null
-  def validated: EName = {
-    require(
-      namespaceUriOption.forall(ns => (ns ne null) && (ns.length > 0)),
-      s"Empty (as opposed to absent) namespace URI not allowed in EName '${this}'")
-    require(XmlStringUtils.isAllowedElementLocalName(localPart), s"'${localPart}' is not an allowed name in EName '${this}'")
-    this
   }
 }
 

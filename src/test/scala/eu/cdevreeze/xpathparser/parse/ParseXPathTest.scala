@@ -20,8 +20,7 @@ import scala.reflect.classTag
 
 import org.scalatest.FunSuite
 
-import eu.cdevreeze.xpathparser.ast.QNameAsEQName
-import eu.cdevreeze.xpathparser.ast.URIQualifiedName
+import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AdditionOp
 import eu.cdevreeze.xpathparser.ast.XPathExpressions.AxisStep
@@ -89,11 +88,11 @@ class ParseXPathTest extends FunSuite {
     val simpleNameTests = parseResult.get.value.findAllElemsOfType(classTag[SimpleNameTest])
 
     assertResult(List(
-      QNameAsEQName("p:a"),
-      QNameAsEQName("p:b"),
-      QNameAsEQName("p:c"),
-      QNameAsEQName("p:d"),
-      QNameAsEQName("p:e"))) {
+      EQName.QName("p:a"),
+      EQName.QName("p:b"),
+      EQName.QName("p:c"),
+      EQName.QName("p:d"),
+      EQName.QName("p:e"))) {
 
       simpleNameTests.map(e => e.name)
     }
@@ -146,7 +145,7 @@ class ParseXPathTest extends FunSuite {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[ValueComp.Ge.type]).size
     }
 
-    assertResult(List(QNameAsEQName("varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear"))) {
+    assertResult(List(EQName.QName("varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear"))) {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[VarRef]).map(_.varName)
     }
   }
@@ -175,8 +174,8 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(List(
-      QNameAsEQName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers"),
-      QNameAsEQName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember"))) {
+      EQName.QName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers"),
+      EQName.QName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember"))) {
 
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[VarRef]).map(_.varName)
     }
@@ -240,7 +239,7 @@ class ParseXPathTest extends FunSuite {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[StringLiteral]).size
     }
 
-    assertResult(List(QNameAsEQName("varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems"))) {
+    assertResult(List(EQName.QName("varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems"))) {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[VarRef]).map(_.varName)
     }
   }
@@ -275,15 +274,15 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(Set(
-      QNameAsEQName("xfi:is-instant-period"),
-      QNameAsEQName("xfi:period"),
-      QNameAsEQName("xfi:period-instant"),
-      QNameAsEQName("xs:dateTime"),
-      QNameAsEQName("xs:dayTimeDuration"),
-      QNameAsEQName("xfi:is-start-end-period"),
-      QNameAsEQName("xfi:period-end"),
-      QNameAsEQName("xfi:period-start"),
-      QNameAsEQName("false"))) {
+      EQName.QName("xfi:is-instant-period"),
+      EQName.QName("xfi:period"),
+      EQName.QName("xfi:period-instant"),
+      EQName.QName("xs:dateTime"),
+      EQName.QName("xs:dayTimeDuration"),
+      EQName.QName("xfi:is-start-end-period"),
+      EQName.QName("xfi:period-end"),
+      EQName.QName("xfi:period-start"),
+      EQName.QName("false"))) {
 
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[FunctionCall]).map(_.functionName).toSet
     }
@@ -335,11 +334,11 @@ class ParseXPathTest extends FunSuite {
       parseResult.get.value.findAllElemsOfType(classTag[ValueComp.Eq.type]).size
     }
 
-    assertResult(Set(QNameAsEQName("varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems"))) {
+    assertResult(Set(EQName.QName("varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems"))) {
       parseResult.get.value.findAllElemsOfType(classTag[VarRef]).map(_.varName).toSet
     }
 
-    assertResult(Set(QNameAsEQName("xfi:identifier"), QNameAsEQName("xfi:identifier-scheme"))) {
+    assertResult(Set(EQName.QName("xfi:identifier"), EQName.QName("xfi:identifier-scheme"))) {
       parseResult.get.value.findAllElemsOfType(classTag[FunctionCall]).map(_.functionName).toSet
     }
 
@@ -364,11 +363,11 @@ class ParseXPathTest extends FunSuite {
       parseResult.get.value.findAllElemsOfType(classTag[ValueComp.Eq.type]).size
     }
 
-    assertResult(Set(QNameAsEQName("varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems"))) {
+    assertResult(Set(EQName.QName("varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems"))) {
       parseResult.get.value.findAllElemsOfType(classTag[VarRef]).map(_.varName).toSet
     }
 
-    assertResult(Set(URIQualifiedName(EName(XfiNs, "identifier")), URIQualifiedName(EName(XfiNs, "identifier-scheme")))) {
+    assertResult(Set(EQName.URIQualifiedName(EName(XfiNs, "identifier")), EQName.URIQualifiedName(EName(XfiNs, "identifier-scheme")))) {
       parseResult.get.value.findAllElemsOfType(classTag[FunctionCall]).map(_.functionName).toSet
     }
 
@@ -390,11 +389,11 @@ class ParseXPathTest extends FunSuite {
       topmostExprSingles.size
     }
 
-    assertResult(Set(QNameAsEQName("p:a"), QNameAsEQName("p:b"), QNameAsEQName("xlink:type"))) {
+    assertResult(Set(EQName.QName("p:a"), EQName.QName("p:b"), EQName.QName("xlink:type"))) {
       topmostExprSingles(0).findAllElemsOfType(classTag[SimpleNameTest]).map(_.name).toSet
     }
 
-    assertResult(Set(QNameAsEQName("p:c"), QNameAsEQName("p:d"))) {
+    assertResult(Set(EQName.QName("p:c"), EQName.QName("p:d"))) {
       topmostExprSingles(1).findAllElemsOfType(classTag[SimpleNameTest]).map(_.name).toSet
     }
   }
@@ -424,7 +423,7 @@ class ParseXPathTest extends FunSuite {
       letExprOption.get.returnExpr.findAllElemsOrSelfOfType(classTag[FunctionCall]).size
     }
 
-    assertResult(Set(QNameAsEQName("a"), QNameAsEQName("f"))) {
+    assertResult(Set(EQName.QName("a"), EQName.QName("f"))) {
       letExprOption.get.findAllElemsOrSelfOfType(classTag[VarRef]).map(_.varName).toSet
     }
 

@@ -16,59 +16,58 @@
 
 package eu.cdevreeze.xpathparser.ast
 
-import eu.cdevreeze.xpathparser.common.EName
-import eu.cdevreeze.xpathparser.common.QName
+import eu.cdevreeze.xpathparser.common
 
 /**
- * EQName, so either a URIQualifiedName or a QNameAsEQName.
+ * EQName, so either a URIQualifiedName or a QName.
  *
  * @author Chris de Vreeze
  */
 sealed trait EQName
 
-final case class QNameAsEQName(qname: QName) extends EQName {
-
-  override def toString: String = qname.toString
-}
-
-final case class URIQualifiedName(ename: EName) extends EQName {
-
-  override def toString: String = ename match {
-    case EName(None, localPart)     => s"Q{}$localPart"
-    case EName(Some(ns), localPart) => s"Q{$ns}$localPart"
-  }
-}
-
 object EQName {
 
-  def parse(s: String): EQName = {
-    if (s.startsWith("Q{")) URIQualifiedName.parse(s) else QNameAsEQName.parse(s)
-  }
-}
+  final case class QName(qname: common.QName) extends EQName {
 
-object QNameAsEQName {
-
-  def apply(s: String): QNameAsEQName = {
-    parse(s)
+    override def toString: String = qname.toString
   }
 
-  def parse(s: String): QNameAsEQName = {
-    QNameAsEQName(QName.parse(s))
-  }
-}
+  final case class URIQualifiedName(ename: common.EName) extends EQName {
 
-object URIQualifiedName {
-
-  def parse(s: String): URIQualifiedName = {
-    require(s.startsWith("Q{"), s"String '$s' is not a URIQualifiedName, because it does not start with 'Q{'")
-    require(s.contains("}"), s"String '$s' is not a URIQualifiedName, because it does not contain '}'")
-    require(!s.endsWith("}"), s"String '$s' is not a URIQualifiedName, because it ends with '}'")
-
-    if (s.startsWith("Q{}")) {
-      URIQualifiedName(EName.parse(s.drop(3)))
-    } else {
-      // Dropping the character "Q", we have James Clark notation to parse
-      URIQualifiedName(EName.parse(s.drop(1)))
+    override def toString: String = ename match {
+      case common.EName(None, localPart)     => s"Q{}$localPart"
+      case common.EName(Some(ns), localPart) => s"Q{$ns}$localPart"
     }
+  }
+
+  object QName {
+
+    def apply(s: String): QName = {
+      parse(s)
+    }
+
+    def parse(s: String): QName = {
+      QName(common.QName.parse(s))
+    }
+  }
+
+  object URIQualifiedName {
+
+    def parse(s: String): URIQualifiedName = {
+      require(s.startsWith("Q{"), s"String '$s' is not a URIQualifiedName, because it does not start with 'Q{'")
+      require(s.contains("}"), s"String '$s' is not a URIQualifiedName, because it does not contain '}'")
+      require(!s.endsWith("}"), s"String '$s' is not a URIQualifiedName, because it ends with '}'")
+
+      if (s.startsWith("Q{}")) {
+        URIQualifiedName(common.EName.parse(s.drop(3)))
+      } else {
+        // Dropping the character "Q", we have James Clark notation to parse
+        URIQualifiedName(common.EName.parse(s.drop(1)))
+      }
+    }
+  }
+
+  def parse(s: String): EQName = {
+    if (s.startsWith("Q{")) URIQualifiedName.parse(s) else QName.parse(s)
   }
 }
