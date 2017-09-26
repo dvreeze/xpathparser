@@ -170,7 +170,7 @@ class VariableBindingTest extends FunSuite {
     expectedVarNames: Set[EQName],
     inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
 
-    var freeVars = VariableBindingUtil.findAllFreeVariables(elem, inheritedIntroducedVarNames)
+    val freeVars = VariableBindingUtil.findAllFreeVariables(elem, inheritedIntroducedVarNames)
 
     assertResult(expectedVarNames) {
       freeVars.map(_.varName).toSet
@@ -182,7 +182,7 @@ class VariableBindingTest extends FunSuite {
     expectedVarNames: Set[EQName],
     inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
 
-    var boundVars = VariableBindingUtil.findAllBoundVariables(elem, inheritedIntroducedVarNames)
+    val boundVars = VariableBindingUtil.findAllBoundVariables(elem, inheritedIntroducedVarNames)
 
     assertResult(expectedVarNames) {
       boundVars.map(_.varName).toSet
@@ -191,14 +191,6 @@ class VariableBindingTest extends FunSuite {
 
   private def assertSuccess(parseResult: Parsed[_]): Unit = {
     assertResult(true) {
-      parseResult.fold(
-        (parser, pos, extra) => false,
-        (expr, pos) => true)
-    }
-  }
-
-  private def assertFailure(parseResult: Parsed[_]): Unit = {
-    assertResult(false) {
       parseResult.fold(
         (parser, pos, extra) => false,
         (expr, pos) => true)
