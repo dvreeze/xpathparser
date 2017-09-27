@@ -31,6 +31,13 @@ final case class BracedUriLiteral(namespaceOption: Option[String]) {
 
 object BracedUriLiteral {
 
+  def canBeBracedUriLiteral(s: String): Boolean = {
+    s.startsWith("Q{") && s.endsWith("}") && {
+      val uri = s.drop(2).dropRight(1)
+      (!uri.contains('{')) && (!uri.contains('}'))
+    }
+  }
+
   def parse(s: String): BracedUriLiteral = {
     require(s.startsWith("Q{"), s"A braced URI literal must start with 'Q{', but found: '$s'")
     require(s.endsWith("}"), s"A braced URI literal must end with '}', but found: '$s'")
