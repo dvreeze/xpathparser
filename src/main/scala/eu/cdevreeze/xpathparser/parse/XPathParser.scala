@@ -522,12 +522,6 @@ object XPathParser {
   private val integerLiteral: P[IntegerLiteral] =
     P(NDT.integerLiteral)
 
-  private val decimalLiteral: P[DecimalLiteral] =
-    P(NDT.decimalLiteral)
-
-  private val doubleLiteral: P[DoubleLiteral] =
-    P(NDT.doubleLiteral)
-
   private val varRef: P[VarRef] =
     P(DT.dollar ~ eqName) map {
       name => VarRef(name)
