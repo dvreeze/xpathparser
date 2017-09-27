@@ -197,7 +197,7 @@ object NonDelimitingTerminals {
   // TODO Is this a correct symbol separator, or should we look at whitespace and comments instead?
 
   private val symbolSeparator: P[Unit] =
-    P(&(End | CharPred(c => !NCName.canBePartOfNCName(c))))
+    P(End | CharPred(c => !NCName.canBePartOfNCName(c)))
 
   def parseWord(s: String): P[Unit] = {
     P(s ~ &(symbolSeparator))
