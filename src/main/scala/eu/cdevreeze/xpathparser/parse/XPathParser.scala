@@ -19,7 +19,6 @@ package eu.cdevreeze.xpathparser.parse
 import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.NCName
-import eu.cdevreeze.xpathparser.ast.EQName
 import fastparse.WhitespaceApi
 
 /**
@@ -39,44 +38,7 @@ object XPathParser {
   import eu.cdevreeze.xpathparser.ast._
 
   private val DT = DelimitingTerminals
-
-  object Names {
-    import fastparse.all._
-
-    // TODO Make more efficient
-
-    val ncName: P[NCName] =
-      P(CharPred(c => NCName.canBeStartOfNCName(c)).! ~ CharPred(c => NCName.canBePartOfNCName(c)).rep.!) map {
-        case (s1, s2) => NCName(s1 + s2)
-      }
-
-    // We could change the order of the 2 branches below, but I'd rather explicitly use a small lookahead.
-
-    val eqName: P[EQName] =
-      P(!"Q{" ~ qName | uriQualifiedName)
-
-    val qName: P[EQName.QName] =
-      P(ncName ~ (":" ~ ncName).?) map {
-        case (s1, s2Opt) =>
-          if (s2Opt.isEmpty) {
-            EQName.QName.parse(s1.name)
-          } else {
-            EQName.QName.parse(s1.name + ":" + s2Opt.get.name)
-          }
-      }
-
-    val uriQualifiedName: P[EQName.URIQualifiedName] =
-      P("Q{" ~/ CharPred(c => isAllowedUriChar(c)).rep.! ~ "}" ~ ncName) map {
-        case (uri, localPart) =>
-          EQName.URIQualifiedName.parse("Q{" + uri + "}" + localPart.name)
-      }
-
-    private def isAllowedUriChar(c: Char): Boolean = {
-      // Just guessing!
-
-      !java.lang.Character.isWhitespace(c) && (c != '{') && (c != '}')
-    }
-  }
+  private val NDT = NonDelimitingTerminals
 
   private val White = WhitespaceApi.Wrapper {
     import fastparse.all._
@@ -109,17 +71,17 @@ object XPathParser {
     P(forExpr | letExpr | quantifiedExpr | ifExpr | orExpr)
 
   private val forExpr: P[ForExpr] =
-    P("for" ~/ simpleForBinding.rep(min = 1, sep = DT.comma) ~ "return" ~ exprSingle) map {
+    P(NDT.forWord ~/ simpleForBinding.rep(min = 1, sep = DT.comma) ~ NDT.returnWord ~ exprSingle) map {
       case (bindings, returnExp) => ForExpr(bindings.toIndexedSeq, returnExp)
     }
 
   private val simpleForBinding: P[SimpleForBinding] =
-    P(DT.dollar ~ eqName ~ "in" ~ exprSingle) map {
+    P(DT.dollar ~ eqName ~ NDT.inWord ~ exprSingle) map {
       case (eqn, exp) => SimpleForBinding(eqn, exp)
     }
 
   private val letExpr: P[LetExpr] =
-    P("let" ~/ simpleLetBinding.rep(min = 1, sep = DT.comma) ~ "return" ~ exprSingle) map {
+    P(NDT.letWord ~/ simpleLetBinding.rep(min = 1, sep = DT.comma) ~ NDT.returnWord ~ exprSingle) map {
       case (bindings, returnExp) => LetExpr(bindings.toIndexedSeq, returnExp)
     }
 
@@ -129,27 +91,27 @@ object XPathParser {
     }
 
   private val quantifiedExpr: P[QuantifiedExpr] =
-    P(StringIn("some", "every").! ~/ simpleBindingInQuantifiedExpr.rep(min = 1, sep = DT.comma) ~ "satisfies" ~ exprSingle) map {
+    P((NDT.someWord | NDT.everyWord).! ~/ simpleBindingInQuantifiedExpr.rep(min = 1, sep = DT.comma) ~ NDT.satisfiesWord ~ exprSingle) map {
       case (quant, bindings, satisfiesExp) => QuantifiedExpr(Quantifier.parse(quant), bindings.toIndexedSeq, satisfiesExp)
     }
 
   private val simpleBindingInQuantifiedExpr: P[SimpleBindingInQuantifiedExpr] =
-    P(DT.dollar ~ eqName ~ "in" ~ exprSingle) map {
+    P(DT.dollar ~ eqName ~ NDT.inWord ~ exprSingle) map {
       case (eqn, exp) => SimpleBindingInQuantifiedExpr(eqn, exp)
     }
 
   private val ifExpr: P[IfExpr] =
-    P("if" ~/ DT.openParenthesis ~ expr ~ DT.closeParenthesis ~ "then" ~ exprSingle ~ "else" ~ exprSingle) map {
+    P(NDT.ifWord ~/ DT.openParenthesis ~ expr ~ DT.closeParenthesis ~ NDT.thenWord ~ exprSingle ~ NDT.elseWord ~ exprSingle) map {
       case (e1, e2, e3) => IfExpr(e1, e2, e3)
     }
 
   private val orExpr: P[OrExpr] =
-    P(andExpr.rep(min = 1, sep = "or" ~/ Pass)) map {
+    P(andExpr.rep(min = 1, sep = NDT.orWord ~/ Pass)) map {
       case exps => OrExpr(exps.toIndexedSeq)
     }
 
   private val andExpr: P[AndExpr] =
-    P(comparisonExpr.rep(min = 1, sep = "and" ~/ Pass)) map {
+    P(comparisonExpr.rep(min = 1, sep = NDT.andWord ~/ Pass)) map {
       case exps => AndExpr(exps.toIndexedSeq)
     }
 
@@ -165,7 +127,7 @@ object XPathParser {
     }
 
   private val rangeExpr: P[RangeExpr] =
-    P(additiveExpr ~ ("to" ~/ additiveExpr).?) map {
+    P(additiveExpr ~ (NDT.toWord ~/ additiveExpr).?) map {
       case (additiveExp1, Some(additiveExp2)) => CompoundRangeExpr(additiveExp1, additiveExp2)
       case (additiveExp, None)                => SimpleRangeExpr(additiveExp)
     }
@@ -177,39 +139,39 @@ object XPathParser {
     }
 
   private val multiplicativeExpr: P[MultiplicativeExpr] =
-    P(unionExpr ~ ((DT.asterisk | StringIn("div", "idiv", "mod")).! ~/ multiplicativeExpr).?) map {
+    P(unionExpr ~ ((DT.asterisk | (NDT.divWord | NDT.idivWord | NDT.modWord)).! ~/ multiplicativeExpr).?) map {
       case (expr, None)            => SimpleMultiplicativeExpr(expr)
       case (expr, Some(opAndExpr)) => CompoundMultiplicativeExpr(expr, MultiplicativeOp.parse(opAndExpr._1), opAndExpr._2)
     }
 
   private val unionExpr: P[UnionExpr] =
-    P(intersectExceptExpr ~ (("union" | DT.verticalBar) ~/ intersectExceptExpr).rep) map {
+    P(intersectExceptExpr ~ ((NDT.unionWord | DT.verticalBar) ~/ intersectExceptExpr).rep) map {
       case (expr, exprSeq) => UnionExpr(expr +: exprSeq.toIndexedSeq)
     }
 
   private val intersectExceptExpr: P[IntersectExceptExpr] =
-    P(instanceOfExpr ~ (StringIn("intersect", "except").! ~/ intersectExceptExpr).?) map {
+    P(instanceOfExpr ~ ((NDT.intersectWord | NDT.exceptWord).! ~/ intersectExceptExpr).?) map {
       case (expr, None)            => SimpleIntersectExceptExpr(expr)
       case (expr, Some(opAndExpr)) => CompoundIntersectExceptExpr(expr, IntersectExceptOp.parse(opAndExpr._1), opAndExpr._2)
     }
 
   private val instanceOfExpr: P[InstanceOfExpr] =
-    P(treatExpr ~ ("instance" ~ "of" ~/ sequenceType).?) map {
+    P(treatExpr ~ (NDT.instanceWord ~ NDT.ofWord ~/ sequenceType).?) map {
       case (expr, tpeOption) => InstanceOfExpr(expr, tpeOption)
     }
 
   private val treatExpr: P[TreatExpr] =
-    P(castableExpr ~ ("treat" ~ "as" ~/ sequenceType).?) map {
+    P(castableExpr ~ (NDT.treatWord ~ NDT.asWord ~/ sequenceType).?) map {
       case (expr, tpeOption) => TreatExpr(expr, tpeOption)
     }
 
   private val castableExpr: P[CastableExpr] =
-    P(castExpr ~ ("castable" ~ "as" ~/ singleType).?) map {
+    P(castExpr ~ (NDT.castableWord ~ NDT.asWord ~/ singleType).?) map {
       case (expr, tpeOption) => CastableExpr(expr, tpeOption)
     }
 
   private val castExpr: P[CastExpr] =
-    P(unaryExpr ~ ("cast" ~ "as" ~/ singleType).?) map {
+    P(unaryExpr ~ (NDT.castWord ~ NDT.asWord ~/ singleType).?) map {
       case (expr, tpeOption) => CastExpr(expr, tpeOption)
     }
 
@@ -250,7 +212,7 @@ object XPathParser {
   // NCName or URI-qualified name or the token "function". (Note that, like context items, decimal and double literals may start with dots.)
 
   private val canStartPostfixExpr: P[Unit] =
-    P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName | "function").map(_ => ())
+    P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName | NDT.functionWord).map(_ => ())
 
   // Looking ahead to distinguish single slash from double slash, and to recognize start of relativePathExpr.
   // See xgc:leading-lone-slash constraint.
@@ -325,8 +287,8 @@ object XPathParser {
     }
 
   private val forwardAxis: P[ForwardAxis] =
-    P(StringIn("child", "descendant", "attribute", "self", "descendant-or-self",
-      "following-sibling", "following", "namespace").! ~ DT.doubleColon) map {
+    P((NDT.childWord | NDT.descendantWord | NDT.attributeWord | NDT.selfWord | NDT.descendantOrSelfWord |
+      NDT.followingSiblingWord | NDT.followingWord | NDT.namespaceWord).! ~ DT.doubleColon) map {
 
       case "child"              => ForwardAxis.Child
       case "descendant"         => ForwardAxis.Descendant
@@ -350,7 +312,7 @@ object XPathParser {
     }
 
   private val reverseAxis: P[ReverseAxis] =
-    P(StringIn("parent", "ancestor", "preceding-sibling", "preceding", "ancestor-or-self").! ~ DT.doubleColon) map {
+    P((NDT.parentWord | NDT.ancestorWord | NDT.precedingSiblingWord | NDT.precedingWord | NDT.ancestorOrSelfWord).! ~ DT.doubleColon) map {
       case "parent"            => ReverseAxis.Parent
       case "ancestor"          => ReverseAxis.Ancestor
       case "preceding-sibling" => ReverseAxis.PrecedingSibling
@@ -397,15 +359,15 @@ object XPathParser {
     P(simpleDocumentTest | documentTestContainingElementTest | documentTestContainingSchemaElementTest)
 
   private val simpleDocumentTest: P[SimpleDocumentTest.type] =
-    P("document-node" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => SimpleDocumentTest)
+    P(NDT.documentNodeWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => SimpleDocumentTest)
 
   private val documentTestContainingElementTest: P[DocumentTestContainingElementTest] =
-    P("document-node" ~ DT.openParenthesis ~ elementTest ~ DT.closeParenthesis) map {
+    P(NDT.documentNodeWord ~ DT.openParenthesis ~ elementTest ~ DT.closeParenthesis) map {
       case elemTest => DocumentTestContainingElementTest(elemTest)
     }
 
   private val documentTestContainingSchemaElementTest: P[DocumentTestContainingSchemaElementTest] =
-    P("document-node" ~ DT.openParenthesis ~ schemaElementTest ~ DT.closeParenthesis) map {
+    P(NDT.documentNodeWord ~ DT.openParenthesis ~ schemaElementTest ~ DT.closeParenthesis) map {
       case schemaElmTest => DocumentTestContainingSchemaElementTest(schemaElmTest)
     }
 
@@ -415,30 +377,30 @@ object XPathParser {
   // Losing some efficiency on parsing of element tests
 
   private val anyElementTest: P[AnyElementTest.type] =
-    P("element" ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis) map (_ => AnyElementTest)
+    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis) map (_ => AnyElementTest)
 
   private val elementNameTest: P[ElementNameTest] =
-    P("element" ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.elementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
       case name => ElementNameTest(name)
     }
 
   private val elementNameAndTypeTest: P[ElementNameAndTypeTest] =
-    P("element" ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.elementWord ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
       case (name, tpe) => ElementNameAndTypeTest(name, tpe)
     }
 
   private val nillableElementNameAndTypeTest: P[NillableElementNameAndTypeTest] =
-    P("element" ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis) map {
+    P(NDT.elementWord ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis) map {
       case (name, tpe) => NillableElementNameAndTypeTest(name, tpe)
     }
 
   private val elementTypeTest: P[ElementTypeTest] =
-    P("element" ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
       case tpe => ElementTypeTest(tpe)
     }
 
   private val nillableElementTypeTest: P[NillableElementTypeTest] =
-    P("element" ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis) map {
+    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis) map {
       case tpe => NillableElementTypeTest(tpe)
     }
 
@@ -448,30 +410,30 @@ object XPathParser {
   // Losing some efficiency on parsing of attribute tests
 
   private val anyAttributeTest: P[AnyAttributeTest.type] =
-    P("attribute" ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis) map (_ => AnyAttributeTest)
+    P(NDT.attributeWord ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis) map (_ => AnyAttributeTest)
 
   private val attributeNameTest: P[AttributeNameTest] =
-    P("attribute" ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.attributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
       case name => AttributeNameTest(name)
     }
 
   private val attributeNameAndTypeTest: P[AttributeNameAndTypeTest] =
-    P("attribute" ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.attributeWord ~ DT.openParenthesis ~ eqName ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
       case (name, tpe) => AttributeNameAndTypeTest(name, tpe)
     }
 
   private val attributeTypeTest: P[AttributeTypeTest] =
-    P("attribute" ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.attributeWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis) map {
       case tpe => AttributeTypeTest(tpe)
     }
 
   private val schemaElementTest: P[SchemaElementTest] =
-    P("schema-element" ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.schemaElementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
       case name => SchemaElementTest(name)
     }
 
   private val schemaAttributeTest: P[SchemaAttributeTest] =
-    P("schema-attribute" ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
+    P(NDT.schemaAttributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis) map {
       case name => SchemaAttributeTest(name)
     }
 
@@ -479,29 +441,29 @@ object XPathParser {
     P(simplePiTest | targetPiTest | dataPiTest)
 
   private val simplePiTest: P[SimplePITest.type] =
-    P("processing-instruction" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => SimplePITest)
+    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => SimplePITest)
 
   private val targetPiTest: P[TargetPITest] =
-    P("processing-instruction" ~ DT.openParenthesis ~ ncName ~ DT.closeParenthesis) map {
+    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ ncName ~ DT.closeParenthesis) map {
       case name => TargetPITest(name)
     }
 
   private val dataPiTest: P[DataPITest] =
-    P("processing-instruction" ~ DT.openParenthesis ~ stringLiteral ~ DT.closeParenthesis) map {
+    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ stringLiteral ~ DT.closeParenthesis) map {
       case stringLit => DataPITest(stringLit)
     }
 
   private val commentTest: P[CommentTest.type] =
-    P("comment" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => CommentTest)
+    P(NDT.commentWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => CommentTest)
 
   private val textTest: P[TextTest.type] =
-    P("text" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => TextTest)
+    P(NDT.textWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => TextTest)
 
   private val namespaceNodeTest: P[NamespaceNodeTest.type] =
-    P("namespace-node" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => NamespaceNodeTest)
+    P(NDT.namespaceNodeWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => NamespaceNodeTest)
 
   private val anyKindTest: P[AnyKindTest.type] =
-    P("node" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => AnyKindTest)
+    P(NDT.nodeWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => AnyKindTest)
 
   private val postfixExpr: P[PostfixExpr] =
     P(primaryExpr ~ (predicate | argumentList).rep) map {
@@ -530,7 +492,7 @@ object XPathParser {
     }
 
   private val param: P[Param] =
-    P(DT.dollar ~ eqName ~ ("as" ~ sequenceType).?) map {
+    P(DT.dollar ~ eqName ~ (NDT.asWord ~ sequenceType).?) map {
       case (name, tpeOption) => Param(name, tpeOption.map(t => TypeDeclaration(t)))
     }
 
@@ -555,16 +517,16 @@ object XPathParser {
     P(DT.stringLiteral)
 
   private val numericLiteral: P[NumericLiteral] =
-    P(integerLiteral | decimalLiteral | doubleLiteral)
+    P(NDT.numericLiteral)
 
   private val integerLiteral: P[IntegerLiteral] =
-    P(CharsWhileIn("0123456789").!) filter (v => isIntegerLiteral(v)) map (v => IntegerLiteral(v.toInt))
+    P(NDT.integerLiteral)
 
   private val decimalLiteral: P[DecimalLiteral] =
-    P(CharsWhileIn("0123456789.").!) filter (v => isDecimalLiteral(v)) map (v => DecimalLiteral(BigDecimal(v)))
+    P(NDT.decimalLiteral)
 
   private val doubleLiteral: P[DoubleLiteral] =
-    P(CharsWhileIn("0123456789.eE+-").!) filter (v => isDoubleLiteral(v)) map (v => DoubleLiteral(v.toDouble))
+    P(NDT.doubleLiteral)
 
   private val varRef: P[VarRef] =
     P(DT.dollar ~ eqName) map {
@@ -598,7 +560,7 @@ object XPathParser {
     }
 
   private val inlineFunctionExpr: P[InlineFunctionExpr] =
-    P("function" ~ DT.openParenthesis ~ paramList.? ~ DT.closeParenthesis ~ ("as" ~ sequenceType).? ~ enclosedExpr) map {
+    P(NDT.functionWord ~ DT.openParenthesis ~ paramList.? ~ DT.closeParenthesis ~ (NDT.asWord ~ sequenceType).? ~ enclosedExpr) map {
       case (parListOption, resultTpeOption, body) =>
         InlineFunctionExpr(parListOption, resultTpeOption, body)
     }
@@ -609,7 +571,7 @@ object XPathParser {
     P(emptySequenceType | nonEmptySequenceType)
 
   private val emptySequenceType: P[EmptySequenceType.type] =
-    P("empty-sequence" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => EmptySequenceType)
+    P(NDT.emptySequenceWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => EmptySequenceType)
 
   // TODO xgc:occurrence-indicators
 
@@ -631,13 +593,13 @@ object XPathParser {
     }
 
   private val anyItemType: P[AnyItemType.type] =
-    P("item" ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => AnyItemType)
+    P(NDT.itemWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => AnyItemType)
 
   private val anyFunctionTest: P[AnyFunctionTest.type] =
-    P("function" ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis) map (_ => AnyFunctionTest)
+    P(NDT.functionWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis) map (_ => AnyFunctionTest)
 
   private val typedFunctionTest: P[TypedFunctionTest] =
-    P("function" ~ DT.openParenthesis ~ sequenceType.rep(sep = DT.comma) ~ DT.closeParenthesis ~ "as" ~ sequenceType) map {
+    P(NDT.functionWord ~ DT.openParenthesis ~ sequenceType.rep(sep = DT.comma) ~ DT.closeParenthesis ~ NDT.asWord ~ sequenceType) map {
       case (parTpes, resultTpe) => TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
     }
 
@@ -658,25 +620,23 @@ object XPathParser {
     }
 
   // Names (EQNames, NCNames etc.)
-  // Using the Names.ncName and Names.eqName parsers
+  // Using the NCNames.ncName and EQNames.eqName parsers
 
-  private val ncName: P[NCName] =
-    P(Names.ncName)
+  private val ncName: P[NCName] = P(NCNames.ncName)
 
-  private val eqName: P[EQName] =
-    P(Names.eqName)
+  private val eqName: P[EQName] = P(EQNames.eqName)
 
   // Operators etc.
 
   private val valueComp: P[ValueComp] =
-    P(("eq" | "ne" | "lt" | "le" | "gt" | "ge").!) map (s => ValueComp.parse(s))
+    P((NDT.eqWord | NDT.neWord | NDT.ltWord | NDT.leWord | NDT.gtWord | NDT.geWord).!) map (s => ValueComp.parse(s))
 
   private val generalComp: P[GeneralComp] =
     P((DT.equals | DT.notEquals | DT.lessThan | DT.lessThanOrEqual |
       DT.greaterThan | DT.greaterThanOrEqual).!) map (s => GeneralComp.parse(s))
 
   private val nodeComp: P[NodeComp] =
-    P(("is" | DT.precedes | DT.follows).!) map (s => NodeComp.parse(s))
+    P((NDT.isWord | DT.precedes | DT.follows).!) map (s => NodeComp.parse(s))
 
   // Utility methods (and data)
 
@@ -716,30 +676,5 @@ object XPathParser {
 
   private def isNCNameCharOrBraceOrStar(c: Char): Boolean = {
     NCName.canBePartOfNCName(c) || (c == '{') || (c == '}') || (c == '*')
-  }
-
-  private def isIntegerLiteral(s: String): Boolean = {
-    s.nonEmpty && s.forall(c => java.lang.Character.isDigit(c))
-  }
-
-  private def isDecimalLiteral(s: String): Boolean = {
-    // Note that it is important to differentiate between decimal literals on the one hand
-    // and context item expressions and abbreviated reverse steps on the other hand!
-
-    s.nonEmpty && (s.count(_ == '.') == 1) &&
-      s.exists(c => java.lang.Character.isDigit(c)) &&
-      s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
-  }
-
-  private def isDoubleLiteral(s: String): Boolean = {
-    val idx = s.indexWhere(c => (c == 'e') || (c == 'E'))
-
-    (idx > 0) && {
-      val base = s.substring(0, idx)
-      val exp = s.substring(idx + 1)
-      val expWithoutSign = if (exp.startsWith("+") || exp.startsWith("-")) exp.drop(1) else exp
-
-      (isIntegerLiteral(base) || isDecimalLiteral(base)) && isIntegerLiteral(expWithoutSign)
-    }
   }
 }
