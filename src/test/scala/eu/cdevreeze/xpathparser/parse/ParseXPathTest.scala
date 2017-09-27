@@ -34,6 +34,7 @@ import eu.cdevreeze.xpathparser.ast.IfExpr
 import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.LetExpr
+import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.Predicate
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
 import eu.cdevreeze.xpathparser.ast.StepExpr
@@ -531,6 +532,22 @@ class ParseXPathTest extends FunSuite {
 
     assertResult(Some("")) {
       predicate.findFirstElemOfType(classTag[StringLiteral]).map(_.value)
+    }
+  }
+
+  test("testSimpleNonAbbrevSteps") {
+    val exprString =
+      "//a/child::b/following-sibling::d[@id = $id1]/child::c//e[@id = $id2]/child::title/text()"
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(4) {
+      parseResult.get.value.findAllElemsOfType(classTag[NonAbbrevForwardStep]).size
+    }
+    assertResult(2) {
+      parseResult.get.value.findAllElemsOfType(classTag[VarRef]).size
     }
   }
 
