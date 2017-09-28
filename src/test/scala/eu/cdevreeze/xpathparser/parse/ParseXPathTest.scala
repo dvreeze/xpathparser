@@ -20,13 +20,15 @@ import scala.reflect.classTag
 
 import org.scalatest.FunSuite
 
-import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.AbbrevForwardStep
+import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.AdditionOp
 import eu.cdevreeze.xpathparser.ast.AxisStep
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
+import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.ExprSingle
 import eu.cdevreeze.xpathparser.ast.ForExpr
+import eu.cdevreeze.xpathparser.ast.ForwardAxis
 import eu.cdevreeze.xpathparser.ast.ForwardAxisStep
 import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.GeneralComp
@@ -35,7 +37,10 @@ import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.LetExpr
 import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
+import eu.cdevreeze.xpathparser.ast.NonAbbrevReverseStep
+import eu.cdevreeze.xpathparser.ast.OneOrMoreSequenceType
 import eu.cdevreeze.xpathparser.ast.Predicate
+import eu.cdevreeze.xpathparser.ast.ReverseAxis
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
 import eu.cdevreeze.xpathparser.ast.StepExpr
 import eu.cdevreeze.xpathparser.ast.StringLiteral
@@ -537,17 +542,64 @@ class ParseXPathTest extends FunSuite {
 
   test("testSimpleNonAbbrevSteps") {
     val exprString =
-      "//a/child::b/following-sibling::d[@id = $id1]/child::c//e[@id = $id2]/child::title/text()"
+      "//a/child::b/following-sibling::d[@id = $id1]/child::c/../preceding::y/e[@id = $id2]/ancestor::x/child::title/text()"
 
     val parseResult = xpathExpr.parse(exprString)
 
     assertSuccess(parseResult)
 
-    assertResult(4) {
-      parseResult.get.value.findAllElemsOfType(classTag[NonAbbrevForwardStep]).size
+    assertResult(Set(EQName.QName("id1"), EQName.QName("id2"))) {
+      parseResult.get.value.findAllElemsOfType(classTag[VarRef]).map(_.varName).toSet
+    }
+
+    assertResult(List(ForwardAxis.Child, ForwardAxis.FollowingSibling, ForwardAxis.Child, ForwardAxis.Child)) {
+      parseResult.get.value.findAllElemsOfType(classTag[NonAbbrevForwardStep]).map(_.forwardAxis)
+    }
+    assertResult(List(ReverseAxis.Preceding, ReverseAxis.Ancestor)) {
+      parseResult.get.value.findAllElemsOfType(classTag[NonAbbrevReverseStep]).map(_.reverseAxis)
+    }
+
+    assertResult(List(EQName.QName("a"), EQName.QName("id"), EQName.QName("e"), EQName.QName("id"), EQName.QName("unknown"))) {
+      parseResult.get.value.findAllElemsOfType(classTag[AbbrevForwardStep]).map(_.nodeTest) map {
+        case SimpleNameTest(eqName) => eqName
+        case _                      => EQName.QName("unknown")
+      }
+    }
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOfType(classTag[AbbrevReverseStep.type]).size
+    }
+  }
+
+  test("testOccurrenceIndicator") {
+    val exprString = "4 treat as item() + - 5"
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOfType(classTag[OneOrMoreSequenceType]).size
+    }
+  }
+
+  // Expression "function () as xs:string *" does not work yet. See xgc:occurrence-indicators.
+
+  test("testMultiplePredicates") {
+    // Example from https://github.com/Saxonica/XT-Speedo
+
+    val exprString =
+      """xhtml:span[ancestor::xhtml:p | ancestor::xhtml:div][not(contains(@style, 'mso-list:'))]"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[AxisStep]).size
     }
     assertResult(2) {
-      parseResult.get.value.findAllElemsOfType(classTag[VarRef]).size
+      val axisStep = parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[AxisStep]).head
+      axisStep.predicateList.size
     }
   }
 

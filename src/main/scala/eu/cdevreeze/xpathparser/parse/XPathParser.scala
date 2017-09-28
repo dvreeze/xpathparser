@@ -190,14 +190,15 @@ object XPathParser {
       case exps => SimpleMapExpr(exps.toIndexedSeq)
     }
 
-  // The branches of exprSingle are easy to distinguish, once we look ahead a bit, and mind constraint xgc:leading-lone-slash.
-  // We can clearly distinguish among a single slash, a double slash, and a start of a relativePathExpr
-  // (which cannot start with a slash, partly because an EQName cannot start with a slash).
+  // According to constraint xgc:leading-lone-slash, we need to look ahead just one token to determine if a slash is a path
+  // expression or if it has to be taken together with the relative path expression that must come after the slash.
+  // Note that a relativePathExpr can never start with a slash (partly because an EQName cannot start with a slash).
+  // Hence the 4 branches below are easy to distinguish.
 
   private val pathExpr: P[PathExpr] =
     P(slashOnlyPathExpr | pathExprStartingWithSingleSlash | pathExprStartingWithDoubleSlash | relativePathExpr)
 
-  // Lookahead parsers
+  // Lookahead parsers, to determine if the next token can start a relative path expression.
 
   private val canStartRelativePathExpr: P[Unit] =
     P(canStartAxisStep | canStartPostfixExpr)
@@ -214,7 +215,7 @@ object XPathParser {
   private val canStartPostfixExpr: P[Unit] =
     P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName | NDT.functionWord).map(_ => ())
 
-  // Looking ahead to distinguish single slash from double slash, and to recognize start of relativePathExpr.
+  // Looking ahead to distinguish a single slash from a double slash, and to recognize the start of a relativePathExpr.
   // See xgc:leading-lone-slash constraint.
 
   private val slashOnlyPathExpr: P[PathExpr] =
@@ -222,8 +223,8 @@ object XPathParser {
       case _ => SlashOnlyPathExpr
     }
 
-  // Looking ahead to distinguish single slash from double slash, and to recognize start of relativePathExpr.
-  // See xgc:leading-lone-slash constraint. Note that canStartRelativePathExpr implies that the next token is not a slash!
+  // See above. Note that the next token is not a slash, because 2 slashes together make up one token,
+  // and because canStartRelativePathExpr implies that the next token cannot be a slash anyway.
 
   private val pathExprStartingWithSingleSlash: P[PathExpr] =
     P(DT.slash ~ &(canStartRelativePathExpr) ~ relativePathExpr) map {
@@ -241,9 +242,12 @@ object XPathParser {
       case (expr, Some(opAndExpr)) => CompoundRelativePathExpr(expr, StepOp.parse(opAndExpr._1), opAndExpr._2)
     }
 
-  // TODO Disambiguate the 2 branches of a stepExpr. Note that both branches may start with an EQName.
-  // The difference is that an axisStep starting with an EQName only contains the EQName, whereas a postfixExpr may start but may never
-  // end with an EQName.
+  // The 2 branches of a stepExpr are relatively easy to distinguish. Note that both branches may start with an EQName (or "keyword"), and other than that
+  // only start with mutually exclusive tokens. The difference between the 2 branches is that an axisStep starting with an EQName only contains the EQName,
+  // whereas a postfixExpr may start but may never end with an EQName. Each postfixExpr starting with an EQName is a function call or named function
+  // reference. Two constraints (xgc:reserved-function-names and gn:parens) further help in recognizing function calls and named function references.
+
+  // Hence, we first try the branch for postfixExpr, and try branch axisStep if the first one fails.
 
   private val stepExpr: P[StepExpr] =
     P(postfixExpr | axisStep)
@@ -252,8 +256,12 @@ object XPathParser {
   // A forwardAxisStep is easy to recognize if non-abbreviated, and otherwise it starts with a nodeTest, possibly
   // preceded by "@".
 
+  // We first try the reverseAxisStep, and only then the forwardAxisStep, to make sure that nodeTests are only
+  // tried if all other options (like non-abbreviated steps) do not apply. Note that the lookahead needed for
+  // discarding reverseAxisStep is limited (2 tokens).
+
   private val axisStep: P[AxisStep] =
-    P(forwardAxisStep | reverseAxisStep)
+    P(reverseAxisStep | forwardAxisStep)
 
   private val forwardAxisStep: P[ForwardAxisStep] =
     P(forwardStep ~ predicate.rep) map {
@@ -320,15 +328,20 @@ object XPathParser {
       case "ancestor-or-self"  => ReverseAxis.AncestorOrSelf
     }
 
-  // The 2 branches of a nodeTest are easy to distinguish.
+  // The 2 branches of a nodeTest are easy to distinguish, with limited lookahead.
+  // We first try branch kindTest, which always starts with a "keyword". If that fails, we try the nameTest branch.
 
   private val nodeTest: P[NodeTest] =
     P(kindTest | nameTest)
 
-  // The 2 branches of a nameTest are easy to distinguish.
+  // The 2 branches of a nameTest are relatively easy to distinguish. A simpleNameTest is just an EQName, whereas a wildcard
+  // always contains an asterisk.
+
+  // To keep lookahead limited and the parsing result as reliable as possible (hopefully), we start with the wildcard branch,
+  // and try the simpleNameTest only if it fails. This goes against the order used in the specification!
 
   private val nameTest: P[NameTest] =
-    P(simpleNameTest | wildcard)
+    P(wildcard | simpleNameTest)
 
   private val simpleNameTest: P[SimpleNameTest] =
     P(eqName) map {
@@ -511,7 +524,7 @@ object XPathParser {
   private val literal: P[Literal] =
     P(stringLiteral | numericLiteral)
 
-  // Using the StringLiterals.stringLiteral parser
+  // Using the StringLiterals.stringLiteral parser, etc.
 
   private val stringLiteral: P[StringLiteral] =
     P(DT.stringLiteral)
@@ -536,7 +549,7 @@ object XPathParser {
     P(DT.dot) map (_ => ContextItemExpr)
 
   // See xgc:reserved-function-names
-  // TODO gn:parens
+  // TODO gn:parens. This becomes important once we support comments.
 
   private val functionCall: P[FunctionCall] =
     P(eqName.filter(nm => !ReservedFunctionNames.contains(nm)) ~ argumentList) map {
