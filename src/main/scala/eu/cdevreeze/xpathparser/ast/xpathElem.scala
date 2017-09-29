@@ -177,31 +177,22 @@ final case class CompoundRangeExpr(additiveExpr1: AdditiveExpr, additiveExpr2: A
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(additiveExpr1, additiveExpr2)
 }
 
-sealed trait AdditiveExpr extends XPathElem
+final case class AdditiveExpr(
+    firstExpr: MultiplicativeExpr,
+    operatorExprPairs: immutable.IndexedSeq[(AdditionOp, MultiplicativeExpr)]) extends XPathElem {
 
-final case class SimpleAdditiveExpr(expr: MultiplicativeExpr) extends AdditiveExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: immutable.IndexedSeq[XPathElem] = {
+    firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
+  }
 }
 
-final case class CompoundAdditiveExpr(headExpr: MultiplicativeExpr, op: AdditionOp, tailExpr: AdditiveExpr) extends AdditiveExpr {
+final case class MultiplicativeExpr(
+    firstExpr: UnionExpr,
+    operatorExprPairs: immutable.IndexedSeq[(MultiplicativeOp, UnionExpr)]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
-}
-
-sealed trait MultiplicativeExpr extends XPathElem
-
-final case class SimpleMultiplicativeExpr(expr: UnionExpr) extends MultiplicativeExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
-}
-
-final case class CompoundMultiplicativeExpr(
-    headExpr: UnionExpr,
-    op: MultiplicativeOp,
-    tailExpr: MultiplicativeExpr) extends MultiplicativeExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
+  def children: immutable.IndexedSeq[XPathElem] = {
+    firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
+  }
 }
 
 final case class UnionExpr(intersectExceptExprs: immutable.IndexedSeq[IntersectExceptExpr]) extends XPathElem {
@@ -209,19 +200,13 @@ final case class UnionExpr(intersectExceptExprs: immutable.IndexedSeq[IntersectE
   def children: immutable.IndexedSeq[XPathElem] = intersectExceptExprs
 }
 
-sealed trait IntersectExceptExpr extends XPathElem
+final case class IntersectExceptExpr(
+    firstExpr: InstanceOfExpr,
+    operatorExprPairs: immutable.IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]) extends XPathElem {
 
-final case class SimpleIntersectExceptExpr(expr: InstanceOfExpr) extends IntersectExceptExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
-}
-
-final case class CompoundIntersectExceptExpr(
-    headExpr: InstanceOfExpr,
-    op: IntersectExceptOp,
-    tailExpr: IntersectExceptExpr) extends IntersectExceptExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
+  def children: immutable.IndexedSeq[XPathElem] = {
+    firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
+  }
 }
 
 final case class InstanceOfExpr(treatExpr: TreatExpr, sequenceTypeOption: Option[SequenceType]) extends XPathElem {
@@ -275,16 +260,13 @@ final case class PathExprStartingWithDoubleSlash(relativePathExpr: RelativePathE
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(relativePathExpr)
 }
 
-sealed trait RelativePathExpr extends PathExpr
+final case class RelativePathExpr(
+    firstExpr: StepExpr,
+    operatorExprPairs: immutable.IndexedSeq[(StepOp, StepExpr)]) extends PathExpr {
 
-final case class SimpleRelativePathExpr(stepExpr: StepExpr) extends RelativePathExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(stepExpr)
-}
-
-final case class CompoundRelativePathExpr(headExpr: StepExpr, op: StepOp, tailExpr: RelativePathExpr) extends RelativePathExpr {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(headExpr, op, tailExpr)
+  def children: immutable.IndexedSeq[XPathElem] = {
+    firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
+  }
 }
 
 sealed trait StepExpr extends XPathElem

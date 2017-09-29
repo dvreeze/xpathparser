@@ -133,15 +133,15 @@ object XPathParser {
     }
 
   private val additiveExpr: P[AdditiveExpr] =
-    P(multiplicativeExpr ~ ((DT.plus | DT.minus).! ~/ additiveExpr).?) map {
-      case (expr, None)            => SimpleAdditiveExpr(expr)
-      case (expr, Some(opAndExpr)) => CompoundAdditiveExpr(expr, AdditionOp.parse(opAndExpr._1), opAndExpr._2)
+    P(multiplicativeExpr ~ ((DT.plus | DT.minus).! ~/ multiplicativeExpr).rep) map {
+      case (firstExp, opExpPairs) =>
+        AdditiveExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (AdditionOp.parse(kv._1) -> kv._2)))
     }
 
   private val multiplicativeExpr: P[MultiplicativeExpr] =
-    P(unionExpr ~ ((DT.asterisk | (NDT.divWord | NDT.idivWord | NDT.modWord)).! ~/ multiplicativeExpr).?) map {
-      case (expr, None)            => SimpleMultiplicativeExpr(expr)
-      case (expr, Some(opAndExpr)) => CompoundMultiplicativeExpr(expr, MultiplicativeOp.parse(opAndExpr._1), opAndExpr._2)
+    P(unionExpr ~ ((DT.asterisk | (NDT.divWord | NDT.idivWord | NDT.modWord)).! ~/ unionExpr).rep) map {
+      case (firstExp, opExpPairs) =>
+        MultiplicativeExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (MultiplicativeOp.parse(kv._1) -> kv._2)))
     }
 
   private val unionExpr: P[UnionExpr] =
@@ -150,9 +150,9 @@ object XPathParser {
     }
 
   private val intersectExceptExpr: P[IntersectExceptExpr] =
-    P(instanceOfExpr ~ ((NDT.intersectWord | NDT.exceptWord).! ~/ intersectExceptExpr).?) map {
-      case (expr, None)            => SimpleIntersectExceptExpr(expr)
-      case (expr, Some(opAndExpr)) => CompoundIntersectExceptExpr(expr, IntersectExceptOp.parse(opAndExpr._1), opAndExpr._2)
+    P(instanceOfExpr ~ ((NDT.intersectWord | NDT.exceptWord).! ~/ instanceOfExpr).rep) map {
+      case (firstExp, opExpPairs) =>
+        IntersectExceptExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (IntersectExceptOp.parse(kv._1) -> kv._2)))
     }
 
   private val instanceOfExpr: P[InstanceOfExpr] =
@@ -237,9 +237,9 @@ object XPathParser {
     }
 
   private val relativePathExpr: P[RelativePathExpr] =
-    P(stepExpr ~ ((DT.slash | DT.doubleSlash).! ~/ relativePathExpr).?) map {
-      case (expr, None)            => SimpleRelativePathExpr(expr)
-      case (expr, Some(opAndExpr)) => CompoundRelativePathExpr(expr, StepOp.parse(opAndExpr._1), opAndExpr._2)
+    P(stepExpr ~ ((DT.slash | DT.doubleSlash).! ~/ stepExpr).rep) map {
+      case (firstExp, opExpPairs) =>
+        RelativePathExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (StepOp.parse(kv._1) -> kv._2)))
     }
 
   // The 2 branches of a stepExpr are relatively easy to distinguish. Note that both branches may start with an EQName (or "keyword"), and other than that
