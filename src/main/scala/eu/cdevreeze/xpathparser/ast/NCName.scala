@@ -48,10 +48,13 @@ object NCName {
     !DisallowedNonWhitespaceChars.contains(c) && !java.lang.Character.isWhitespace(c)
   }
 
+  // TODO Look at https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName for allowed and disallowed characters.
+  // For example, an XML parser does not allow an asterisk inside an element name (QName), so why would we?
+
   private val DisallowedNonWhitespaceChars: Set[Char] = {
     // The quote characters, if not disallowed, would confuse an XPath parser when a string literal must be found
     // instead of an NCName.
 
-    Set(':', '@', '$', '%', '&', '/', '+', ',', ';', '(', ')', '[', ']', '{', '}', '<', '>', '\'', '"')
+    Set(':', '@', '$', '%', '&', '/', '+', ',', ';', '(', ')', '[', ']', '{', '}', '<', '>', '\'', '"', '*')
   }
 }
