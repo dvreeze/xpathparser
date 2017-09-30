@@ -51,6 +51,10 @@ object XPathParser {
   import White._
   import fastparse.noApi._
 
+  /**
+   * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. To ignore initial
+   * whitespace, call `xpathExpr.parse(xpathString.trim)` instead.
+   */
   val xpathExpr: P[XPathExpr] =
     P(expr ~ End) map (e => XPathExpr(e))
 

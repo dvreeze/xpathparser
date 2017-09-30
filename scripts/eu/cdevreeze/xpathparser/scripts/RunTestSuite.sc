@@ -33,7 +33,7 @@ def runTests(testInputFile: File): Unit = {
   val testMapping: Map[String, String] = props.asScala.toMap
   
   val rawParsedXPathMapping = testMapping mapValues { exprString =>
-    Try(xpathExpr.parse(exprString))
+    Try(xpathExpr.parse(exprString.trim))
   }
   
   val parseExceptionMapping = rawParsedXPathMapping collect { 
