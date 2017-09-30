@@ -53,7 +53,8 @@ object XPathParser {
 
   /**
    * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. To ignore initial
-   * whitespace, call `xpathExpr.parse(xpathString.trim)` instead.
+   * whitespace, call `xpathExpr.parse(xpathString.trim)` instead. Comments are not supported,
+   * so will lead to parsing failures.
    */
   val xpathExpr: P[XPathExpr] =
     P(expr ~ End) map (e => XPathExpr(e))
