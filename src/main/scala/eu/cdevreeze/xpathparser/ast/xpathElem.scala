@@ -418,7 +418,7 @@ final case class StringLiteral(value: String) extends Literal with LeafElem
 
 sealed trait NumericLiteral extends Literal
 
-final case class IntegerLiteral(value: Int) extends NumericLiteral with LeafElem
+final case class IntegerLiteral(value: BigInt) extends NumericLiteral with LeafElem
 
 final case class DecimalLiteral(value: BigDecimal) extends NumericLiteral with LeafElem
 
@@ -440,7 +440,7 @@ final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) 
 
 sealed trait FunctionItemExpr extends PrimaryExpr
 
-final case class NamedFunctionRef(functionName: EQName, arity: Int) extends FunctionItemExpr with LeafElem
+final case class NamedFunctionRef(functionName: EQName, arity: BigInt) extends FunctionItemExpr with LeafElem
 
 final case class InlineFunctionExpr(
     paramListOption: Option[ParamList],

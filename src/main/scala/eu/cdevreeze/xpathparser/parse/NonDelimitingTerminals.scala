@@ -39,7 +39,7 @@ object NonDelimitingTerminals {
     P(integerLiteral | decimalLiteral | doubleLiteral)
 
   val integerLiteral: P[IntegerLiteral] =
-    P(CharsWhileIn("0123456789").!) filter (v => isIntegerLiteral(v)) map (v => IntegerLiteral(v.toInt))
+    P(CharsWhileIn("0123456789").!) filter (v => isIntegerLiteral(v)) map (v => IntegerLiteral(BigInt(v)))
 
   val decimalLiteral: P[DecimalLiteral] =
     P(CharsWhileIn("0123456789.").!) filter (v => isDecimalLiteral(v)) map (v => DecimalLiteral(BigDecimal(v)))
