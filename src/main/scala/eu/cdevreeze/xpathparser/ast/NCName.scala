@@ -27,34 +27,38 @@ final case class NCName(name: String) {
 
 object NCName {
 
+  /**
+   * Returns true if the given string can start valid non-colon names. This is the same as
+   * saying that the string is a valid non-colon name, so `canBeNCName(s)` is returned.
+   */
   def canBeStartOfNCName(s: String): Boolean = {
+    canBeNCName(s)
+  }
+
+  /**
+   * Returns true if the given string is a valid non-colon name.
+   *
+   * Disclaimer: Names starting with "xml" are not excluded, and names containing non-BMP characters are
+   * not included.
+   */
+  def canBeNCName(s: String): Boolean = {
     s.nonEmpty && canBeStartOfNCName(s.charAt(0)) && s.drop(1).forall(c => canBePartOfNCName(c))
   }
 
-  def canBeNCName(s: String): Boolean = {
-    canBeStartOfNCName(s)
-  }
-
-  // See https://stackoverflow.com/questions/1631396/what-is-an-xsncname-type-and-when-should-it-be-used
+  /**
+   * Returns the same as `Names.canBeStartOfName(c)`, but excluding the colon.
+   */
   def canBeStartOfNCName(c: Char): Boolean = {
     // By disallowing digits and dots as first characters of an NCName, an XPath parser does not confuse
-    // NCNames with numeric literals.
+    // NCNames with numeric literals, for example.
 
-    canBePartOfNCName(c) && !java.lang.Character.isDigit(c) && (c != '.') && (c != '-')
+    (c != ':') && Names.canBeStartOfName(c)
   }
 
-  // See https://stackoverflow.com/questions/1631396/what-is-an-xsncname-type-and-when-should-it-be-used
+  /**
+   * Returns the same as `Names.canBePartOfName(c)`, but excluding the colon.
+   */
   def canBePartOfNCName(c: Char): Boolean = {
-    !DisallowedNonWhitespaceChars.contains(c) && !java.lang.Character.isWhitespace(c)
-  }
-
-  // TODO Look at https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName for allowed and disallowed characters.
-  // For example, an XML parser does not allow an asterisk inside an element name (QName), so why would we?
-
-  private val DisallowedNonWhitespaceChars: Set[Char] = {
-    // The quote characters, if not disallowed, would confuse an XPath parser when a string literal must be found
-    // instead of an NCName.
-
-    Set(':', '@', '$', '%', '&', '/', '+', ',', ';', '(', ')', '[', ']', '{', '}', '<', '>', '\'', '"', '*')
+    (c != ':') && Names.canBePartOfName(c)
   }
 }

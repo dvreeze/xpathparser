@@ -130,6 +130,8 @@ object DelimitingTerminals {
 
     // TODO Make more efficient
 
+    // Note the use of cuts here, which may hinder re-use in XPathParser, unless we switch off cuts where needed.
+
     private val aposStringLiteral: P[StringLiteral] =
       P("'" ~/ (escapeApos | nonEscapedCharInAposStringLiteral).rep.! ~ "'") map { v =>
         // Why do we still need the "unescaping" here?

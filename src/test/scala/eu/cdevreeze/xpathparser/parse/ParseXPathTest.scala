@@ -36,6 +36,7 @@ import eu.cdevreeze.xpathparser.ast.IfExpr
 import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.LetExpr
+import eu.cdevreeze.xpathparser.ast.NamedFunctionRef
 import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.NonAbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.OneOrMoreSequenceType
@@ -58,6 +59,7 @@ import eu.cdevreeze.xpathparser.common.EName
  * <li>https://en.wikibooks.org/wiki/XQuery/XPath</li>
  * <li>https://www.w3.org/TR/xpath-30</li>
  * <li>http://www.nltaxonomie.nl/nt12/kvk/</li>
+ * <li>https://dev.w3.org/2011/QT3-test-suite</li>
  * </ul>
  *
  * @author Chris de Vreeze
@@ -600,6 +602,21 @@ class ParseXPathTest extends FunSuite {
     assertResult(2) {
       val axisStep = parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[AxisStep]).head
       axisStep.predicateList.size
+    }
+  }
+
+  test("testNamedFunctionRef") {
+    // Example from https://dev.w3.org/2011/QT3-test-suite/, test case function-literal-008
+
+    val exprString =
+      """Q{http://www.w3.org/2005/xpath-functions}nilled#1(/root)"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[NamedFunctionRef]).size
     }
   }
 

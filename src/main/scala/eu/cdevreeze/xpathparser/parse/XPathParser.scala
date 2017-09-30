@@ -199,6 +199,7 @@ object XPathParser {
     P(slashOnlyPathExpr | pathExprStartingWithSingleSlash | pathExprStartingWithDoubleSlash | relativePathExpr)
 
   // Lookahead parsers, to determine if the next token can start a relative path expression.
+  // For these lookahead parsers, it is not important to distinguish branch canStartAxisStep from canStartPostfixExpr.
 
   private val canStartRelativePathExpr: P[Unit] =
     P(canStartAxisStep | canStartPostfixExpr)
@@ -335,13 +336,14 @@ object XPathParser {
     P(kindTest | nameTest)
 
   // The 2 branches of a nameTest are relatively easy to distinguish. A simpleNameTest is just an EQName, whereas a wildcard
-  // always contains an asterisk.
+  // always contains an asterisk. Also mind the remarks below.
 
-  // To keep lookahead limited and the parsing result as reliable as possible (hopefully), we start with the wildcard branch,
-  // and try the simpleNameTest only if it fails. This goes against the order used in the specification!
+  // As per the grammar specification, we first try the simpleNameTest branch, and then, if it fails, the wildcard branch.
+  // This way a URI qualified name will be recognized before the "braced URI literal wildcard". Because of the ws:explicit
+  // constraint a prefix wildcard will not be "hidden" by a QName as EQName.
 
   private val nameTest: P[NameTest] =
-    P(wildcard | simpleNameTest)
+    P(simpleNameTest | wildcard)
 
   private val simpleNameTest: P[SimpleNameTest] =
     P(eqName) map {

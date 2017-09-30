@@ -22,6 +22,8 @@ import eu.cdevreeze.xpathparser.ast.EQName
  * EQName parsing support. Note that EQNames are non-delimiting terminal symbols.
  * No whitespace is skipped during parsing of an EQName.
  *
+ * For re-usability without imposing any NoCut calls on using parsers, no cuts have been used.
+ *
  * @author Chris de Vreeze
  */
 object EQNames {
@@ -43,7 +45,7 @@ object EQNames {
     }
 
   val uriQualifiedName: P[EQName.URIQualifiedName] =
-    P("Q{" ~/ CharPred(c => isAllowedUriChar(c)).rep.! ~ "}" ~ NCNames.ncName) map {
+    P("Q{" ~ CharPred(c => isAllowedUriChar(c)).rep.! ~ "}" ~ NCNames.ncName) map {
       case (uri, localPart) =>
         EQName.URIQualifiedName.parse("Q{" + uri + "}" + localPart.name)
     }
