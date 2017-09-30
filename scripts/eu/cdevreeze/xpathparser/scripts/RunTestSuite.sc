@@ -45,11 +45,11 @@ def runTests(testInputFile: File): Unit = {
   }
   
   val parseFailureMapping = parsedXPathMapping collect {
-    case (testName, t @ Parsed.Failure) => (testName -> t)
+    case (testName, t: Parsed.Failure) => (testName -> t)
   }
-  
-  val parseSuccessMapping = parsedXPathMapping collect {
-    case (testName, t @ Parsed.Success(_, _)) => (testName -> t)
+
+  val parseSuccessMapping: Map[String, XPathExpr] = parsedXPathMapping collect {
+    case (testName, t: Parsed.Success[_]) => (testName -> t.get.value.asInstanceOf[XPathExpr])
   }
   
   println()
@@ -57,15 +57,16 @@ def runTests(testInputFile: File): Unit = {
   println()
 
   parseSuccessMapping.toSeq.sortBy(_._1) foreach {
-    case (testName, parseResult) => println(s"Success: $testName")
+    case (testName, parsedXPath) =>
+      println(s"Success: $testName. Number of elements: ${parsedXPath.findAllElemsOrSelf.size}")
   }
-  
+
   println()
   println("Parse failures:")
   println()
 
   parseFailureMapping.toSeq.sortBy(_._1) foreach {
-    case (testName, parseResult) => println(s"Failure: $testName")
+    case (testName, parseResult) => println(s"Failure: $testName. Result: $parseResult")
   }
   
   println()
@@ -73,13 +74,13 @@ def runTests(testInputFile: File): Unit = {
   println()
 
   parseExceptionMapping.toSeq.sortBy(_._1) foreach {
-    case (testName, exceptionResult) => println(s"Fatal error: $testName,. Error: $exceptionResult")
+    case (testName, exceptionResult) => println(s"Fatal error: $testName. Error: $exceptionResult")
   }
 
   println()
   println(s"Number of fatal parse exceptions: ${parseExceptionMapping.size}")
   println(s"Number of parsed expressions: ${parsedXPathMapping.size}")
-  
-  println(s"Number of parse successes: ${parsedXPathMapping.size - parseFailureMapping.size}")
+
+  println(s"Number of parse successes: ${parseSuccessMapping.size}")
   println(s"Number of parse failures (non-fatal): ${parseFailureMapping.size}")
 }

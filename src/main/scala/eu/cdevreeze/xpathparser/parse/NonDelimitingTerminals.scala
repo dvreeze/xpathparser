@@ -39,13 +39,19 @@ object NonDelimitingTerminals {
     P(integerLiteral | decimalLiteral | doubleLiteral)
 
   val integerLiteral: P[IntegerLiteral] =
-    P(CharsWhileIn("0123456789").!) filter (v => isIntegerLiteral(v)) map (v => IntegerLiteral(BigInt(v)))
+    P(CharsWhileIn("0123456789").! ~ !".") filter (v => isIntegerLiteral(v)) map { v =>
+      IntegerLiteral(BigInt(v))
+    }
 
   val decimalLiteral: P[DecimalLiteral] =
-    P(CharsWhileIn("0123456789.").!) filter (v => isDecimalLiteral(v)) map (v => DecimalLiteral(BigDecimal(v)))
+    P(CharsWhileIn("0123456789.").! ~ !CharIn("e", "E")) filter (v => isDecimalLiteral(v)) map { v =>
+      DecimalLiteral(BigDecimal(v))
+    }
 
   val doubleLiteral: P[DoubleLiteral] =
-    P(CharsWhileIn("0123456789.eE+-").!) filter (v => isDoubleLiteral(v)) map (v => DoubleLiteral(v.toDouble))
+    P(CharsWhileIn("0123456789.eE+-").!) filter (v => isDoubleLiteral(v)) map { v =>
+      DoubleLiteral(v.toDouble)
+    }
 
   // NCNames and EQNames
 
