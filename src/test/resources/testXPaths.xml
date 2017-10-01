@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Test XPath expressions that must be successfully parsed</comment>
+<comment>Test XPath expressions that must be successfully parsed. Thanks to W3C for test suite https://dev.w3.org/2011/QT3-test-suite/.</comment>
 <entry key="unabbreviatedSyntax-1">for $h in (/works/employee) return $h/child::empnum</entry>
 <entry key="K-ForExprWithout-17">6 eq (for $foo in 1, $foo in 3 return $foo + $foo)</entry>
 <entry key="K-ForExprWithout-16">8 eq (for $foo in 1, $foo in 3, $moo in 5 return $moo + $foo)</entry>
@@ -49,10 +49,19 @@
 <entry key="Axes031-1">fn:count(//center/descendant::*)</entry>
 <entry key="K-SeqExprCast-211">xs:string(xs:yearMonthDuration(xs:dayTimeDuration("-P31DT3H2M10.001S"))) eq "P0M"</entry>
 <entry key="K-SeqExprCast-210">xs:string(xs:yearMonthDuration(xs:duration("-P3Y0M31DT3H2M10.001S"))) eq "-P3Y"</entry>
+<entry key="appendix-A4-9">-+7</entry>
+<entry key="appendix-A4-8">5 - 10 mod 4</entry>
+<entry key="appendix-A4-7">5 + 10 mod 4</entry>
+<entry key="appendix-A4-6">5 - 10 idiv 4</entry>
 <entry key="CastAs579">xs:base64Binary("0FB7") cast as xs:string</entry>
+<entry key="appendix-A4-5">5 + 10 idiv 4</entry>
 <entry key="CastAs578">xs:base64Binary("01001010") cast as xs:string</entry>
+<entry key="appendix-A4-4">5 - 10 div 2</entry>
 <entry key="CastAs577">xs:base64Binary("0FB7") cast as xs:untypedAtomic</entry>
+<entry key="appendix-A4-3">3 + 10 div 2</entry>
 <entry key="CastAs576">xs:base64Binary("01001010") cast as xs:untypedAtomic</entry>
+<entry key="appendix-A4-2">3 - 5 * 3</entry>
+<entry key="appendix-A4-1">-3 + 5 * 3</entry>
 <entry key="Axes020-1">fn:count(//center/self::*)</entry>
 <entry key="CastAs572">xs:boolean("false") cast as xs:boolean</entry>
 <entry key="CastAs571">xs:boolean("true") cast as xs:boolean</entry>
@@ -421,6 +430,7 @@
 <entry key="K-SeqExprCast-1237">not(xs:boolean("true") castable as xs:time)</entry>
 <entry key="K-SeqExprCast-1235">not(xs:boolean("true") castable as xs:dateTime)</entry>
 <entry key="K-SeqExprCast-1233">not(xs:boolean("true") castable as xs:dayTimeDuration)</entry>
+<entry key="K-Literals-47a">"t" eq "&amp;#x74;"</entry>
 <entry key="K-SeqExprCast-1231">not(xs:boolean("true") castable as xs:yearMonthDuration)</entry>
 <entry key="Axes015-1">fn:count(//center/parent::near-north)</entry>
 <entry key="CastableAs569">xs:boolean("true") castable as xs:gDay</entry>
@@ -641,6 +651,7 @@
 <entry key="K-SeqExprCast-182">xs:string(xs:dayTimeDuration("-P5DT0H0M0.000S")) eq "-P5D"</entry>
 <entry key="K-SeqExprCast-181">xs:string(xs:dayTimeDuration("-PT8H23M0S")) eq "-PT8H23M"</entry>
 <entry key="K-SeqExprCast-180">xs:string(xs:dayTimeDuration("-P0010DT0010H0010M0010S")) eq "-P10DT10H10M10S"</entry>
+<entry key="errors-and-optimization-1">if (true()) then 1 else error(QName('http://www.example.com/errors', 'err:oops'), "Oops, this error should not be raised!")</entry>
 <entry key="unabbreviatedSyntax-29">for $h in (/works) return $h/child::employee[attribute::gender eq 'female'][fn:position() = 5]</entry>
 <entry key="unabbreviatedSyntax-28">for $h in (/works) return $h/child::employee[attribute::name eq "Jane Doe 11"]</entry>
 <entry key="unabbreviatedSyntax-27">/child::works/child::employee[fn:position() = 5]/child::hours[fn:position() = 2]</entry>
@@ -697,6 +708,7 @@
 <entry key="K-SeqExprCast-156">xs:string(xs:duration("P0Y0M0DT00H00M00.000S")) eq "PT0S"</entry>
 <entry key="K-SeqExprCast-155">xs:string(xs:duration("-P0010DT0010H0010M0010S")) eq "-P10DT10H10M10S"</entry>
 <entry key="K-SeqExprCast-154">xs:string(xs:duration("P0010Y0010M0010DT0010H0010M0010S")) eq "P10Y10M10DT10H10M10S"</entry>
+<entry key="surrogates16a">string-to-codepoints(substring("&#1113088;A", 2, 1))</entry>
 <entry key="K-SeqExprCast-143">xs:hexBinary(remove(("3B", 1.1), 2) treat as xs:string)</entry>
 <entry key="K-SeqExprCast-142">xs:string(xs:base64Binary("")) eq ""</entry>
 <entry key="K-SeqExprCast-141">xs:string(xs:hexBinary(xs:base64Binary("aaa a"))) eq "69A69A"</entry>
@@ -707,6 +719,7 @@
 <entry key="K-SeqExprCast-136">xs:string(xs:base64Binary(xs:hexBinary("f0"))) eq "8A=="</entry>
 <entry key="K-SeqExprCast-135">xs:string(xs:base64Binary(xs:hexBinary("F43D1234ce8f"))) eq "9D0SNM6P"</entry>
 <entry key="K-SeqExprCast-134">xs:string(xs:base64Binary(xs:hexBinary("69A69A"))) eq "aaaa"</entry>
+<entry key="surrogates15a">replace("abc&#119127;def", "[^a-f]", "###")</entry>
 <entry key="K-SeqExprCast-133">xs:string(xs:base64Binary(xs:hexBinary("3B"))) eq "Ow=="</entry>
 <entry key="K-SeqExprCast-132">xs:string(xs:base64Binary(xs:hexBinary("12"))) eq "Eg=="</entry>
 <entry key="K-SeqExprCast-131">xs:string(xs:base64Binary(xs:hexBinary("0f3c"))) eq "Dzw="</entry>
@@ -722,6 +735,7 @@
 <entry key="K-SeqExprCast-128">xs:string(xs:base64Binary("frfhforlksid7453")) eq "frfhforlksid7453"</entry>
 <entry key="K-SeqExprCast-127">xs:string(xs:base64Binary("aaa a")) eq "aaaa"</entry>
 <entry key="K-SeqExprCast-126">xs:string(xs:base64Binary("0w==")) eq "0w=="</entry>
+<entry key="surrogates14a">replace("abc&#119130;def", "[&#119120;-&#119135;]", "&#119135;")</entry>
 <entry key="Axes030-2">fn:count(//center/text()/self::node())</entry>
 <entry key="Axes030-1">fn:count(//center/text()/self::node())</entry>
 <entry key="LetExpr015">let $x := (0,0.1e-1,2.0,'a',"cat",'',true()) return $x</entry>
@@ -731,6 +745,7 @@
 <entry key="CastAs482">xs:gMonthDay("--05-31") cast as xs:string</entry>
 <entry key="CastAs481">xs:gMonthDay("--05-31") cast as xs:untypedAtomic</entry>
 <entry key="K-SeqExprCast-114">xs:string(xs:hexBinary("")) eq ""</entry>
+<entry key="surrogates13a">matches("abc&#119127;def", "abc.def")</entry>
 <entry key="K-SeqExprCast-113">xs:string(xs:hexBinary("3a")) eq "3A"</entry>
 <entry key="K-SeqExprCast-112">xs:string(xs:hexBinary("0b")) eq "0B"</entry>
 <entry key="K-SeqExprCast-111">xs:string(xs:hexBinary("0c")) eq "0C"</entry>
@@ -751,6 +766,7 @@
 <entry key="K-SeqExprCast-106">xs:string(xs:hexBinary("c0")) eq "C0"</entry>
 <entry key="K-SeqExprCast-105">xs:string(xs:hexBinary("a4")) eq "A4"</entry>
 <entry key="K-SeqExprCast-104">xs:string(xs:hexBinary("a0")) eq "A0"</entry>
+<entry key="surrogates12a">matches("abc&#119127;def", "abc[&#119126;-&#119128;]def")</entry>
 <entry key="K-SeqExprCast-103">xs:string(xs:hexBinary("0a")) eq "0A"</entry>
 <entry key="K-SeqExprCast-102">xs:string(xs:hexBinary("aa")) eq "AA"</entry>
 <entry key="K-SeqExprCast-101">count(xs:hexBinary(xs:hexBinary("03"))) eq 1</entry>
@@ -785,6 +801,7 @@
 <entry key="function-literal-095">exists(Q{http://www.w3.org/2005/xpath-functions}compare#3)</entry>
 <entry key="function-literal-094">Q{http://www.w3.org/2005/xpath-functions}compare#2('string', 'string')</entry>
 <entry key="function-literal-093">exists(Q{http://www.w3.org/2005/xpath-functions}compare#2)</entry>
+<entry key="surrogates11a">substring-after("abc&#119126;def", "&#119126;")</entry>
 <entry key="function-literal-092">Q{http://www.w3.org/2005/xpath-functions}string-to-codepoints#1('A')</entry>
 <entry key="function-literal-091">exists(Q{http://www.w3.org/2005/xpath-functions}string-to-codepoints#1)</entry>
 <entry key="casthc42">fn:true() cast as xs:boolean</entry>
@@ -811,6 +828,7 @@
 <entry key="casthc35">xs:time("12:00:00") cast as xs:string</entry>
 <entry key="function-literal-083">exists(Q{http://www.w3.org/2005/xpath-functions/math}acos#1)</entry>
 <entry key="casthc34">xs:date("1999-05-31") cast as xs:date</entry>
+<entry key="surrogates10a">substring-before("abc&#119126;def", "f")</entry>
 <entry key="function-literal-082">Q{http://www.w3.org/2005/xpath-functions/math}asin#1(1e0)</entry>
 <entry key="casthc33">xs:date("1999-05-31") cast as xs:dateTime</entry>
 <entry key="function-literal-081">exists(Q{http://www.w3.org/2005/xpath-functions/math}asin#1)</entry>
@@ -1370,6 +1388,7 @@
 <entry key="K2-SeqExprInstanceOf-59">xs:nonNegativeInteger("1") instance of xs:negativeInteger</entry>
 <entry key="K2-CondExpr-7">if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else if (1) then 1 else ()</entry>
 <entry key="K2-SeqExprInstanceOf-58">xs:nonNegativeInteger("1") instance of xs:nonPositiveInteger</entry>
+<entry key="K-Literals-31a">"a string &amp;;"</entry>
 <entry key="K2-SeqExprInstanceOf-57">xs:positiveInteger("1") instance of xs:nonNegativeInteger</entry>
 <entry key="K2-SeqExprInstanceOf-56">xs:unsignedByte("0") instance of xs:unsignedShort</entry>
 <entry key="K2-CondExpr-4">if(//(employee[location = "Denver"]/ancestor::*)) then 1 else 3</entry>
@@ -1639,6 +1658,7 @@ true()(::)</entry>
 <entry key="cbcl-castable-unsignedByte-003">"256" castable as xs:unsignedByte</entry>
 <entry key="cbcl-castable-unsignedByte-002">-1 castable as xs:unsignedByte</entry>
 <entry key="cbcl-castable-unsignedByte-001">256 castable as xs:unsignedByte</entry>
+<entry key="surrogates09a">substring-before("abc&#119126;def", "&#119126;")</entry>
 <entry key="Axes073-2">fn:count(//self::node())</entry>
 <entry key="Axes073-1">fn:count(//self::node())</entry>
 <entry key="XQueryComment014">(: Name: XQueryComment014 :)
@@ -1681,6 +1701,7 @@ then (: this is the then case :) ( true() )
 else (: this is the else case :) ( false() )
 
 </entry>
+<entry key="surrogates08a">codepoints-to-string((97, 98, 99, 119126, 100, 101, 102))</entry>
 <entry key="XQueryComment009">(: Name: XQueryComment009 :)
 (: Description: Comments inside a conditional expression :)
 
@@ -1702,15 +1723,20 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="Axes062-2">fn:count(//child::*)</entry>
 <entry key="Axes062-1">fn:count(//child::*)</entry>
 <entry key="cbcl-cast-nonPositiveInteger-003">xs:nonPositiveInteger("+00")</entry>
+<entry key="surrogates07a">string-to-codepoints("abc&#119126;def")</entry>
 <entry key="lessthaneqonanyuri-1">(xs:anyURI("http://www.example/com")) &lt;= (xs:anyURI("http://www.example/com"))</entry>
 <entry key="Axes009-3">fn:count(//west/attribute::node())</entry>
 <entry key="Axes009-2">fn:count(//west/attribute::node())</entry>
 <entry key="Axes009-1">fn:count(//west/attribute::node())</entry>
+<entry key="surrogates06a">translate("abc&#119126;def", "def", "&#119126;EF")</entry>
+<entry key="surrogates05a">translate("abc&#119126;def", "&#119126;de", "#DE")</entry>
 <entry key="CastAs394">xs:time("13:20:00Z") cast as xs:time</entry>
 <entry key="CastAs393">xs:time("13:20:02.123") cast as xs:time</entry>
 <entry key="CastAs392">xs:time("13:20:00-05:00") cast as xs:time</entry>
+<entry key="surrogates04a">translate("abc&#119126;def", "&#119126;", "#")</entry>
 <entry key="CastAs383">xs:time("13:20:00-05:00") cast as xs:string</entry>
 <entry key="CastAs382">xs:time("13:20:00-05:00") cast as xs:untypedAtomic</entry>
+<entry key="surrogates03a">substring("abc&#119126;def", 4)</entry>
 <entry key="K-FunctionCallExpr-17a">matches(format-time(current-time(), "[H01]:[m01]", (), (), ()), "..:..")</entry>
 <entry key="cbcl-castable-unsignedShort-005">"-00" castable as xs:unsignedShort</entry>
 <entry key="CastAs377">xs:dateTime("-1999-05-31T13:20:00+14:00") cast as xs:gMonth</entry>
@@ -1725,6 +1751,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastAs372">xs:dateTime("1999-05-31T13:20:00") cast as xs:gMonthDay</entry>
 <entry key="CastAs371">xs:dateTime("-1999-05-31T13:20:00+14:00") cast as xs:gYear</entry>
 <entry key="CastAs370">xs:dateTime("1999-05-31T13:20:00") cast as xs:gYear</entry>
+<entry key="surrogates02a">substring("abc&#119126;def", 5)</entry>
 <entry key="K-FunctionCallExpr-16a">matches(format-time(current-time(), "[H01]:[m01]"), "[0-2][0-9]:[0-5][0-9]")</entry>
 <entry key="CastAs369">xs:dateTime("-1999-05-31T13:20:00+14:00") cast as xs:gYearMonth</entry>
 <entry key="CastAs368">xs:dateTime("1999-05-31T13:20:00") cast as xs:gYearMonth</entry>
@@ -1733,6 +1760,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastAs365">xs:dateTime("-1999-05-31T13:20:00+14:00") cast as xs:time</entry>
 <entry key="CastAs364">xs:dateTime("1999-05-31T13:20:00") cast as xs:time</entry>
 <entry key="CastAs363">xs:dateTime("1999-05-31T13:20:00") cast as xs:dateTime</entry>
+<entry key="surrogates01a">string-length("abc&#119126;def")</entry>
 <entry key="K-FunctionCallExpr-15a">format-number(3, "0000")</entry>
 <entry key="CastAs355">xs:dateTime("-1999-05-31T13:20:00+14:00") cast as xs:string</entry>
 <entry key="CastAs354">xs:dateTime("1999-05-31T13:20:00") cast as xs:string</entry>
@@ -1991,6 +2019,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastableAs367">xs:dateTime("-1999-05-31T13:20:00+14:00") castable as xs:date</entry>
 <entry key="CastableAs366">xs:dateTime("1999-05-31T13:20:00") castable as xs:date</entry>
 <entry key="CastableAs365">xs:dateTime("-1999-05-31T13:20:00+14:00") castable as xs:time</entry>
+<entry key="PathExpr-9p">fn:count(.[/&lt;a div 3])</entry>
 <entry key="CastableAs364">xs:dateTime("1999-05-31T13:20:00") castable as xs:time</entry>
 <entry key="CastableAs363">xs:dateTime("1999-05-31T13:20:00") castable as xs:dateTime</entry>
 <entry key="CastableAs362">xs:dateTime("1999-05-31T13:20:00") castable as xs:dayTimeDuration</entry>
@@ -2026,6 +2055,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastableAs357">xs:dateTime("2000-01-16T00:00:00Z") castable as xs:float</entry>
 <entry key="CastableAs356">xs:dateTime("1999-05-31T13:20:00") castable as xs:float</entry>
 <entry key="CastableAs355">xs:dateTime("-1999-05-31T13:20:00+14:00") castable as xs:string</entry>
+<entry key="PathExpr-8p">fn:count(.[/ &lt; /b])</entry>
 <entry key="CastableAs354">xs:dateTime("1999-05-31T13:20:00") castable as xs:string</entry>
 <entry key="CastableAs353">xs:dateTime("-1999-05-31T13:20:00+14:00") castable as xs:untypedAtomic</entry>
 <entry key="CastableAs352">xs:dateTime("1999-05-31T13:20:00") castable as xs:untypedAtomic</entry>
@@ -2047,6 +2077,10 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastableAs349">xs:dayTimeDuration("P3DT10H30M") castable as xs:base64Binary</entry>
 <entry key="CastableAs348">xs:dayTimeDuration("P3DT10H30M") castable as xs:boolean</entry>
 <entry key="sequence-type-9">(2) castable as xs:integer?</entry>
+<entry key="cbcl-cast-nmtoken-001b">for $string in ("&#13;
+	 foobar 
+&#13;	" cast as xs:NMTOKEN) return not(contains($string, '	') or contains($string, '
+') or contains($string, '&#13;') or string-length($string) ne 6)</entry>
 <entry key="CastableAs347">xs:dayTimeDuration("P3DT10H30M") castable as xs:gMonth</entry>
 <entry key="sequence-type-8">(1,2) instance of xs:integer+</entry>
 <entry key="FunctionCall-011">codepoints-to-string(xs:NMTOKENS('48 49 50 51')!xs:untypedAtomic(.))</entry>
@@ -2055,6 +2089,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="FunctionCall-010">function($in as xs:decimal*) as xs:decimal {sum($in, 0.0)}(xs:NMTOKENS('1 1.2 1.3 1.4')!xs:untypedAtomic(.))</entry>
 <entry key="CastableAs345">xs:dayTimeDuration("P3DT10H30M") castable as xs:gMonthDay</entry>
 <entry key="sequence-type-6">(1) instance of xs:integer?</entry>
+<entry key="PathExpr-7p">fn:count(.[/ &lt; a])</entry>
 <entry key="CastableAs344">xs:dayTimeDuration("P3DT10H30M") castable as xs:gYear</entry>
 <entry key="sequence-type-5">("ab","cde","fgh") instance of xs:integer*</entry>
 <entry key="CastableAs343">xs:dayTimeDuration("P3DT10H30M") castable as xs:gYearMonth</entry>
@@ -2089,6 +2124,7 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="CastableAs327">xs:dayTimeDuration("P3DT10H30M") castable as xs:string</entry>
 <entry key="CastableAs326">xs:dayTimeDuration("-PT100M") castable as xs:untypedAtomic</entry>
 <entry key="CastableAs325">xs:dayTimeDuration("P3DT10H30M") castable as xs:untypedAtomic</entry>
+<entry key="PathExpr-5p">fn:count(.[/ &lt; 5])</entry>
 <entry key="CastableAs324">xs:yearMonthDuration("P1Y2M") castable as xs:anyURI</entry>
 <entry key="CastableAs323">xs:yearMonthDuration("P1Y2M") castable as xs:hexBinary</entry>
 <entry key="CastableAs322">xs:yearMonthDuration("P1Y2M") castable as xs:base64Binary</entry>
@@ -2124,6 +2160,8 @@ if (:test (: yada (: neato :) :) :) (/fs:MyComputer)
 <entry key="generalexpression425">(50000) &gt; ($works/works/employee[1]/hours[1],$staff/staff/employee[6]/grade[1])</entry>
 <entry key="generalexpression424">(50000) &gt; (/works/employee[1]/hours[1],/works/employee[6]/hours[1])</entry>
 <entry key="generalexpression423">(50000) &gt; (/works/employee[1]/hours[1])</entry>
+<entry key="line-ending-P002">deep-equal(string-to-codepoints('&#13;
+'), (13, 10))</entry>
 <entry key="function-literal-528">Q{http://www.w3.org/2001/XMLSchema}ENTITIES#1('ENTITY1 ENTITY2 ENTITY3')</entry>
 <entry key="function-literal-527">exists(Q{http://www.w3.org/2001/XMLSchema}ENTITIES#1)</entry>
 <entry key="function-literal-526">Q{http://www.w3.org/2001/XMLSchema}NMTOKENS#1('NMTOKEN1 NMTOKEN2 NMTOKEN3')</entry>
@@ -2840,11 +2878,13 @@ string')</entry>
 <entry key="cbcl-instance-of-001">
         for $x in (xs:integer(1), xs:decimal(1)) return (((($x + 1) * 2) - 1) instance of xs:integer)
       </entry>
+<entry key="Literals061a">"&amp;#8364;"</entry>
 <entry key="CastAs199">xs:double("1e5") cast as xs:untypedAtomic</entry>
 <entry key="CastAs195">xs:float("NaN") cast as xs:boolean</entry>
 <entry key="CastAs194">xs:float("-INF") cast as xs:boolean</entry>
 <entry key="CastAs193">xs:float("1e5") cast as xs:boolean</entry>
 <entry key="CastAs192">xs:float("-0.0E0") cast as xs:boolean</entry>
+<entry key="Literals060a">"&amp;gt;"</entry>
 <entry key="cbcl-castable-dayTimeDuration-002">"-P11768614336404564651D" castable as xs:duration</entry>
 <entry key="cbcl-castable-dayTimeDuration-001">"P11768614336404564651D" castable as xs:dayTimeDuration</entry>
 <entry key="eqname-018">(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{}*/string()</entry>
@@ -2867,6 +2907,9 @@ string')</entry>
 <entry key="CastAs171">xs:float("INF") cast as xs:float</entry>
 <entry key="CastAs170">xs:float("-1.75e-3") cast as xs:float</entry>
 <entry key="ancestor-20">fn:deep-equal(/works/employee[12]/overtime/ancestor::works,/works/employee[12]/overtime/ancestor::works)</entry>
+<entry key="cbcl-castable-nmtoken-002b">"&#13;
+	 foobar 
+&#13;	" castable as xs:NMTOKEN</entry>
 <entry key="CastAs168">xs:float("NaN") cast as xs:string</entry>
 <entry key="CastAs167">xs:float("-0.0E0") cast as xs:string</entry>
 <entry key="CastAs166">xs:float("-INF") cast as xs:untypedAtomic</entry>
@@ -3317,18 +3360,25 @@ string')</entry>
 <entry key="CastableAs146">xs:string("---31Z") castable as xs:gDay</entry>
 <entry key="CastableAs145">xs:string("---03-05:00") castable as xs:gDay</entry>
 <entry key="CastableAs144">xs:string("---31") castable as xs:gDay</entry>
+<entry key="Axes126">/*/*/*/namespace::*[not(name())]</entry>
 <entry key="K-SeqExprCast-59">xs:untypedAtomic(xs:integer(3)) eq '3'</entry>
 <entry key="CastableAs143">xs:string("true") castable as xs:gMonthDay</entry>
+<entry key="Axes125">/*/*/namespace::*[not(name())]</entry>
 <entry key="K-SeqExprCast-58">xs:untypedAtomic(xs:string(3)) eq '3'</entry>
 <entry key="CastableAs142">xs:string("--05-31Z") castable as xs:gMonthDay</entry>
+<entry key="Axes124">/*/namespace::*[not(name())]</entry>
 <entry key="K-SeqExprCast-57">xs:untypedAtomic(xs:double(3)) eq '3'</entry>
 <entry key="CastableAs141">xs:string("--05-31+14:00") castable as xs:gMonthDay</entry>
+<entry key="Axes123">/*/namespace::xlink is /*/namespace::*[. = 'http://www.w3.org/1999/xlink']</entry>
 <entry key="K-SeqExprCast-56">xs:untypedAtomic(xs:anyURI('example.com/')) eq 'example.com/'</entry>
 <entry key="generalexpression269">(/works/employee[1]/hours[1]) &lt; 10000</entry>
 <entry key="CastableAs140">xs:string("--05-31") castable as xs:gMonthDay</entry>
+<entry key="Axes122">/*/namespace::xlink is /*/*[1]/namespace::xlink</entry>
 <entry key="K-SeqExprCast-55">(xs:QName("fn:local-name") cast as xs:untypedAtomic) eq xs:untypedAtomic("fn:local-name")</entry>
 <entry key="generalexpression268">(/works/employee[1]/hours[1]) &lt; ()</entry>
+<entry key="Axes121">string(/*/namespace::xlink)</entry>
 <entry key="K-SeqExprCast-54">(xs:QName("local-name") cast as xs:untypedAtomic) eq xs:untypedAtomic("local-name")</entry>
+<entry key="Axes120">/*/namespace::*/name()</entry>
 <entry key="K-SeqExprCast-53">true() cast as xs:untypedAtomic instance of xs:untypedAtomic</entry>
 <entry key="K-SeqExprCast-52">false() cast as xs:untypedAtomic instance of xs:untypedAtomic</entry>
 <entry key="K-SeqExprCast-51">true() cast as xs:untypedAtomic eq xs:untypedAtomic("true")</entry>
@@ -3355,8 +3405,10 @@ string')</entry>
 <entry key="CastableAs138">xs:string("1999Z") castable as xs:gYear</entry>
 <entry key="function-literal-361">exists(Q{http://www.w3.org/2005/xpath-functions}generate-id#0)</entry>
 <entry key="CastableAs137">xs:string("-0012-05:00") castable as xs:gYear</entry>
+<entry key="Axes119">/*/namespace::*/..</entry>
 <entry key="function-literal-360">Q{http://www.w3.org/2005/xpath-functions}idref#2(('id1', 'id2'), /)</entry>
 <entry key="CastableAs136">xs:string("1999") castable as xs:gYear</entry>
+<entry key="Axes118">/*/namespace::*</entry>
 <entry key="CastableAs135">xs:string("true") castable as xs:gYearMonth</entry>
 <entry key="CastableAs134">xs:string("1999-05Z") castable as xs:gYearMonth</entry>
 <entry key="Axes116">/*/namespace::*[self::namespace-node()]</entry>
@@ -3546,6 +3598,7 @@ string')</entry>
 <entry key="function-literal-325">exists(Q{http://www.w3.org/2005/xpath-functions}deep-equal#3)</entry>
 <entry key="function-literal-324">Q{http://www.w3.org/2005/xpath-functions}deep-equal#2((1, true()), (1, true()))</entry>
 <entry key="function-literal-323">exists(Q{http://www.w3.org/2005/xpath-functions}deep-equal#2)</entry>
+<entry key="Literals059a">"&amp;lt;"</entry>
 <entry key="function-literal-322">Q{http://www.w3.org/2005/xpath-functions}index-of#3((1, 'string'), 'string', 'http://www.w3.org/2005/xpath-functions/collation/codepoint')</entry>
 <entry key="function-literal-321">exists(Q{http://www.w3.org/2005/xpath-functions}index-of#3)</entry>
 <entry key="function-literal-320">Q{http://www.w3.org/2005/xpath-functions}index-of#2((1, 'string'), 'string')</entry>
@@ -3574,6 +3627,7 @@ string')</entry>
 <entry key="function-literal-315">exists(Q{http://www.w3.org/2005/xpath-functions}distinct-values#1)</entry>
 <entry key="function-literal-314">Q{http://www.w3.org/2005/xpath-functions}unordered#1(1)</entry>
 <entry key="function-literal-313">exists(Q{http://www.w3.org/2005/xpath-functions}unordered#1)</entry>
+<entry key="Literals058a">"&amp;apos;"</entry>
 <entry key="function-literal-312">Q{http://www.w3.org/2005/xpath-functions}subsequence#3((1, true()), 1e0, 1e0)</entry>
 <entry key="function-literal-311">exists(Q{http://www.w3.org/2005/xpath-functions}subsequence#3)</entry>
 <entry key="function-literal-310">Q{http://www.w3.org/2005/xpath-functions}subsequence#2((1, true()), 2e0)</entry>
@@ -3605,6 +3659,7 @@ string')</entry>
 <entry key="K-SeqExprCast-1462">not(xs:QName("ncname") castable as xs:hexBinary)</entry>
 <entry key="function-literal-304">Q{http://www.w3.org/2005/xpath-functions}insert-before#3((1, 2, 3), 2, ('a', 'b', 'c'))</entry>
 <entry key="function-literal-303">exists(Q{http://www.w3.org/2005/xpath-functions}insert-before#3)</entry>
+<entry key="Literals057a">"&amp;quot;"</entry>
 <entry key="K-SeqExprCast-1460">not(xs:QName("ncname") castable as xs:base64Binary)</entry>
 <entry key="function-literal-302">Q{http://www.w3.org/2005/xpath-functions}tail#1((1, true()))</entry>
 <entry key="function-literal-301">exists(Q{http://www.w3.org/2005/xpath-functions}tail#1)</entry>
@@ -3639,6 +3694,7 @@ string')</entry>
 <entry key="K-SeqExprCast-1452">not(xs:QName("ncname") castable as xs:gMonthDay)</entry>
 <entry key="cbcl-castable-nonNegativeInteger-003">"-00" castable as xs:nonNegativeInteger</entry>
 <entry key="cbcl-castable-nonNegativeInteger-002">"-1" castable as xs:nonNegativeInteger</entry>
+<entry key="Literals056a">"&amp;amp;"</entry>
 <entry key="cbcl-castable-nonNegativeInteger-001">-1 castable as xs:nonNegativeInteger</entry>
 <entry key="K-SeqExprCast-1450">not(xs:QName("ncname") castable as xs:gYear)</entry>
 <entry key="Axes081-4">fn:count(//center//attribute::center-attr-2)</entry>
@@ -3837,6 +3893,7 @@ string')</entry>
 <entry key="K-SeqExprCast-393">xs:gMonth(xs:date("2002-11-23-00:00")) eq xs:gMonth("--11Z")</entry>
 <entry key="cast-within-14">let $value := xs:long(10.0) return $value cast as xs:nonNegativeInteger</entry>
 <entry key="K-SeqExprCast-392">xs:gYearMonth(xs:date("2002-11-23-13:37")) eq xs:gYearMonth("2002-11-13:37")</entry>
+<entry key="surrogates08">codepoints-to-string((97, 98, 99, 119126, 100, 101, 102))</entry>
 <entry key="cast-within-13">let $value := xs:long(10.0) return $value cast as xs:integer</entry>
 <entry key="K-SeqExprCast-391">xs:gYearMonth(xs:date("2002-11-23Z")) eq xs:gYearMonth("2002-11Z")</entry>
 <entry key="cast-within-12">let $value := xs:integer(10.0) return $value cast as xs:unsignedByte</entry>
@@ -4330,6 +4387,14 @@ line2"</entry>
 <entry key="generalexpression117">10000 != (/works/employee[1]/hours[1],/works/employee[6]/hours[1])</entry>
 <entry key="generalexpression116">10000 != (/works/employee[1]/hours[1])</entry>
 <entry key="generalexpression112">10000 != (10000,50000)</entry>
+<entry key="cbcl-cast-token-001b">
+        for $string in ("&#13; foo 	 bar 
+" cast as xs:token) 
+        return not(contains($string, '	') or 
+                   contains($string, '
+') or 
+                   contains($string, '&#13;') or 
+                   string-length($string) ne 7)</entry>
 <entry key="generalexpression111">10000 != (50000)</entry>
 <entry key="generalexpression110">10000 != ()</entry>
 <entry key="K-SeqExprCast-1379">not(xs:anyURI("http://www.example.com/an/arbitrary/URI.ext") castable as xs:double)</entry>
@@ -4696,6 +4761,14 @@ line2"</entry>
 <entry key="K2-SeqExprCast-23">xs:unsignedInt("4294967295")</entry>
 <entry key="K2-SeqExprCast-21">xs:nonNegativeInteger("999999999999999999")</entry>
 <entry key="K2-SeqExprCast-20">xs:byte("127")</entry>
+<entry key="cbcl-cast-normalizedString-001b">
+        for $string in ("&#13; foo 	 bar 
+" cast as xs:normalizedString)
+        return not(contains($string, '	') or 
+                   contains($string, '
+') or 
+                   contains($string, '&#13;') or 
+                   string-length($string) ne 13)</entry>
 <entry key="cbcl-castable-nonPositiveInteger-003">"+00" castable as xs:nonPositiveInteger</entry>
 <entry key="cbcl-castable-nonPositiveInteger-002">"1" castable as xs:nonPositiveInteger</entry>
 <entry key="cbcl-castable-nonPositiveInteger-001">1 castable as xs:nonPositiveInteger</entry>

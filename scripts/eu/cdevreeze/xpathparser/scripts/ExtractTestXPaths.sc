@@ -27,6 +27,8 @@ println("Usage: createTestXPathPropertyFile(inputDir, outputFile)")
 
 val ns = "http://www.w3.org/2010/09/qt-fots-catalog"
 
+val dependencyPrefixes = Set("XP10+", "XP20+", "XP30+", "XP30")
+
 def accumulateTestXPaths(doc: simple.Document, props: Properties): Unit = {
   require(doc.documentElement.localName == "test-set")
   
@@ -34,12 +36,13 @@ def accumulateTestXPaths(doc: simple.Document, props: Properties): Unit = {
   
   val dependencyElemOption = doc.documentElement.findChildElem(_.localName == "dependency")
   
-  val skipTests = dependencyElemOption.exists(!_.attribute(EName("value")).contains("XP30"))
+  val skipTests =
+    dependencyElemOption.exists(e => !dependencyPrefixes.exists(pref => e.attribute(EName("value")).contains(pref)))
   
   if (!skipTests) {
     val filteredTestcaseElems =
       testcaseElems filter { elm =>
-        elm.findChildElem(_.localName == "dependency").forall(_.attribute(EName("value")).contains("XP30")) &&
+        elm.findChildElem(_.localName == "dependency").forall(e => dependencyPrefixes.exists(pref => e.attribute(EName("value")).contains(pref))) &&
           elm.findElem(_.localName == "error").isEmpty
       }
       
@@ -63,8 +66,12 @@ def createTestXPathPropertyFile(inputDir: File, outputFile: File): Unit = {
     catalogDoc.documentElement.resolvedName == EName(ns, "catalog"),
     s"Not a catalog with the expected root element: $catalogFile")
     
+  val testdirPrefixes = Set("prod-", "misc-", "app_")
+
   val testElems =
-    catalogDoc.documentElement.filterChildElems(e => e.resolvedName == EName(ns, "test-set") && e.attribute(EName("name")).startsWith("prod-"))
+    catalogDoc.documentElement.filterChildElems(e =>
+      e.resolvedName == EName(ns, "test-set") &&
+        testdirPrefixes.exists(pref => e.attribute(EName("name")).startsWith(pref)))
     
   val testFiles = testElems.map(e => new File(inputDir, e.attribute(EName("file"))))
     
@@ -74,5 +81,7 @@ def createTestXPathPropertyFile(inputDir: File, outputFile: File): Unit = {
   
   testDocs.foreach(doc => accumulateTestXPaths(doc, props))
   
-  props.storeToXML(new FileOutputStream(outputFile), "Test XPath expressions that must be successfully parsed")
+  props.storeToXML(
+    new FileOutputStream(outputFile),
+    "Test XPath expressions that must be successfully parsed. Thanks to W3C for test suite https://dev.w3.org/2011/QT3-test-suite/.")
 }
