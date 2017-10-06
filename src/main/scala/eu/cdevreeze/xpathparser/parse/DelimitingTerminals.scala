@@ -52,7 +52,11 @@ object DelimitingTerminals {
 
   val closeParenthesis: P[Unit] = P(")")
 
-  val asterisk: P[Unit] = P("*")
+  // Asterisk and asterisk-colon
+
+  val asterisk: P[Unit] = P("*" ~ !":")
+
+  val asteriskColon: P[Unit] = P("*:")
 
   val plus: P[Unit] = P("+")
 
@@ -72,11 +76,13 @@ object DelimitingTerminals {
 
   val doubleSlash: P[Unit] = P("//")
 
-  // Single and double colons and assignment symbol
+  // Single and double colons, colon-asterisk and assignment symbol
 
-  val colon: P[Unit] = P(":" ~ !(":" | "="))
+  val colon: P[Unit] = P(":" ~ !(":" | "*" | "="))
 
   val doubleColon: P[Unit] = P("::")
+
+  val colonAsterisk: P[Unit] = P(":*")
 
   val assignmentSymbol: P[Unit] = P(":=")
 
@@ -96,7 +102,11 @@ object DelimitingTerminals {
 
   val follows: P[Unit] = P(">>")
 
-  val equals: P[Unit] = P("=")
+  // Symbols starting with the equals character
+
+  val equals: P[Unit] = P("=" ~ !">")
+
+  val doubleArrow: P[Unit] = P("=>")
 
   val questionMark: P[Unit] = P("?")
 

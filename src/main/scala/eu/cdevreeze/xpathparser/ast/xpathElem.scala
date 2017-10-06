@@ -79,9 +79,9 @@ final case class XPathExpr(expr: Expr) extends XPathElem {
 
 // Enclosed expressions
 
-final case class EnclosedExpr(expr: Expr) extends XPathElem {
+final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: immutable.IndexedSeq[XPathElem] = exprOption.toIndexedSeq
 }
 
 // Expressions
@@ -224,9 +224,33 @@ final case class CastableExpr(castExpr: CastExpr, singleTypeOption: Option[Singl
   def children: immutable.IndexedSeq[XPathElem] = castExpr +: singleTypeOption.toIndexedSeq
 }
 
-final case class CastExpr(unaryExpr: UnaryExpr, singleTypeOption: Option[SingleType]) extends XPathElem {
+final case class CastExpr(arrowExpr: ArrowExpr, singleTypeOption: Option[SingleType]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = unaryExpr +: singleTypeOption.toIndexedSeq
+  def children: immutable.IndexedSeq[XPathElem] = arrowExpr +: singleTypeOption.toIndexedSeq
+}
+
+final case class ArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: immutable.IndexedSeq[ArrowFunctionCall]) extends XPathElem {
+
+  def children: immutable.IndexedSeq[XPathElem] = unaryExpr +: arrowFunctionCalls
+}
+
+final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifier, argumentList: ArgumentList) extends XPathElem {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(arrowFunctionSpecifier, argumentList)
+}
+
+sealed trait ArrowFunctionSpecifier extends XPathElem
+
+final case class EQNameAsArrowFunctionSpecifier(eqName: EQName) extends ArrowFunctionSpecifier with LeafElem
+
+final case class VarRefAsArrowFunctionSpecifier(varRef: VarRef) extends ArrowFunctionSpecifier {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(varRef)
+}
+
+final case class ParenthesizedExprAsArrowFunctionSpecifier(parenthesizedExpr: ParenthesizedExpr) extends ArrowFunctionSpecifier {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(parenthesizedExpr)
 }
 
 final case class UnaryExpr(ops: immutable.IndexedSeq[UnaryOp], valueExpr: ValueExpr) extends XPathElem {
@@ -273,9 +297,9 @@ sealed trait StepExpr extends XPathElem
 
 final case class PostfixExpr(
     primaryExpr: PrimaryExpr,
-    predicatesAndArgumentLists: immutable.IndexedSeq[PredicateOrArgumentList]) extends StepExpr {
+    postfixes: immutable.IndexedSeq[Postfix]) extends StepExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = primaryExpr +: predicatesAndArgumentLists
+  def children: immutable.IndexedSeq[XPathElem] = primaryExpr +: postfixes
 }
 
 sealed trait AxisStep extends StepExpr {
@@ -450,16 +474,32 @@ final case class InlineFunctionExpr(
   def children: immutable.IndexedSeq[XPathElem] = paramListOption.toIndexedSeq ++ resultTypeOption.toIndexedSeq :+ body
 }
 
-sealed trait PredicateOrArgumentList extends XPathElem
+sealed trait Postfix extends XPathElem
 
-final case class Predicate(expr: Expr) extends PredicateOrArgumentList {
+final case class Predicate(expr: Expr) extends Postfix {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
 }
 
-final case class ArgumentList(arguments: immutable.IndexedSeq[Argument]) extends PredicateOrArgumentList {
+final case class ArgumentList(arguments: immutable.IndexedSeq[Argument]) extends Postfix {
 
   def children: immutable.IndexedSeq[XPathElem] = arguments
+}
+
+sealed trait PostfixLookup extends Postfix
+
+final case class NamedPostfixLookup(ncName: NCName) extends PostfixLookup with LeafElem
+
+final case class PositionalPostfixLookup(integerLiteral: IntegerLiteral) extends PostfixLookup {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(integerLiteral)
+}
+
+case object WildcardPostfixLookup extends PostfixLookup with LeafElem
+
+final case class ParenthesizedExprPostfixLookup(parenthesizedExpr: ParenthesizedExpr) extends PostfixLookup {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(parenthesizedExpr)
 }
 
 final case class ParamList(params: immutable.IndexedSeq[Param]) extends XPathElem {

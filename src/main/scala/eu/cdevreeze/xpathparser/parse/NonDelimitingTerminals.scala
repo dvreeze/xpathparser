@@ -67,6 +67,8 @@ object NonDelimitingTerminals {
 
   val andWord: P[Unit] = parseWord("and")
 
+  val arrayWord: P[Unit] = parseWord("array")
+
   val asWord: P[Unit] = parseWord("as")
 
   val attributeWord: P[Unit] = parseWord("attribute")
@@ -130,6 +132,8 @@ object NonDelimitingTerminals {
   val letWord: P[Unit] = parseWord("let")
 
   val ltWord: P[Unit] = parseWord("lt")
+
+  val mapWord: P[Unit] = parseWord("map")
 
   val modWord: P[Unit] = parseWord("mod")
 

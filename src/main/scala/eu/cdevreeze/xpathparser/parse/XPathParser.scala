@@ -65,8 +65,8 @@ object XPathParser {
     }
 
   private val enclosedExpr: P[EnclosedExpr] =
-    P(DT.openBrace ~ expr ~ DT.closeBrace) map {
-      case exp => EnclosedExpr(exp)
+    P(DT.openBrace ~ expr.? ~ DT.closeBrace) map {
+      case expOpt => EnclosedExpr(expOpt)
     }
 
   // The branches of exprSingle are easy to distinguish. All but one start with a different keyword.
@@ -176,8 +176,25 @@ object XPathParser {
     }
 
   private val castExpr: P[CastExpr] =
-    P(unaryExpr ~ (NDT.castWord ~ NDT.asWord ~/ singleType).?) map {
+    P(arrowExpr ~ (NDT.castWord ~ NDT.asWord ~/ singleType).?) map {
       case (expr, tpeOption) => CastExpr(expr, tpeOption)
+    }
+
+  private val arrowExpr: P[ArrowExpr] =
+    P(unaryExpr ~ arrowFunctionCall.rep(min = 0)) map {
+      case (exp, funCalls) => ArrowExpr(exp, funCalls.toIndexedSeq)
+    }
+
+  private val arrowFunctionCall: P[ArrowFunctionCall] =
+    P(DT.doubleArrow ~/ arrowFunctionSpecifier ~ argumentList) map {
+      case (funcSpec, args) => ArrowFunctionCall(funcSpec, args)
+    }
+
+  private val arrowFunctionSpecifier: P[ArrowFunctionSpecifier] =
+    P(eqName | varRef | parenthesizedExpr) map {
+      case nm: EQName                 => EQNameAsArrowFunctionSpecifier(nm)
+      case ref @ VarRef(_)            => VarRefAsArrowFunctionSpecifier(ref)
+      case exp @ ParenthesizedExpr(_) => ParenthesizedExprAsArrowFunctionSpecifier(exp)
     }
 
   private val unaryExpr: P[UnaryExpr] =
@@ -485,9 +502,11 @@ object XPathParser {
   private val anyKindTest: P[AnyKindTest.type] =
     P(NDT.nodeWord ~ DT.openParenthesis ~ DT.closeParenthesis) map (_ => AnyKindTest)
 
+  // Postfix expressions
+
   private val postfixExpr: P[PostfixExpr] =
-    P(primaryExpr ~ (predicate | argumentList).rep) map {
-      case (primaryExp, predicateOrArgumentListSeq) => PostfixExpr(primaryExp, predicateOrArgumentListSeq.toIndexedSeq)
+    P(primaryExpr ~ (predicate | argumentList | lookup).rep) map {
+      case (primaryExp, postfixes) => PostfixExpr(primaryExp, postfixes.toIndexedSeq)
     }
 
   private val argumentList: P[ArgumentList] =
@@ -504,6 +523,14 @@ object XPathParser {
   private val exprSingleArgument: P[ExprSingleArgument] =
     P(exprSingle) map {
       case exp => ExprSingleArgument(exp)
+    }
+
+  private val lookup: P[PostfixLookup] =
+    P(DT.questionMark ~ (ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr)) map {
+      case (nm: NCName)             => NamedPostfixLookup(nm)
+      case (intLit: IntegerLiteral) => PositionalPostfixLookup(intLit)
+      case "*"                      => WildcardPostfixLookup
+      case (exp: ParenthesizedExpr) => ParenthesizedExprPostfixLookup(exp)
     }
 
   private val paramList: P[ParamList] =
@@ -524,6 +551,8 @@ object XPathParser {
   // Primary expressions
 
   // The branches of a primaryExpr are relatively easy to distinguish. See above.
+
+  // TODO For XPath 3.1, add mapConstructor, arrayConstructor and unaryLookup
 
   private val primaryExpr: P[PrimaryExpr] =
     P(literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr)
@@ -655,6 +684,7 @@ object XPathParser {
   // Utility methods (and data)
 
   private val ReservedFunctionNames: Set[EQName] = Set(
+    EQName.QName("array"),
     EQName.QName("attribute"),
     EQName.QName("comment"),
     EQName.QName("document-node"),
@@ -663,6 +693,7 @@ object XPathParser {
     EQName.QName("function"),
     EQName.QName("if"),
     EQName.QName("item"),
+    EQName.QName("map"),
     EQName.QName("namespace-node"),
     EQName.QName("node"),
     EQName.QName("processing-instruction"),
