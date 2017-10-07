@@ -8,6 +8,6 @@ early stage.
 
 This XPath parser makes use of the excellent `FastParse`_ library for the generation of the XPath parser.
 
-XPath 3.0 is currently the supported XPath version.
+XPath 3.1 is the supported XPath version.
 
 .. _`FastParse`: http://www.lihaoyi.com/fastparse/
