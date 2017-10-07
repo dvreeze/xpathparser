@@ -25,7 +25,6 @@ import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.AdditionOp
 import eu.cdevreeze.xpathparser.ast.AnyWildcard
 import eu.cdevreeze.xpathparser.ast.ArgumentList
-import eu.cdevreeze.xpathparser.ast.ArrayConstructor
 import eu.cdevreeze.xpathparser.ast.AxisStep
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.CurlyArrayConstructor
