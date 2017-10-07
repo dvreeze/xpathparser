@@ -8,9 +8,9 @@
 // It creates an output property file with test XPath expressions that must be successfully parsed (at
 // least). The keys are the test case names.
 
-// Taking yaidom version 1.6.2
+// Taking yaidom version 1.6.4
 
-import $ivy.`eu.cdevreeze.yaidom::yaidom:1.6.2`
+import $ivy.`eu.cdevreeze.yaidom::yaidom:1.6.4`
 
 // Imports that (must) remain available after this initialization script
 
@@ -26,6 +26,8 @@ import eu.cdevreeze.yaidom._
 println("Usage: createTestXPathPropertyFile(inputDir, outputFile)")
 
 val ns = "http://www.w3.org/2010/09/qt-fots-catalog"
+
+// There are no XPath 3.1 tests
 
 val dependencyPrefixes = Set("XP10+", "XP20+", "XP30+", "XP30")
 

@@ -16,17 +16,14 @@
 
 package eu.cdevreeze.xpathparser.parse
 
-import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.NCName
 import fastparse.WhitespaceApi
 
 /**
- * XPath 3.0 parsing support, using FastParse.
+ * XPath 3.1 parsing support, using FastParse.
  *
  * Usage: XPathParser.xpathExpr.parse(xpathString)
- *
- * TODO XPath 3.1.
  *
  * @author Chris de Vreeze
  */
@@ -233,10 +230,12 @@ object XPathParser {
     P(forwardAxis | reverseAxis | DT.at | DT.doubleDot | nodeTest).map(_ => ())
 
   // A postfix expression starts with a (string or numeric) literal, dollar sign, (opening) parenthesis, dot,
-  // NCName or URI-qualified name or the token "function". (Note that, like context items, decimal and double literals may start with dots.)
+  // NCName or URI-qualified name or the token "function". In XPath 3.1 it can also start with token "map" or "array",
+  // an open bracket, or a question mark. (Note that, like context items, decimal and double literals may start with dots.)
 
   private val canStartPostfixExpr: P[Unit] =
-    P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName | NDT.functionWord).map(_ => ())
+    P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName |
+      NDT.functionWord | NDT.mapWord | NDT.arrayWord | DT.openBracket | DT.questionMark).map(_ => ())
 
   // Looking ahead to distinguish a single slash from a double slash, and to recognize the start of a relativePathExpr.
   // See xgc:leading-lone-slash constraint.
@@ -362,32 +361,21 @@ object XPathParser {
 
   // As per the grammar specification, we first try the simpleNameTest branch, and then, if it fails, the wildcard branch.
   // This way a URI qualified name will be recognized before the "braced URI literal wildcard". Because of the ws:explicit
-  // constraint a prefix wildcard will not be "hidden" by a QName as EQName.
+  // constraint a prefix wildcard should not be "hidden" by a QName as EQName, but to make sure a prefix
+  // wildcard is recognized we look ahead.
 
   private val nameTest: P[NameTest] =
     P(simpleNameTest | wildcard)
 
   private val simpleNameTest: P[SimpleNameTest] =
-    P(eqName) map {
+    P(eqName ~ !DT.colonAsterisk) map {
       case name => SimpleNameTest(name)
     }
 
   // See ws:explicit constraint.
 
   private val wildcard: P[Wildcard] =
-    P(anyWildcard | prefixWildcard | localNameWildcard | namespaceWildcard)
-
-  private val anyWildcard: P[AnyWildcard.type] =
-    P(CharsWhileIn("*:").!) filter (s => s == "*") map (_ => AnyWildcard)
-
-  private val prefixWildcard: P[PrefixWildcard] =
-    P(CharsWhile(isNCNameCharOrColonOrStar).!) filter (isPrefixWildcard) map (v => PrefixWildcard(NCName(v.dropRight(2))))
-
-  private val localNameWildcard: P[LocalNameWildcard] =
-    P(CharsWhile(isNCNameCharOrColonOrStar).!) filter (isLocalNameWildcard) map (v => LocalNameWildcard(NCName(v.drop(2))))
-
-  private val namespaceWildcard: P[NamespaceWildcard] =
-    P(CharsWhile(isNCNameCharOrBraceOrStar).!) filter (isNamespaceWildcard) map (v => NamespaceWildcard(BracedUriLiteral.parse(v.dropRight(1))))
+    P(Wildcards.wildcard)
 
   private val kindTest: P[KindTest] =
     P(documentTest | elementTest | attributeTest | schemaElementTest | schemaAttributeTest | piTest | commentTest | textTest | namespaceNodeTest | anyKindTest)
@@ -526,11 +514,16 @@ object XPathParser {
     }
 
   private val lookup: P[PostfixLookup] =
-    P(DT.questionMark ~ (ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr)) map {
-      case (nm: NCName)             => NamedPostfixLookup(nm)
-      case (intLit: IntegerLiteral) => PositionalPostfixLookup(intLit)
-      case "*"                      => WildcardPostfixLookup
-      case (exp: ParenthesizedExpr) => ParenthesizedExprPostfixLookup(exp)
+    P(DT.questionMark ~ keySpecifier) map {
+      case keySpec => PostfixLookup(keySpec)
+    }
+
+  private val keySpecifier: P[KeySpecifier] =
+    P(ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr) map {
+      case (nm: NCName)             => NamedKeySpecifier(nm)
+      case (intLit: IntegerLiteral) => PositionalKeySpecifier(intLit)
+      case "*"                      => WildcardKeySpecifier
+      case (exp: ParenthesizedExpr) => ParenthesizedExprKeySpecifier(exp)
     }
 
   private val paramList: P[ParamList] =
@@ -552,10 +545,9 @@ object XPathParser {
 
   // The branches of a primaryExpr are relatively easy to distinguish. See above.
 
-  // TODO For XPath 3.1, add mapConstructor, arrayConstructor and unaryLookup
-
   private val primaryExpr: P[PrimaryExpr] =
-    P(literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr)
+    P(literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr |
+      mapConstructor | arrayConstructor | unaryLookup)
 
   private val literal: P[Literal] =
     P(stringLiteral | numericLiteral)
@@ -608,6 +600,34 @@ object XPathParser {
         InlineFunctionExpr(parListOption, resultTpeOption, body)
     }
 
+  private val mapConstructor: P[MapConstructor] =
+    P(NDT.mapWord ~ DT.openBrace ~/ mapConstructorEntry.rep(sep = DT.comma) ~ DT.closeBrace) map {
+      case entries => MapConstructor(entries.toIndexedSeq)
+    }
+
+  private val mapConstructorEntry: P[MapConstructorEntry] =
+    P(exprSingle ~ DT.colon ~ exprSingle) map {
+      case (k, v) => MapConstructorEntry(k, v)
+    }
+
+  private val arrayConstructor: P[ArrayConstructor] =
+    P(squareArrayConstructor | curlyArrayConstructor)
+
+  private val squareArrayConstructor: P[SquareArrayConstructor] =
+    P(DT.openBracket ~ exprSingle.rep(sep = DT.comma) ~ DT.closeBracket) map {
+      case elems => SquareArrayConstructor(elems.toIndexedSeq)
+    }
+
+  private val curlyArrayConstructor: P[CurlyArrayConstructor] =
+    P(NDT.arrayWord ~ enclosedExpr) map {
+      exp => CurlyArrayConstructor(exp)
+    }
+
+  private val unaryLookup: P[UnaryLookup] =
+    P(DT.questionMark ~ keySpecifier) map {
+      case keySpec => UnaryLookup(keySpec)
+    }
+
   // Types
 
   private val sequenceType: P[SequenceType] =
@@ -628,7 +648,7 @@ object XPathParser {
     }
 
   private val itemType: P[ItemType] =
-    P(kindTestItemType | anyItemType | anyFunctionTest | typedFunctionTest | atomicOrUnionType | parenthesizedItemType)
+    P(kindTestItemType | anyItemType | anyFunctionTest | typedFunctionTest | atomicOrUnionType | parenthesizedItemType | mapTest | arrayTest)
 
   private val kindTestItemType: P[KindTestItemType] =
     P(kindTest) map {
@@ -656,6 +676,32 @@ object XPathParser {
       case tpe => ParenthesizedItemType(tpe)
     }
 
+  private val mapTest: P[MapTest] =
+    P(anyMapTest | typedMapTest)
+
+  private val anyMapTest: P[AnyMapTest.type] =
+    P(NDT.mapWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis) map {
+      case _ => AnyMapTest
+    }
+
+  private val typedMapTest: P[TypedMapTest] =
+    P(NDT.mapWord ~ DT.openParenthesis ~ atomicOrUnionType ~ DT.comma ~ sequenceType ~ DT.closeParenthesis) map {
+      case (kt, vt) => TypedMapTest(kt, vt)
+    }
+
+  private val arrayTest: P[ArrayTest] =
+    P(anyArrayTest | typedArrayTest)
+
+  private val anyArrayTest: P[AnyArrayTest.type] =
+    P(NDT.arrayWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis) map {
+      case _ => AnyArrayTest
+    }
+
+  private val typedArrayTest: P[TypedArrayTest] =
+    P(NDT.arrayWord ~ DT.openParenthesis ~ sequenceType ~ DT.closeParenthesis) map {
+      case et => TypedArrayTest(et)
+    }
+
   private val singleType: P[SingleType] =
     P(eqName ~ DT.questionMark.!.?) map {
       case (tpe, None)    => NonEmptySingleType(tpe)
@@ -681,7 +727,7 @@ object XPathParser {
   private val nodeComp: P[NodeComp] =
     P((NDT.isWord | DT.precedes | DT.follows).!) map (s => NodeComp.parse(s))
 
-  // Utility methods (and data)
+  // Utility data/methods
 
   private val ReservedFunctionNames: Set[EQName] = Set(
     EQName.QName("array"),
@@ -702,24 +748,4 @@ object XPathParser {
     EQName.QName("switch"),
     EQName.QName("text"),
     EQName.QName("typeswitch"))
-
-  private def isPrefixWildcard(s: String): Boolean = {
-    s.endsWith(":*") && NCName.canBeNCName(s.dropRight(2))
-  }
-
-  private def isLocalNameWildcard(s: String): Boolean = {
-    s.startsWith("*:") && NCName.canBeNCName(s.drop(2))
-  }
-
-  private def isNamespaceWildcard(s: String): Boolean = {
-    s.endsWith("*") && BracedUriLiteral.canBeBracedUriLiteral(s.dropRight(1))
-  }
-
-  private def isNCNameCharOrColonOrStar(c: Char): Boolean = {
-    NCName.canBePartOfNCName(c) || (c == ':') || (c == '*')
-  }
-
-  private def isNCNameCharOrBraceOrStar(c: Char): Boolean = {
-    NCName.canBePartOfNCName(c) || (c == '{') || (c == '}') || (c == '*')
-  }
 }

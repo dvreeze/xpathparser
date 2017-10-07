@@ -23,6 +23,8 @@ import org.scalatest.FunSuite
 import eu.cdevreeze.xpathparser.ast.AbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.AdditionOp
+import eu.cdevreeze.xpathparser.ast.AnyWildcard
+import eu.cdevreeze.xpathparser.ast.ArgumentList
 import eu.cdevreeze.xpathparser.ast.AxisStep
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.EQName
@@ -36,11 +38,15 @@ import eu.cdevreeze.xpathparser.ast.IfExpr
 import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.LetExpr
+import eu.cdevreeze.xpathparser.ast.LocalNameWildcard
+import eu.cdevreeze.xpathparser.ast.MapConstructorEntry
 import eu.cdevreeze.xpathparser.ast.NamedFunctionRef
+import eu.cdevreeze.xpathparser.ast.NamespaceWildcard
 import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.NonAbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.OneOrMoreSequenceType
 import eu.cdevreeze.xpathparser.ast.Predicate
+import eu.cdevreeze.xpathparser.ast.PrefixWildcard
 import eu.cdevreeze.xpathparser.ast.ReverseAxis
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
 import eu.cdevreeze.xpathparser.ast.StepExpr
@@ -58,6 +64,7 @@ import eu.cdevreeze.xpathparser.common.EName
  * <li>https://github.com/Saxonica/XT-Speedo</li>
  * <li>https://en.wikibooks.org/wiki/XQuery/XPath</li>
  * <li>https://www.w3.org/TR/xpath-30</li>
+ * <li>https://www.w3.org/TR/xpath-31/</li>
  * <li>http://www.nltaxonomie.nl/nt12/kvk/</li>
  * <li>https://dev.w3.org/2011/QT3-test-suite</li>
  * </ul>
@@ -617,6 +624,322 @@ class ParseXPathTest extends FunSuite {
 
     assertResult(1) {
       parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[NamedFunctionRef]).size
+    }
+  }
+
+  test("testMapOfWeekdays") {
+    // Example from the XPath 3.1 spec
+
+    val exprString =
+      """map {
+  "Su" : "Sunday",
+  "Mo" : "Monday",
+  "Tu" : "Tuesday",
+  "We" : "Wednesday",
+  "Th" : "Thursday",
+  "Fr" : "Friday",
+  "Sa" : "Saturday"
+}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(7) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+  }
+
+  test("testWrongMapOfWeekdays") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString =
+      """map {
+  "Su" : "Sunday",
+  "Mo" : "Monday",
+  "Tu" : "Tuesday",
+  "We" : "Wednesday",
+  "Th" : "Thursday",
+  "Fr" : "Friday",
+  "Sa"
+}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertFailure(parseResult)
+  }
+
+  test("testNestedMap") {
+    // Example from the XPath 3.1 spec
+
+    val exprString =
+      """map {
+    "book": map {
+        "title": "Data on the Web",
+        "year": 2000,
+        "author": [
+            map {
+                "last": "Abiteboul",
+                "first": "Serge"
+            },
+            map {
+                "last": "Buneman",
+                "first": "Peter"
+            },
+            map {
+                "last": "Suciu",
+                "first": "Dan"
+            }
+        ],
+        "publisher": "Morgan Kaufmann Publishers",
+        "price": 39.95
+    }
+}
+"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some("book")) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[StringLiteral]).map(_.value)
+    }
+
+    assertResult(12) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+  }
+
+  test("testMapOfWeekdaysPseudoFunctionCall") {
+    // Example from the XPath 3.1 spec, adapted to become a "function call"
+
+    val exprString =
+      """map {
+  "Su" : "Sunday",
+  "Mo" : "Monday",
+  "Tu" : "Tuesday",
+  "We" : "Wednesday",
+  "Th" : "Thursday",
+  "Fr" : "Friday",
+  "Sa" : "Saturday"
+}("Su")"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArgumentList]).size
+    }
+  }
+
+  test("testPseudoFunctionCalls") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """$b("book")("author")(1)("last")"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(4) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArgumentList]).size
+    }
+  }
+
+  test("testPrefixWildcard") {
+    // There seems to be no test for prefix wildcards in test suite https://dev.w3.org/2011/QT3-test-suite/.
+
+    val exprString = """a:*"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[PrefixWildcard]).size
+    }
+  }
+
+  test("testLocalNameWildcard") {
+    val exprString = """*:a"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[LocalNameWildcard]).size
+    }
+  }
+
+  test("testAnyWildcard") {
+    val exprString = """*"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[AnyWildcard.type]).size
+    }
+  }
+
+  test("testNamespaceWildcard") {
+    val exprString = """Q{http://www.example.org/customnamespace}*"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
+    }
+
+    assertResult(Some("http://www.example.org/customnamespace")) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).head.bracedUriLiteral.namespaceOption
+    }
+  }
+
+  test("testEmptyNamespaceWildcard") {
+    val exprString = """Q{}*"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
+    }
+
+    assertResult(None) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).head.bracedUriLiteral.namespaceOption
+    }
+  }
+
+  test("testWrongMapConstructor") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map{a:b}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertFailure(parseResult)
+  }
+
+  test("testMapConstructorUsingSpaceForDisambiguation") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map{a : b}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a: b}""").get.value
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a :b}""").get.value
+    }
+  }
+
+  test("testMapConstructorWithQNameKey") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map{a:b:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some(EQName.QName("a:b"))) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[SimpleNameTest]).map(_.name)
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a:b: c}""").get.value
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a:b :c}""").get.value
+    }
+  }
+
+  test("testMapConstructorWithPrefixWildcardKey") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map{a:*:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some("a")) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[PrefixWildcard]).map(_.prefix.name)
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a:*: c}""").get.value
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a:* :c}""").get.value
+    }
+  }
+
+  test("testMapConstructorWithLocalNameWildcardKey") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map{*:b:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some("b")) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[LocalNameWildcard]).map(_.localName.name)
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{*:b: c}""").get.value
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{*:b :c}""").get.value
     }
   }
 

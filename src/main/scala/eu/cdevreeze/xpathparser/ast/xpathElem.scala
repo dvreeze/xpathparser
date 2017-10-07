@@ -21,7 +21,7 @@ import scala.collection.immutable
 import eu.cdevreeze.xpathparser.queryapi.ElemLike
 
 /**
- * XPath 3.0 AST. The root of the type hierarchy is XPathElem. It offers the ElemApi query API.
+ * XPath 3.1 AST. The root of the type hierarchy is XPathElem. It offers the ElemApi query API.
  *
  * The purpose of this AST is as follows:
  * <ul>
@@ -37,8 +37,6 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * Having such an AST of a successfully parsed XPath expression, it must be easy to reliably find used namespace prefixes, for example.
  *
  * TODO Improve several class names.
- *
- * TODO XPath 3.1.
  *
  * @author Chris de Vreeze
  */
@@ -474,6 +472,33 @@ final case class InlineFunctionExpr(
   def children: immutable.IndexedSeq[XPathElem] = paramListOption.toIndexedSeq ++ resultTypeOption.toIndexedSeq :+ body
 }
 
+final case class MapConstructor(entries: immutable.IndexedSeq[MapConstructorEntry]) extends PrimaryExpr {
+
+  def children: immutable.IndexedSeq[XPathElem] = entries
+}
+
+sealed trait ArrayConstructor extends PrimaryExpr
+
+final case class UnaryLookup(keySpecifier: KeySpecifier) extends PrimaryExpr {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keySpecifier)
+}
+
+final case class SquareArrayConstructor(elements: immutable.IndexedSeq[ExprSingle]) extends ArrayConstructor {
+
+  def children: immutable.IndexedSeq[XPathElem] = elements
+}
+
+final case class CurlyArrayConstructor(expr: EnclosedExpr) extends ArrayConstructor {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+}
+
+final case class MapConstructorEntry(keyExpr: ExprSingle, valueExpr: ExprSingle) extends XPathElem {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keyExpr, valueExpr)
+}
+
 sealed trait Postfix extends XPathElem
 
 final case class Predicate(expr: Expr) extends Postfix {
@@ -486,18 +511,23 @@ final case class ArgumentList(arguments: immutable.IndexedSeq[Argument]) extends
   def children: immutable.IndexedSeq[XPathElem] = arguments
 }
 
-sealed trait PostfixLookup extends Postfix
+final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix {
 
-final case class NamedPostfixLookup(ncName: NCName) extends PostfixLookup with LeafElem
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keySpecifier)
+}
 
-final case class PositionalPostfixLookup(integerLiteral: IntegerLiteral) extends PostfixLookup {
+sealed trait KeySpecifier extends XPathElem
+
+final case class NamedKeySpecifier(ncName: NCName) extends KeySpecifier with LeafElem
+
+final case class PositionalKeySpecifier(integerLiteral: IntegerLiteral) extends KeySpecifier {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(integerLiteral)
 }
 
-case object WildcardPostfixLookup extends PostfixLookup with LeafElem
+case object WildcardKeySpecifier extends KeySpecifier with LeafElem
 
-final case class ParenthesizedExprPostfixLookup(parenthesizedExpr: ParenthesizedExpr) extends PostfixLookup {
+final case class ParenthesizedExprKeySpecifier(parenthesizedExpr: ParenthesizedExpr) extends KeySpecifier {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(parenthesizedExpr)
 }
@@ -605,6 +635,24 @@ final case class AtomicOrUnionType(tpe: EQName) extends ItemType with LeafElem
 final case class ParenthesizedItemType(itemType: ItemType) extends ItemType {
 
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+}
+
+sealed trait MapTest extends ItemType
+
+case object AnyMapTest extends MapTest with LeafElem
+
+final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceType) extends MapTest {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keyType, valueType)
+}
+
+sealed trait ArrayTest extends ItemType
+
+case object AnyArrayTest extends ArrayTest with LeafElem
+
+final case class TypedArrayTest(elementType: SequenceType) extends ArrayTest {
+
+  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(elementType)
 }
 
 final case class TypeDeclaration(tpe: SequenceType) extends XPathElem {

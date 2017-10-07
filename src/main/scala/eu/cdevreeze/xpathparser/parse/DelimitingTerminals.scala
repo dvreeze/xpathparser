@@ -115,8 +115,8 @@ object DelimitingTerminals {
   // Braced URI literal
 
   val bracedUriLiteral: P[BracedUriLiteral] =
-    P(("Q{" ~ CharsWhile(c => (c != '{') && (c != '}')) ~ "}").!) filter (v => BracedUriLiteral.canBeBracedUriLiteral(v)) map { v =>
-      BracedUriLiteral.parse(v)
+    P("Q{" ~ CharPred(isAllowedNamespaceUriChar).rep.! ~ "}") map {
+      rawNs => if (rawNs.isEmpty) BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
     }
 
   val openBracket: P[Unit] = P("[")
@@ -132,6 +132,12 @@ object DelimitingTerminals {
   val verticalBar: P[Unit] = P("|" ~ !"|")
 
   val doubleVerticalBar: P[Unit] = P("||")
+
+  private def isAllowedNamespaceUriChar(c: Char): Boolean = {
+    // TODO Is this correct?
+
+    (c != '{') && (c != '}') && !java.lang.Character.isWhitespace(c)
+  }
 
   object StringLiterals {
 
