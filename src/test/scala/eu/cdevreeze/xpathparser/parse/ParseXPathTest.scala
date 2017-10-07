@@ -46,6 +46,7 @@ import eu.cdevreeze.xpathparser.ast.NamespaceWildcard
 import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.NonAbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.OneOrMoreSequenceType
+import eu.cdevreeze.xpathparser.ast.ParenthesizedExpr
 import eu.cdevreeze.xpathparser.ast.PostfixLookup
 import eu.cdevreeze.xpathparser.ast.Predicate
 import eu.cdevreeze.xpathparser.ast.PrefixWildcard
@@ -70,6 +71,7 @@ import eu.cdevreeze.xpathparser.common.EName
  * <li>https://www.w3.org/TR/xpath-31/</li>
  * <li>http://www.nltaxonomie.nl/nt12/kvk/</li>
  * <li>https://dev.w3.org/2011/QT3-test-suite</li>
+ * <li>https://www.progress.com/tutorials/xquery/tour</li>
  * </ul>
  *
  * @author Chris de Vreeze
@@ -970,7 +972,7 @@ class ParseXPathTest extends FunSuite {
       xpathExpr.parse("""map{a: *:c}""").get.value
     }
 
-    // Note that delimiting terminal ":*", which makes the parsing fail
+    // Note the delimiting terminal ":*", which makes the parsing fail
 
     assertFailure(xpathExpr.parse("""map{a :*:c}"""))
   }
@@ -1024,7 +1026,7 @@ class ParseXPathTest extends FunSuite {
       firstKey.findFirstElemOfType(classTag[AnyWildcard.type])
     }
 
-    // Note that delimiting terminal "*:", which makes the parsing fail
+    // Note the delimiting terminal "*:", which makes the parsing fail
 
     assertFailure(xpathExpr.parse("""map{*: b:c}"""))
 
@@ -1157,6 +1159,27 @@ class ParseXPathTest extends FunSuite {
 
     assertResult(Some("http://www.example.com/customnamespace")) {
       parseResult.get.value.findFirstElemOrSelfOfType(classTag[NamespaceWildcard]).get.bracedUriLiteral.namespaceOption
+    }
+  }
+
+  test("testParenthesizedExpr") {
+    // Example from https://www.progress.com/tutorials/xquery/tour
+
+    val exprString = """(doc("books.xml")/bib/book/author)[1]"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ParenthesizedExpr]).size
+    }
+
+    assertResult(4) {
+      val parenExprs =
+        parseResult.get.value.findAllElemsOrSelfOfType(classTag[ParenthesizedExpr])
+
+      parenExprs.flatMap(_.findAllTopmostElemsOrSelfOfType(classTag[StepExpr])).size
     }
   }
 
