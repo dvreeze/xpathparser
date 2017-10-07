@@ -484,9 +484,9 @@ final case class UnaryLookup(keySpecifier: KeySpecifier) extends PrimaryExpr {
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keySpecifier)
 }
 
-final case class SquareArrayConstructor(elements: immutable.IndexedSeq[ExprSingle]) extends ArrayConstructor {
+final case class SquareArrayConstructor(members: immutable.IndexedSeq[ExprSingle]) extends ArrayConstructor {
 
-  def children: immutable.IndexedSeq[XPathElem] = elements
+  def children: immutable.IndexedSeq[XPathElem] = members
 }
 
 final case class CurlyArrayConstructor(expr: EnclosedExpr) extends ArrayConstructor {

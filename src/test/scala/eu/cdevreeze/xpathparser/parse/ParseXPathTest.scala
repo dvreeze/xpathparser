@@ -25,8 +25,10 @@ import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.AdditionOp
 import eu.cdevreeze.xpathparser.ast.AnyWildcard
 import eu.cdevreeze.xpathparser.ast.ArgumentList
+import eu.cdevreeze.xpathparser.ast.ArrayConstructor
 import eu.cdevreeze.xpathparser.ast.AxisStep
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
+import eu.cdevreeze.xpathparser.ast.CurlyArrayConstructor
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.ExprSingle
 import eu.cdevreeze.xpathparser.ast.ForExpr
@@ -45,10 +47,12 @@ import eu.cdevreeze.xpathparser.ast.NamespaceWildcard
 import eu.cdevreeze.xpathparser.ast.NonAbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.NonAbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.OneOrMoreSequenceType
+import eu.cdevreeze.xpathparser.ast.PostfixLookup
 import eu.cdevreeze.xpathparser.ast.Predicate
 import eu.cdevreeze.xpathparser.ast.PrefixWildcard
 import eu.cdevreeze.xpathparser.ast.ReverseAxis
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
+import eu.cdevreeze.xpathparser.ast.SquareArrayConstructor
 import eu.cdevreeze.xpathparser.ast.StepExpr
 import eu.cdevreeze.xpathparser.ast.StringLiteral
 import eu.cdevreeze.xpathparser.ast.UnaryOp
@@ -740,7 +744,7 @@ class ParseXPathTest extends FunSuite {
     }
   }
 
-  test("testPseudoFunctionCalls") {
+  test("testMapPseudoFunctionCalls") {
     // Example from the XPath 3.1 spec
 
     val exprString = """$b("book")("author")(1)("last")"""
@@ -885,6 +889,35 @@ class ParseXPathTest extends FunSuite {
     }
   }
 
+  test("testMapConstructorWithOtherQNameKey") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString = """map{a : b:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some(EQName.QName("a"))) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[SimpleNameTest]).map(_.name)
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a: b:c}""").get.value
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a :b:c}""").get.value
+    }
+  }
+
   test("testMapConstructorWithPrefixWildcardKey") {
     // Example from the XPath 3.1 spec
 
@@ -914,6 +947,35 @@ class ParseXPathTest extends FunSuite {
     }
   }
 
+  test("testMapConstructorWithPrefixWildcardValue") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString = """map{a : *:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some(EQName.QName("a"))) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[SimpleNameTest]).map(_.name)
+    }
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{a: *:c}""").get.value
+    }
+
+    // Note that delimiting terminal ":*", which makes the parsing fail
+
+    assertFailure(xpathExpr.parse("""map{a :*:c}"""))
+  }
+
   test("testMapConstructorWithLocalNameWildcardKey") {
     // Example from the XPath 3.1 spec
 
@@ -940,6 +1002,162 @@ class ParseXPathTest extends FunSuite {
 
     assertResult(parseResult.get.value) {
       xpathExpr.parse("""map{*:b :c}""").get.value
+    }
+  }
+
+  test("testMapConstructorWithAnyWildcardKey") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString = """map{* : b:c}"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(Some(AnyWildcard)) {
+      val firstKey =
+        parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
+
+      firstKey.findFirstElemOfType(classTag[AnyWildcard.type])
+    }
+
+    // Note that delimiting terminal "*:", which makes the parsing fail
+
+    assertFailure(xpathExpr.parse("""map{*: b:c}"""))
+
+    assertResult(parseResult.get.value) {
+      xpathExpr.parse("""map{* :b:c}""").get.value
+    }
+  }
+
+  test("testSquareArrayConstructor") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString =
+      """[ $x, local:items(), (), (27, 17, 0) ]"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[SquareArrayConstructor]).size
+    }
+
+    assertResult(4) {
+      parseResult.get.value.findFirstElemOrSelfOfType(classTag[SquareArrayConstructor]).get.members.size
+    }
+  }
+
+  test("testCurlyArrayConstructor") {
+    // Example from the XPath 3.1 spec, adapted
+
+    val exprString =
+      """array{ $x, local:items(), (), (27, 17, 0) }"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[CurlyArrayConstructor]).size
+    }
+  }
+
+  test("testSquareArrayPseudoFunctionCalls") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """[ [1, 2, 3], [4, 5, 6]](2)(2)"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(2) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArgumentList]).size
+    }
+  }
+
+  test("testCurlyArrayPseudoFunctionCalls") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """array { (), (27, 17, 0) }(2)"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArgumentList]).size
+    }
+  }
+
+  test("testMapLookup") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """map { "first" : "Jenna", "last" : "Scott" }?first"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[PostfixLookup]).size
+    }
+  }
+
+  test("testNestedArrayLookup") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """([1,2,3], [4,5,6])?2"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[PostfixLookup]).size
+    }
+  }
+
+  test("testExprWithNamespaceWildcard") {
+    // Example from https://dev.w3.org/2011/QT3-test-suite/, test case eqname-018
+
+    val exprString = """(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{}*/string()"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
+    }
+
+    assertResult(None) {
+      parseResult.get.value.findFirstElemOrSelfOfType(classTag[NamespaceWildcard]).get.bracedUriLiteral.namespaceOption
+    }
+  }
+
+  test("testExprWithOtherNamespaceWildcard") {
+    // Example from https://dev.w3.org/2011/QT3-test-suite/, test case eqname-018, but adapted in the namespace URI
+
+    val exprString =
+      """(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{http://www.example.com/customnamespace}*/string()"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
+    }
+
+    assertResult(Some("http://www.example.com/customnamespace")) {
+      parseResult.get.value.findFirstElemOrSelfOfType(classTag[NamespaceWildcard]).get.bracedUriLiteral.namespaceOption
     }
   }
 

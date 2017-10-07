@@ -178,7 +178,7 @@ object XPathParser {
     }
 
   private val arrowExpr: P[ArrowExpr] =
-    P(unaryExpr ~ arrowFunctionCall.rep(min = 0)) map {
+    P(unaryExpr ~ arrowFunctionCall.rep) map {
       case (exp, funCalls) => ArrowExpr(exp, funCalls.toIndexedSeq)
     }
 
@@ -615,7 +615,7 @@ object XPathParser {
 
   private val squareArrayConstructor: P[SquareArrayConstructor] =
     P(DT.openBracket ~ exprSingle.rep(sep = DT.comma) ~ DT.closeBracket) map {
-      case elems => SquareArrayConstructor(elems.toIndexedSeq)
+      case members => SquareArrayConstructor(members.toIndexedSeq)
     }
 
   private val curlyArrayConstructor: P[CurlyArrayConstructor] =
