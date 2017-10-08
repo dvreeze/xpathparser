@@ -25,6 +25,7 @@ import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
 import eu.cdevreeze.xpathparser.ast.AdditionOp
 import eu.cdevreeze.xpathparser.ast.AnyWildcard
 import eu.cdevreeze.xpathparser.ast.ArgumentList
+import eu.cdevreeze.xpathparser.ast.ArrowExpr
 import eu.cdevreeze.xpathparser.ast.AxisStep
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.CurlyArrayConstructor
@@ -1122,6 +1123,26 @@ class ParseXPathTest extends FunSuite {
 
     assertResult(1) {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[PostfixLookup]).size
+    }
+  }
+
+  test("testArrowExpr") {
+    // Example from the XPath 3.1 spec
+
+    val exprString = """$string => upper-case() => normalize-unicode() => tokenize("\s+")"""
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    assertResult(1) {
+      parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[ArrowExpr]).size
+    }
+
+    assertResult(3) {
+      val arrowExprs = parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArrowExpr])
+
+      arrowExprs.flatMap(_.arrowFunctionCalls).size
     }
   }
 
