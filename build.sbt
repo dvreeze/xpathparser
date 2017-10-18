@@ -16,7 +16,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warning
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.3"
 
-libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.4.4"
+libraryDependencies += "com.lihaoyi" %% "fastparse" % "1.0.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 
