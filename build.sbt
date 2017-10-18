@@ -27,12 +27,16 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
+publishTo := {
+  val vers = version.value
+
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
+
+  if (vers.trim.endsWith("SNAPSHOT")) {
     Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
+  } else {
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  }
 }
 
 publishArtifact in Test := false
