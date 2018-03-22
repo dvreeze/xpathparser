@@ -2,10 +2,16 @@
 .classpath
 .project
 .settings/
-project/
 target/
 temp/
 .history
 .worksheet
 scalastyle-config.xml
 /bin/
+
+# /project/
+/project/boot
+/project/project/
+/project/target/
+/project/build/target
+
