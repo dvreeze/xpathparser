@@ -3,8 +3,10 @@ language: scala
 
 matrix:
   include:
+  - jdk: oraclejdk9
+    scala: 2.12.4
   - jdk: oraclejdk8
-    scala: 2.12.3
+    scala: 2.12.4
   - jdk: oraclejdk8
     scala: 2.11.11
 
