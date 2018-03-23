@@ -5,20 +5,18 @@ organization := "eu.cdevreeze.xpathparser"
 
 version := "0.3.3-SNAPSHOT"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.5"
 
-crossScalaVersions := Seq("2.12.4", "2.11.11")
+crossScalaVersions := Seq("2.12.5", "2.11.12")
 
 // See: Toward a safer Scala
 // http://downloads.typesafe.com/website/presentations/ScalaDaysSF2015/Toward%20a%20Safer%20Scala%20@%20Scala%20Days%20SF%202015.pdf
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.4"
-
 libraryDependencies += "com.lihaoyi" %% "fastparse" % "1.0.0"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
 
 // resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
