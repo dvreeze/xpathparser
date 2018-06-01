@@ -27,6 +27,7 @@ import eu.cdevreeze.xpathparser.ast.AnyWildcard
 import eu.cdevreeze.xpathparser.ast.ArgumentList
 import eu.cdevreeze.xpathparser.ast.ArrowExpr
 import eu.cdevreeze.xpathparser.ast.AxisStep
+import eu.cdevreeze.xpathparser.ast.CompoundArrowExpr
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.CurlyArrayConstructor
 import eu.cdevreeze.xpathparser.ast.EQName
@@ -577,7 +578,7 @@ class ParseXPathTest extends FunSuite {
     assertResult(List(EQName.QName("a"), EQName.QName("id"), EQName.QName("e"), EQName.QName("id"), EQName.QName("unknown"))) {
       parseResult.get.value.findAllElemsOfType(classTag[AbbrevForwardStep]).map(_.nodeTest) map {
         case SimpleNameTest(eqName) => eqName
-        case _                      => EQName.QName("unknown")
+        case _ => EQName.QName("unknown")
       }
     }
     assertResult(1) {
@@ -1140,7 +1141,7 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(3) {
-      val arrowExprs = parseResult.get.value.findAllElemsOrSelfOfType(classTag[ArrowExpr])
+      val arrowExprs = parseResult.get.value.findAllElemsOrSelfOfType(classTag[CompoundArrowExpr])
 
       arrowExprs.flatMap(_.arrowFunctionCalls).size
     }
