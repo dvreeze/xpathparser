@@ -120,7 +120,7 @@ object XPathParser {
   private val comparisonExpr: P[ComparisonExpr] =
     P(stringConcatExpr ~ ((valueComp | generalComp | nodeComp) ~/ stringConcatExpr).?) map {
       case (expr1, Some((op, expr2))) => CompoundComparisonExpr(expr1, op, expr2)
-      case (expr, None)               => SimpleComparisonExpr(expr)
+      case (expr, None) => expr
     }
 
   private val stringConcatExpr: P[StringConcatExpr] =
@@ -131,7 +131,7 @@ object XPathParser {
   private val rangeExpr: P[RangeExpr] =
     P(additiveExpr ~ (NDT.toWord ~/ additiveExpr).?) map {
       case (additiveExp1, Some(additiveExp2)) => CompoundRangeExpr(additiveExp1, additiveExp2)
-      case (additiveExp, None)                => SimpleRangeExpr(additiveExp)
+      case (additiveExp, None) => additiveExp
     }
 
   private val additiveExpr: P[AdditiveExpr] =
@@ -189,8 +189,8 @@ object XPathParser {
 
   private val arrowFunctionSpecifier: P[ArrowFunctionSpecifier] =
     P(eqName | varRef | parenthesizedExpr) map {
-      case nm: EQName                 => EQNameAsArrowFunctionSpecifier(nm)
-      case ref @ VarRef(_)            => VarRefAsArrowFunctionSpecifier(ref)
+      case nm: EQName => EQNameAsArrowFunctionSpecifier(nm)
+      case ref @ VarRef(_) => VarRefAsArrowFunctionSpecifier(ref)
       case exp @ ParenthesizedExpr(_) => ParenthesizedExprAsArrowFunctionSpecifier(exp)
     }
 
@@ -200,9 +200,7 @@ object XPathParser {
     }
 
   private val valueExpr: P[ValueExpr] =
-    P(simpleMapExpr) map {
-      case expr => ValueExpr(expr)
-    }
+    P(simpleMapExpr)
 
   private val simpleMapExpr: P[SimpleMapExpr] =
     P(pathExpr.rep(min = 1, sep = DT.exclamationMark)) map {
@@ -320,14 +318,14 @@ object XPathParser {
     P((NDT.childWord | NDT.descendantWord | NDT.attributeWord | NDT.selfWord | NDT.descendantOrSelfWord |
       NDT.followingSiblingWord | NDT.followingWord | NDT.namespaceWord).! ~ DT.doubleColon) map {
 
-      case "child"              => ForwardAxis.Child
-      case "descendant"         => ForwardAxis.Descendant
-      case "attribute"          => ForwardAxis.Attribute
-      case "self"               => ForwardAxis.Self
+      case "child" => ForwardAxis.Child
+      case "descendant" => ForwardAxis.Descendant
+      case "attribute" => ForwardAxis.Attribute
+      case "self" => ForwardAxis.Self
       case "descendant-or-self" => ForwardAxis.DescendantOrSelf
-      case "following-sibling"  => ForwardAxis.FollowingSibling
-      case "following"          => ForwardAxis.Following
-      case "namespace"          => ForwardAxis.Namespace
+      case "following-sibling" => ForwardAxis.FollowingSibling
+      case "following" => ForwardAxis.Following
+      case "namespace" => ForwardAxis.Namespace
     }
 
   private val reverseStep: P[ReverseStep] =
@@ -343,11 +341,11 @@ object XPathParser {
 
   private val reverseAxis: P[ReverseAxis] =
     P((NDT.parentWord | NDT.ancestorWord | NDT.precedingSiblingWord | NDT.precedingWord | NDT.ancestorOrSelfWord).! ~ DT.doubleColon) map {
-      case "parent"            => ReverseAxis.Parent
-      case "ancestor"          => ReverseAxis.Ancestor
+      case "parent" => ReverseAxis.Parent
+      case "ancestor" => ReverseAxis.Ancestor
       case "preceding-sibling" => ReverseAxis.PrecedingSibling
-      case "preceding"         => ReverseAxis.Preceding
-      case "ancestor-or-self"  => ReverseAxis.AncestorOrSelf
+      case "preceding" => ReverseAxis.Preceding
+      case "ancestor-or-self" => ReverseAxis.AncestorOrSelf
     }
 
   // The 2 branches of a nodeTest are easy to distinguish, with limited lookahead.
@@ -520,9 +518,9 @@ object XPathParser {
 
   private val keySpecifier: P[KeySpecifier] =
     P(ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr) map {
-      case (nm: NCName)             => NamedKeySpecifier(nm)
+      case (nm: NCName) => NamedKeySpecifier(nm)
       case (intLit: IntegerLiteral) => PositionalKeySpecifier(intLit)
-      case "*"                      => WildcardKeySpecifier
+      case "*" => WildcardKeySpecifier
       case (exp: ParenthesizedExpr) => ParenthesizedExprKeySpecifier(exp)
     }
 
@@ -640,11 +638,11 @@ object XPathParser {
 
   private val nonEmptySequenceType: P[SequenceType] =
     P(itemType ~ (DT.questionMark | DT.asterisk | DT.plus).!.?) map {
-      case (tpe, None)      => ExactlyOneSequenceType(tpe)
+      case (tpe, None) => ExactlyOneSequenceType(tpe)
       case (tpe, Some("?")) => ZeroOrOneSequenceType(tpe)
       case (tpe, Some("*")) => ZeroOrMoreSequenceType(tpe)
       case (tpe, Some("+")) => OneOrMoreSequenceType(tpe)
-      case _                => EmptySequenceType
+      case _ => EmptySequenceType
     }
 
   private val itemType: P[ItemType] =
@@ -704,7 +702,7 @@ object XPathParser {
 
   private val singleType: P[SingleType] =
     P(eqName ~ DT.questionMark.!.?) map {
-      case (tpe, None)    => NonEmptySingleType(tpe)
+      case (tpe, None) => NonEmptySingleType(tpe)
       case (tpe, Some(_)) => PotentiallyEmptySingleType(tpe)
     }
 

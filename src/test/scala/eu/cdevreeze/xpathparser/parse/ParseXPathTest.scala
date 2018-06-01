@@ -42,6 +42,7 @@ import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.LetExpr
 import eu.cdevreeze.xpathparser.ast.LocalNameWildcard
+import eu.cdevreeze.xpathparser.ast.MapConstructor
 import eu.cdevreeze.xpathparser.ast.MapConstructorEntry
 import eu.cdevreeze.xpathparser.ast.NamedFunctionRef
 import eu.cdevreeze.xpathparser.ast.NamespaceWildcard
@@ -716,11 +717,15 @@ class ParseXPathTest extends FunSuite {
       val firstKey =
         parseResult.get.value.findAllTopmostElemsOrSelfOfType(classTag[MapConstructorEntry]).head.keyExpr
 
-      firstKey.findFirstElemOfType(classTag[StringLiteral]).map(_.value)
+      firstKey.findFirstElemOrSelfOfType(classTag[StringLiteral]).map(_.value)
     }
 
     assertResult(12) {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[MapConstructorEntry]).size
+    }
+
+    assertResult(5) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[MapConstructor]).size
     }
   }
 
@@ -1197,11 +1202,11 @@ class ParseXPathTest extends FunSuite {
       parseResult.get.value.findAllElemsOrSelfOfType(classTag[ParenthesizedExpr]).size
     }
 
-    assertResult(4) {
+    assertResult(3) {
       val parenExprs =
         parseResult.get.value.findAllElemsOrSelfOfType(classTag[ParenthesizedExpr])
 
-      parenExprs.flatMap(_.findAllTopmostElemsOrSelfOfType(classTag[StepExpr])).size
+      parenExprs.flatMap(_.findAllElemsOrSelfOfType(classTag[AxisStep])).size
     }
   }
 
