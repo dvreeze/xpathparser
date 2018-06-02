@@ -111,16 +111,31 @@ final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
 /**
  * Expression, which is a sequence of 1 or more ExprSingle objects, separated by commas.
  */
-final case class Expr(exprSingleSeq: immutable.IndexedSeq[ExprSingle]) extends XPathElem {
-  require(exprSingleSeq.size >= 1, s"At least one expression-single must be provided but found none")
+sealed trait Expr extends XPathElem
+
+sealed trait SimpleExpr extends Expr
+
+final case class CompoundExpr(exprSingleSeq: immutable.IndexedSeq[ExprSingle]) extends Expr {
+  require(exprSingleSeq.size >= 2, s"At least 2 expression-singles must be provided but found 0 or 1 such expression")
 
   def children: immutable.IndexedSeq[XPathElem] = exprSingleSeq
+}
+
+object Expr {
+
+  def apply(exprSingleSeq: immutable.IndexedSeq[ExprSingle]): Expr = {
+    if (exprSingleSeq.size == 1) {
+      exprSingleSeq.head
+    } else {
+      CompoundExpr(exprSingleSeq)
+    }
+  }
 }
 
 /**
  * Expression-single. Most XPath expressions are expression-singles.
  */
-sealed trait ExprSingle extends XPathElem
+sealed trait ExprSingle extends SimpleExpr
 
 final case class ForExpr(
   simpleForBindings: immutable.IndexedSeq[SimpleForBinding],
