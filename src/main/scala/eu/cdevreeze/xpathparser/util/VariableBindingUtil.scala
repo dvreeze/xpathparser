@@ -52,11 +52,11 @@ object VariableBindingUtil {
           (0 until e.variableBindings.size).toIndexedSeq
             .flatMap { variableBindingIndex =>
               val variableBinding = e.variableBindings(variableBindingIndex)
-              val accVariableBindings = e.variableBindings.take(variableBindingIndex + 1)
+              val prevVariableBindings = e.variableBindings.take(variableBindingIndex)
 
-              val introducedVariables = inheritedIntroducedVariables.union(accVariableBindings.map(_.varName).toSet)
+              val prevIntroducedVariables = inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
 
-              findAllBoundVariables(variableBinding.expr, introducedVariables)
+              findAllBoundVariables(variableBinding.expr, prevIntroducedVariables)
             }
 
         val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
@@ -93,11 +93,11 @@ object VariableBindingUtil {
           (0 until e.variableBindings.size).toIndexedSeq
             .flatMap { variableBindingIndex =>
               val variableBinding = e.variableBindings(variableBindingIndex)
-              val accVariableBindings = e.variableBindings.take(variableBindingIndex + 1)
+              val prevVariableBindings = e.variableBindings.take(variableBindingIndex)
 
-              val introducedVariables = inheritedIntroducedVariables.union(accVariableBindings.map(_.varName).toSet)
+              val prevIntroducedVariables = inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
 
-              findAllFreeVariables(variableBinding.expr, introducedVariables)
+              findAllFreeVariables(variableBinding.expr, prevIntroducedVariables)
             }
 
         val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
