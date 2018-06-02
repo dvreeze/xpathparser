@@ -23,6 +23,8 @@ lazy val commonSettings = Seq(
 
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-target:jvm-1.8"),
 
+  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
+
   publishArtifact in Test := false,
   publishMavenStyle := true,
 
