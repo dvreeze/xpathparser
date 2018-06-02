@@ -16,9 +16,6 @@
 
 package eu.cdevreeze.xpathparser.common
 
-import javax.xml.XMLConstants
-import javax.xml.namespace.{ QName => JQName }
-
 /**
  * Expanded name, containing a local part and optional namespace name. See the EName type in the yaidom project.
  *
@@ -35,16 +32,9 @@ final case class EName(namespaceUriOption: Option[String], localPart: String) ex
     QName(prefixOption, localPart)
   }
 
-  /** Given an optional prefix, creates a `javax.xml.namespace.QName` from this EName */
-  def toJavaQName(prefixOption: Option[String]): JQName = {
-    require(
-      namespaceUriOption.isDefined || prefixOption.isEmpty, s"Prefix only allowed if namespace non-empty in EName '${this}'")
-    new JQName(namespaceUriOption.getOrElse(XMLConstants.NULL_NS_URI), localPart, prefixOption.getOrElse(XMLConstants.DEFAULT_NS_PREFIX))
-  }
-
   /** The `String` representation, in the format of the `javax.xml.namespace.QName.toString` method */
   override def toString: String = namespaceUriOption match {
-    case None        => localPart
+    case None => localPart
     case Some(nsUri) => "{" + nsUri + "}" + localPart
   }
 }
@@ -56,9 +46,6 @@ object EName {
 
   /** Shorthand for `parse(s)` */
   def apply(s: String): EName = parse(s)
-
-  /** Creates an `EName` from a `javax.xml.namespace.QName` */
-  def fromJavaQName(jqname: JQName): EName = EName(jqname.toString)
 
   /**
    * Parses a `String` into an `EName`. The `String` (after trimming) must conform to the `toString` format of an `EName`.
