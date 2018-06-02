@@ -4,6 +4,9 @@
 // To convince SBT not to publish any root level artifacts, I had a look at how scala-java-time does it.
 // See https://github.com/cquiroz/scala-java-time/blob/master/build.sbt as a "template" for this build file.
 
+// shadow sbt-scalajs' crossProject and CrossType from Scala.js 0.6.x
+
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 val scalaVer = "2.12.6"
 
@@ -51,7 +54,9 @@ lazy val root = project.in(file("."))
     publishArtifact      := false,
     Keys.`package`       := file(""))
 
-lazy val xpathparser = crossProject.crossType(CrossType.Full).in(file("."))
+lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Full)
+  .in(file("."))
   .settings(commonSettings: _*)
   .jvmSettings(
     mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.3.2")
