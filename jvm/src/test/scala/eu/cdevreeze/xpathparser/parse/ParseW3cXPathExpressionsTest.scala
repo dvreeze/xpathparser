@@ -17,7 +17,6 @@
 package eu.cdevreeze.xpathparser.parse
 
 import scala.collection.JavaConverters.propertiesAsScalaMapConverter
-
 import org.scalatest.FunSuite
 
 /**

@@ -1,47 +1,74 @@
 
-name := "xpathparser"
+// Building both for JVM and JavaScript runtimes.
 
-organization := "eu.cdevreeze.xpathparser"
-
-version := "0.3.3-SNAPSHOT"
-
-scalaVersion := "2.12.5"
-
-crossScalaVersions := Seq("2.12.5", "2.11.12")
-
-// See: Toward a safer Scala
-// http://downloads.typesafe.com/website/presentations/ScalaDaysSF2015/Toward%20a%20Safer%20Scala%20@%20Scala%20Days%20SF%202015.pdf
-
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
-
-libraryDependencies += "com.lihaoyi" %% "fastparse" % "1.0.0"
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+// To convince SBT not to publish any root level artifacts, I had a look at how scala-java-time does it.
+// See https://github.com/cquiroz/scala-java-time/blob/master/build.sbt as a "template" for this build file.
 
 
-// resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
+val scalaVer = "2.12.6"
 
-// addCompilerPlugin("com.artima.supersafe" %% "supersafe" % "1.0.3")
+val crossScalaVer = Seq(scalaVer, "2.11.12")
 
-publishMavenStyle := true
+lazy val commonSettings = Seq(
+  name         := "xpathparser",
+  description  := "XPath parser and XPath AST API",
+  organization := "eu.cdevreeze.xpathparser",
+  version      := "0.4.0-SNAPSHOT",
 
-publishTo := {
-  val vers = version.value
+  scalaVersion       := scalaVer,
+  crossScalaVersions := crossScalaVer,
 
-  val nexus = "https://oss.sonatype.org/"
+  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-target:jvm-1.8"),
 
-  if (vers.trim.endsWith("SNAPSHOT")) {
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  } else {
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  }
-}
+  publishArtifact in Test := false,
+  publishMavenStyle := true,
 
-publishArtifact in Test := false
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
 
-pomIncludeRepository := { repo => false }
+  pomExtra := pomData,
+  pomIncludeRepository := { _ => false },
 
-pomExtra := {
+  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "1.0.0",
+
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.5" % "test"
+)
+
+lazy val root = project.in(file("."))
+  .aggregate(xpathparserJVM, xpathparserJS)
+  .settings(commonSettings: _*)
+  .settings(
+    name                 := "xpathparser",
+    // Thanks, scala-java-time, for showing us how to prevent any publishing of root level artifacts:
+    // No, SBT, we don't want any artifacts for root. No, not even an empty jar.
+    publish              := {},
+    publishLocal         := {},
+    publishArtifact      := false,
+    Keys.`package`       := file(""))
+
+lazy val xpathparser = crossProject.crossType(CrossType.Full).in(file("."))
+  .settings(commonSettings: _*)
+  .jvmSettings(
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.3.2")
+  )
+  .jsSettings(
+    // Do we need this jsEnv?
+    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.6",
+
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.3.2")
+  )
+
+lazy val xpathparserJVM = xpathparser.jvm
+lazy val xpathparserJS = xpathparser.js
+
+lazy val pomData =
   <url>https://github.com/dvreeze/xpathparser</url>
   <licenses>
     <license>
@@ -63,4 +90,3 @@ pomExtra := {
       <email>chris.de.vreeze@caiway.net</email>
     </developer>
   </developers>
-}
