@@ -228,13 +228,23 @@ class VariableBindingTest extends FunSuite {
     assertFreeVariableNames(parseResult.get.value, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
     assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("n"), EQName.QName("m")))
 
-    val secondBindingExpr = parseResult.get.value.findElemOfType(classTag[ForExpr])(_ => true).map(_.variableBindings.tail.head).get.expr
+    val forExpr = parseResult.get.value.findElemOfType(classTag[ForExpr])(_ => true).get
+    val secondBindingExpr = forExpr.variableBindings.tail.head.expr
 
     assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("n"), EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
     assertBoundVariableNames(secondBindingExpr, Set())
 
     assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")), Set(EQName.QName("n"), EQName.QName("m")))
     assertBoundVariableNames(secondBindingExpr, Set(EQName.QName("n")), Set(EQName.QName("n"), EQName.QName("m")))
+
+    val firstVarScope = forExpr.scopeOfVariableBinding(0)
+
+    assertResult(2) {
+      firstVarScope.size
+    }
+    assertResult(Set(secondBindingExpr, forExpr.returnExpr)) {
+      firstVarScope.toSet
+    }
   }
 
   private def assertFreeVariableNames(

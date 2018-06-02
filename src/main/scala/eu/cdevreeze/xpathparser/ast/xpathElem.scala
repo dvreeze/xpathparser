@@ -81,7 +81,13 @@ sealed trait VariableIntroducingExpr extends XPathElem {
    * Returns the scope of the variable binding whose index is given as parameter.
    * The scope determines where variables can be bound by that variable binding.
    */
-  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem]
+  final def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
+    require(
+      0 <= variableBindingIndex && variableBindingIndex < variableBindings.size,
+      s"Wrong variable binding index: $variableBindingIndex")
+
+    variableBindings.drop(variableBindingIndex + 1).map(_.expr) :+ returnExpr
+  }
 }
 
 /**
@@ -125,14 +131,6 @@ final case class ForExpr(
   def children: immutable.IndexedSeq[XPathElem] = simpleForBindings :+ returnExpr
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleForBindings
-
-  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
-    require(
-      0 <= variableBindingIndex && variableBindingIndex < simpleForBindings.size,
-      s"Wrong variable binding index: $variableBindingIndex")
-
-    simpleForBindings.drop(variableBindingIndex + 1).map(_.expr) :+ returnExpr
-  }
 }
 
 final case class LetExpr(
@@ -142,14 +140,6 @@ final case class LetExpr(
   def children: immutable.IndexedSeq[XPathElem] = simpleLetBindings :+ returnExpr
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleLetBindings
-
-  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
-    require(
-      0 <= variableBindingIndex && variableBindingIndex < simpleLetBindings.size,
-      s"Wrong variable binding index: $variableBindingIndex")
-
-    simpleLetBindings.drop(variableBindingIndex + 1).map(_.expr) :+ returnExpr
-  }
 }
 
 final case class QuantifiedExpr(
@@ -162,14 +152,6 @@ final case class QuantifiedExpr(
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleBindings
 
   def returnExpr: XPathElem = satisfiesExpr
-
-  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
-    require(
-      0 <= variableBindingIndex && variableBindingIndex < simpleBindings.size,
-      s"Wrong variable binding index: $variableBindingIndex")
-
-    simpleBindings.drop(variableBindingIndex + 1).map(_.expr) :+ satisfiesExpr
-  }
 }
 
 final case class IfExpr(
