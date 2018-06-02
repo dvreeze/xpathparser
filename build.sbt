@@ -69,6 +69,8 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.6",
 
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3",
+
     mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.3.2")
   )
 

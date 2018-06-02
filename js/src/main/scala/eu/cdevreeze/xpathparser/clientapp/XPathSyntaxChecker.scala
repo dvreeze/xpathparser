@@ -23,6 +23,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 import org.scalajs.dom.document
 import org.scalajs.dom.Node
+import org.scalajs.dom.raw.HTMLPreElement
 import org.scalajs.dom.raw.HTMLLIElement
 import org.scalajs.dom.raw.HTMLTextAreaElement
 import org.scalajs.dom.raw.HTMLUListElement
@@ -68,6 +69,8 @@ object XPathSyntaxChecker {
     freeVariablesUList.innerHTML = ""
     boundVariablesUList.innerHTML = ""
     calledFunctionsUList.innerHTML = ""
+
+    getAstPreElement().firstElementChild.innerHTML = ""
   }
 
   @JSExport("clearColor")
@@ -101,6 +104,13 @@ object XPathSyntaxChecker {
     calledFunctions.map(_.functionName).distinct.foreach { funcCall =>
       addNewReadonlyListItem(calledFunctionsUList, funcCall.toString, liCls)
     }
+
+    val codeElement = getAstPreElement().firstElementChild
+
+    val codeString: String = pprint.apply(parseResult.value, height = 2000).plainText
+
+    codeElement.innerHTML = ""
+    addCodeString(codeElement, "\n" + codeString)
   }
 
   private def showFailure(parseResult: Parsed.Failure[Char, String]): Unit = {
@@ -113,6 +123,8 @@ object XPathSyntaxChecker {
     freeVariablesUList.innerHTML = ""
     boundVariablesUList.innerHTML = ""
     calledFunctionsUList.innerHTML = ""
+
+    getAstPreElement().firstElementChild.innerHTML = ""
   }
 
   private def getXPathTextArea(): HTMLTextAreaElement = {
@@ -131,11 +143,20 @@ object XPathSyntaxChecker {
     document.getElementById("functions").ensuring(_ != null).asInstanceOf[HTMLUListElement]
   }
 
+  private def getAstPreElement(): HTMLPreElement = {
+    document.getElementById("astPre").ensuring(_ != null).asInstanceOf[HTMLPreElement]
+  }
+
   private def addNewReadonlyListItem(targetNode: Node, text: String, cssClass: String): Unit = {
     val liElem = document.createElement("li").asInstanceOf[HTMLLIElement]
     liElem.className = cssClass
     val textNode = document.createTextNode(text)
     liElem.appendChild(textNode)
     targetNode.appendChild(liElem)
+  }
+
+  private def addCodeString(targetNode: Node, text: String): Unit = {
+    val textNode = document.createTextNode(text)
+    targetNode.appendChild(textNode)
   }
 }
