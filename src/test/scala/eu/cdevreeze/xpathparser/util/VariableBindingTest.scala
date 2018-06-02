@@ -212,6 +212,31 @@ class VariableBindingTest extends FunSuite {
       Set(EQName.QName("f")))
   }
 
+  test("testBindingsDependingOnOtherBindings") {
+    // From the NL taxonomy (NT12)
+
+    val exprString =
+      """not((for
+                $n in (1 to (count($varArc_ELRName_PrtFactsNECovA_Set01)-1)),
+                $m in (($n+1) to (count($varArc_ELRName_PrtFactsNECovA_Set01)))
+              return (($varArc_ELRName_PrtFactsNECovA_Set01[$n] = $varArc_ELRName_PrtFactsNECovA_Set01[$m]))) = true())""".trim
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    // Note that $n is never free, not even in the variable binding for $m.
+
+    assertFreeVariableNames(parseResult.get.value, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
+    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("n"), EQName.QName("m")))
+
+    val secondBindingExpr = parseResult.get.value.findElemOfType(classTag[ForExpr])(_ => true).map(_.variableBindings.tail.head).get.expr
+
+    assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("n"), EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
+    assertBoundVariableNames(secondBindingExpr, Set())
+
+    assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")), Set(EQName.QName("n"), EQName.QName("m")))
+    assertBoundVariableNames(secondBindingExpr, Set(EQName.QName("n")), Set(EQName.QName("n"), EQName.QName("m")))
+  }
+
   private def assertFreeVariableNames(
     elem: XPathElem,
     expectedVarNames: Set[EQName],

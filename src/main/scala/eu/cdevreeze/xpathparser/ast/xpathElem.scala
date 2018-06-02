@@ -73,13 +73,15 @@ sealed trait VariableIntroducingExpr extends XPathElem {
   def variableBindings: immutable.IndexedSeq[VariableBinding]
 
   /**
-   * Returns the children that are affected by the own (and other) variable bindings,
-   * in interpreting which variables are free and which are bounded.
-   *
-   * TODO This is the wrong method. If there are multiple variable bindings, they have
-   * different scopes.
+   * Returns the "return expression".
    */
-  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem]
+  def returnExpr: XPathElem
+
+  /**
+   * Returns the scope of the variable binding whose index is given as parameter.
+   * The scope determines where variables can be bound by that variable binding.
+   */
+  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem]
 }
 
 /**
@@ -124,7 +126,13 @@ final case class ForExpr(
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleForBindings
 
-  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
+  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
+    require(
+      0 <= variableBindingIndex && variableBindingIndex < simpleForBindings.size,
+      s"Wrong variable binding index: $variableBindingIndex")
+
+    simpleForBindings.drop(variableBindingIndex + 1).map(_.expr) :+ returnExpr
+  }
 }
 
 final case class LetExpr(
@@ -135,7 +143,13 @@ final case class LetExpr(
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleLetBindings
 
-  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(returnExpr)
+  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
+    require(
+      0 <= variableBindingIndex && variableBindingIndex < simpleLetBindings.size,
+      s"Wrong variable binding index: $variableBindingIndex")
+
+    simpleLetBindings.drop(variableBindingIndex + 1).map(_.expr) :+ returnExpr
+  }
 }
 
 final case class QuantifiedExpr(
@@ -147,7 +161,15 @@ final case class QuantifiedExpr(
 
   def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleBindings
 
-  def childrenAffectedByOwnVariableBindings: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(satisfiesExpr)
+  def returnExpr: XPathElem = satisfiesExpr
+
+  def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
+    require(
+      0 <= variableBindingIndex && variableBindingIndex < simpleBindings.size,
+      s"Wrong variable binding index: $variableBindingIndex")
+
+    simpleBindings.drop(variableBindingIndex + 1).map(_.expr) :+ satisfiesExpr
+  }
 }
 
 final case class IfExpr(

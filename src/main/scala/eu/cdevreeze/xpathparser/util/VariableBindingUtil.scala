@@ -47,24 +47,31 @@ object VariableBindingUtil {
     // Many recursive calls are done below
 
     elem match {
-      case e @ VarRef(eqname) =>
-        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq(e) else immutable.IndexedSeq()
-      case e: VariableBinding =>
-        findAllBoundVariables(e.expr, inheritedIntroducedVariables)
       case e: VariableIntroducingExpr =>
+        val rawLoopGeneratorResult =
+          (0 until e.variableBindings.size).toIndexedSeq
+            .flatMap { variableBindingIndex =>
+              val variableBinding = e.variableBindings(variableBindingIndex)
+              val accVariableBindings = e.variableBindings.take(variableBindingIndex + 1)
+
+              val introducedVariables = inheritedIntroducedVariables.union(accVariableBindings.map(_.varName).toSet)
+
+              findAllBoundVariables(variableBinding.expr, introducedVariables)
+            }
+
         val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
 
-        val boundVariablesInBindings =
-          e.variableBindings.flatMap(b => findAllBoundVariables(b.expr, inheritedIntroducedVariables))
+        val returnExprResult = findAllBoundVariables(e.returnExpr, introducedVariables)
 
-        val boundVariablesUsingOwnBindings =
-          e.childrenAffectedByOwnVariableBindings.flatMap(che => findAllBoundVariables(che, introducedVariables))
-
-        boundVariablesInBindings ++ boundVariablesUsingOwnBindings
+        rawLoopGeneratorResult.distinct ++ returnExprResult
       case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
         val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
 
         findAllBoundVariables(body, introducedVariables)
+      case e: VariableBinding =>
+        findAllBoundVariables(e.expr, inheritedIntroducedVariables)
+      case e @ VarRef(eqname) =>
+        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq(e) else immutable.IndexedSeq()
       case e =>
         e.children.flatMap(che => findAllBoundVariables(che, inheritedIntroducedVariables))
     }
@@ -81,24 +88,31 @@ object VariableBindingUtil {
     // Many recursive calls are done below
 
     elem match {
-      case e @ VarRef(eqname) =>
-        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq() else immutable.IndexedSeq(e)
-      case e: VariableBinding =>
-        findAllFreeVariables(e.expr, inheritedIntroducedVariables)
       case e: VariableIntroducingExpr =>
+        val rawLoopGeneratorResult =
+          (0 until e.variableBindings.size).toIndexedSeq
+            .flatMap { variableBindingIndex =>
+              val variableBinding = e.variableBindings(variableBindingIndex)
+              val accVariableBindings = e.variableBindings.take(variableBindingIndex + 1)
+
+              val introducedVariables = inheritedIntroducedVariables.union(accVariableBindings.map(_.varName).toSet)
+
+              findAllFreeVariables(variableBinding.expr, introducedVariables)
+            }
+
         val introducedVariables = inheritedIntroducedVariables.union(e.variableBindings.map(_.varName).toSet)
 
-        val freeVariablesInBindings =
-          e.variableBindings.flatMap(b => findAllFreeVariables(b.expr, inheritedIntroducedVariables))
+        val returnExprResult = findAllFreeVariables(e.returnExpr, introducedVariables)
 
-        val freeVariablesUsingOwnBindings =
-          e.childrenAffectedByOwnVariableBindings.flatMap(che => findAllFreeVariables(che, introducedVariables))
-
-        freeVariablesInBindings ++ freeVariablesUsingOwnBindings
+        rawLoopGeneratorResult.distinct ++ returnExprResult
       case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
         val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
 
         findAllFreeVariables(body, introducedVariables)
+      case e: VariableBinding =>
+        findAllFreeVariables(e.expr, inheritedIntroducedVariables)
+      case e @ VarRef(eqname) =>
+        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq() else immutable.IndexedSeq(e)
       case e =>
         e.children.flatMap(che => findAllFreeVariables(che, inheritedIntroducedVariables))
     }
