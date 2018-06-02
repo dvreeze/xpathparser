@@ -42,8 +42,6 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  *
  * TODO Improve several class names.
  *
- * TODO Scala-JS backend.
- *
  * @author Chris de Vreeze
  */
 sealed trait XPathElem extends ElemLike[XPathElem] {

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XPath 3.1 syntax checker</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+</head>
+<body>
+	<!-- Include Scala.js compiled code -->
+	<script type="text/javascript" src="./js/target/scala-2.12/xpathparser-fastopt.js"></script>
+
+	<script type="text/javascript" src="./js/target/scala-2.12/xpathparser-jsdeps.js"></script>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<div class="container-fluid">
+		<div class="page-header">
+			<h1>XPath 3.1 syntax checker</h1>
+		</div>
+
+		<form>
+			<div class="form-group">
+				<label for="xpathInput">XPath expression</label>
+				<textarea class="form-control" id="xpathInput" placeholder="XPath string" rows="5"
+					oninput="XPathSyntaxChecker.clearColor()" onkeydown="XPathSyntaxChecker.clearColor()"
+					style="font-family: monospace;"></textarea>
+			</div>
+
+			<!-- See https://getbootstrap.com/2.3.2/components.html#buttonGroups -->
+			<div class="btn-toolbar">
+				<button type="button" class="btn btn-default btn-lg"
+					onclick="XPathSyntaxChecker.checkSyntax(document.getElementById('xpathInput').value)">Check syntax</button>
+				<button type="button" class="btn btn-default btn-lg" onclick="XPathSyntaxChecker.clear()">Clear</button>
+			</div>
+
+			<hr />
+
+			<div class="form-group">
+				<label for="freeVariables">Free variables</label>
+				<ul class="list-group" id="freeVariables"></ul>
+			</div>
+
+			<div class="form-group">
+				<label for="boundVariables">Bound variables</label>
+				<ul class="list-group" id="boundVariables"></ul>
+			</div>
+
+			<div class="form-group">
+				<label for="functions">Functions called</label>
+				<ul class="list-group" id="functions"></ul>
+			</div>
+		</form>
+	</div>
+
+</body>
+</html>
