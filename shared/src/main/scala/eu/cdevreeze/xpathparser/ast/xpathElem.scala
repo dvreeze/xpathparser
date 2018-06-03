@@ -489,7 +489,7 @@ final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifie
   def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(arrowFunctionSpecifier, argumentList)
 }
 
-// Note that an arrow function specifier should extends Expr indirectly, but then an EQName must be an expression too
+// Note that an arrow function specifier should extend Expr indirectly, but then an EQName must be an expression too
 
 sealed trait ArrowFunctionSpecifier extends XPathElem
 
