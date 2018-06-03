@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   name         := "xpathparser",
   description  := "XPath parser and XPath AST API",
   organization := "eu.cdevreeze.xpathparser",
-  version      := "0.4.0-SNAPSHOT",
+  version      := "0.4.0",
 
   scalaVersion       := scalaVer,
   crossScalaVersions := crossScalaVer,
