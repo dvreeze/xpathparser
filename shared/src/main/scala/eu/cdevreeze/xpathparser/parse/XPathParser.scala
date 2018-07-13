@@ -56,7 +56,7 @@ object XPathParser {
    * The parser consumes the entire input string or else parsing cannot be successful.
    */
   val xpathExpr: P[XPathExpr] =
-    P(expr ~ End) map (e => XPathExpr(e))
+    P(expr ~ End)
 
   /**
    * Parser for an Expr. Usage: `expr.parse(inputString)`. The parser does not need to consume

@@ -91,10 +91,7 @@ sealed trait VariableIntroducingExpr extends XPathElem {
 /**
  * XPath expression.
  */
-final case class XPathExpr(expr: Expr) extends XPathElem {
-
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
-}
+sealed trait XPathExpr extends XPathElem
 
 // Enclosed expressions
 
@@ -111,7 +108,7 @@ final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
 /**
  * Expression, which is a sequence of 1 or more ExprSingle objects, separated by commas.
  */
-sealed trait Expr extends XPathElem
+sealed trait Expr extends XPathExpr
 
 sealed trait SimpleExpr extends Expr
 
