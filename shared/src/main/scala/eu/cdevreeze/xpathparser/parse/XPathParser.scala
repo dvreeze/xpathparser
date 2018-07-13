@@ -52,11 +52,17 @@ object XPathParser {
    * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. To ignore initial
    * whitespace, call `xpathExpr.parse(xpathString.trim)` instead. Comments are not supported,
    * so will lead to parsing failures.
+   *
+   * The parser consumes the entire input string or else parsing cannot be successful.
    */
   val xpathExpr: P[XPathExpr] =
     P(expr ~ End) map (e => XPathExpr(e))
 
-  private val expr: P[Expr] =
+  /**
+   * Parser for an Expr. Usage: `expr.parse(inputString)`. The parser does not need to consume
+   * the entire input string.
+   */
+  val expr: P[Expr] =
     P(exprSingle.rep(min = 1, sep = DT.comma)) map {
       case (exprs) => Expr(exprs.toIndexedSeq)
     }

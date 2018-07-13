@@ -83,6 +83,7 @@ class ParseXPathTest extends FunSuite {
 
   import fastparse.all.Parsed
 
+  import XPathParser.expr
   import XPathParser.xpathExpr
 
   test("testParseSlash") {
@@ -131,6 +132,10 @@ class ParseXPathTest extends FunSuite {
     val parseResult = xpathExpr.parse(exprString)
 
     assertFailure(parseResult)
+
+    val partialParseResult = expr.parse(exprString)
+
+    assertSuccess(partialParseResult)
   }
 
   test("testParseIfExprWithFunctionCalls") {
