@@ -83,7 +83,7 @@ class ParseXPathTest extends FunSuite {
 
   import fastparse.all.Parsed
 
-  import XPathParser.expr
+  import XPathElemParser.expr
   import XPathParser.xpathExpr
 
   test("testParseSlash") {
@@ -104,6 +104,30 @@ class ParseXPathTest extends FunSuite {
 
   test("testParseSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
+
+    val parseResult = xpathExpr.parse(exprString)
+
+    assertSuccess(parseResult)
+
+    val simpleNameTests = parseResult.get.value.findAllElemsOfType(classTag[SimpleNameTest])
+
+    assertResult(List(
+      EQName.QName("p:a"),
+      EQName.QName("p:b"),
+      EQName.QName("p:c"),
+      EQName.QName("p:d"),
+      EQName.QName("p:e"))) {
+
+      simpleNameTests.map(e => e.name)
+    }
+
+    assertResult(5) {
+      parseResult.get.value.findAllElemsOrSelfOfType(classTag[AxisStep]).size
+    }
+  }
+
+  test("testParseSimplePathExprWithWhitespace") {
+    val exprString = "   /p:a//p:b/p:c//p:d/p:e   "
 
     val parseResult = xpathExpr.parse(exprString)
 

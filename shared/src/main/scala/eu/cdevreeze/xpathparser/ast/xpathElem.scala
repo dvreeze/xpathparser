@@ -23,7 +23,7 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
 /**
  * XPath 3.1 AST. The root of the type hierarchy is XPathElem. It offers the ElemApi query API.
  *
- * The purpose of this AST is as follows:
+ * The requirements on this AST are as follows:
  * <ul>
  * <li>It must represent the syntax tree of a successfully parsed XPath expression</li>
  * <li>It is not annotated with more semantic information, like type information that is not included in the XPath expression</li>
@@ -33,6 +33,8 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * <li>It must be readable in that object composition trees are not unnecessarily deep and therefore hard to comprehend</li>
  * <li>Serialization of the AST to XPath may lead to differences in whitespace (and operator aliases), but other than that the result must be the same</li>
  * <li>The AST class hierarchy does not have to use the exact same names as the XPath grammar</li>
+ * <li>Instances of the AST classes are easy to create in an ad-hoc manner, so they contain no parsing state</li>
+ * <li>The AST classes are case classes, with value equality and good support for pattern matching</li>
  * </ul>
  *
  * It would be natural for the AST types to have IS-A relationships modeled as type inheritance, and HAS-A
@@ -130,7 +132,7 @@ object Expr {
 }
 
 /**
- * Expression-single. Most XPath expressions are expression-singles.
+ * Expression-single, that is, an expression without any top-level commas. Most XPath expressions are expression-singles.
  */
 sealed trait ExprSingle extends SimpleExpr
 

@@ -50,7 +50,7 @@ object XPathSyntaxChecker {
 
   @JSExport("checkSyntax")
   def checkSyntax(xpathString: String): Unit = {
-    val parseResult: Parsed[XPathExpr, Char, String] = XPathParser.xpathExpr.parse(xpathString.trim)
+    val parseResult: Parsed[XPathExpr, Char, String] = XPathParser.xpathExpr.parse(xpathString)
 
     parseResult.fold(
       (parser, pos, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure[Char, String]]),

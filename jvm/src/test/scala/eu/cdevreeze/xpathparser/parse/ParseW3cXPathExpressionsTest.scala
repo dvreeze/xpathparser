@@ -40,9 +40,9 @@ class ParseW3cXPathExpressionsTest extends FunSuite {
   testInputs foreach {
     case (name, exprString) =>
       test(name) {
-        // Do not forget to trim the expression first!
+        // No need to trim the expression first.
 
-        val parseResult = xpathExpr.parse(exprString.trim)
+        val parseResult = xpathExpr.parse(exprString)
 
         assertSuccess(parseResult)
       }
