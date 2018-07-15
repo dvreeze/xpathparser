@@ -30,7 +30,7 @@ import fastparse.WhitespaceApi
  * XPathElemParser.expr.parse(xpathString)
  * }}}
  *
- * Using the parsers in XPathElemParser may be somewhat risky in that they malfunction when called in isolation,
+ * Using the parsers in XPathElemParser may be somewhat risky in that they may "malfunction" when called in isolation,
  * due to the lack of context (such as cuts to avoid backtracking). Usually it is safer to stick to using the
  * XPathParser.xpathExpr parser. On the other hand, exposing parsers for specific AST elements makes it easier to
  * "decorate" specific parsers.
@@ -47,7 +47,11 @@ object XPathElemParser {
   private val DT = DelimitingTerminals
   private val NDT = NonDelimitingTerminals
 
-  private val White = WhitespaceApi.Wrapper {
+  /**
+   * WhitespaceApi implementation for ignoring whitespace. This makes the "~" and "rep"
+   * operators consume and ignore all non-trailing whitespace.
+   */
+  val White = WhitespaceApi.Wrapper {
     import fastparse.all._
 
     // TODO Adapt. What about parsing of comments?
@@ -120,7 +124,7 @@ object XPathElemParser {
     }
 
   val comparisonExpr: P[ComparisonExpr] =
-    P(stringConcatExpr ~ ((valueComp | generalComp | nodeComp) ~/ stringConcatExpr).?) map {
+    P(stringConcatExpr ~ (comp ~/ stringConcatExpr).?) map {
       case (expr1, Some((op, expr2))) => CompoundComparisonExpr(expr1, op, expr2)
       case (expr, None) => expr
     }
@@ -716,6 +720,9 @@ object XPathElemParser {
   private val eqName: P[EQName] = P(EQNames.eqName)
 
   // Operators etc.
+
+  val comp: P[Comp] =
+    P(valueComp | generalComp | nodeComp)
 
   val valueComp: P[ValueComp] =
     P((NDT.eqWord | NDT.neWord | NDT.ltWord | NDT.leWord | NDT.gtWord | NDT.geWord).!) map (s => ValueComp.parse(s))

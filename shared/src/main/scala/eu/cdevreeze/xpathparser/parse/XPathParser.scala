@@ -17,7 +17,6 @@
 package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.XPathExpr
-import fastparse.WhitespaceApi
 
 /**
  * XPath 3.1 parsing support, using FastParse.
@@ -31,15 +30,7 @@ import fastparse.WhitespaceApi
  */
 object XPathParser {
 
-  private val White = WhitespaceApi.Wrapper {
-    import fastparse.all._
-
-    // TODO Adapt. What about parsing of comments?
-
-    NoTrace(CharPred(c => java.lang.Character.isWhitespace(c)).rep)
-  }
-
-  import White._
+  import XPathElemParser.White._
   import fastparse.noApi._
 
   /**
