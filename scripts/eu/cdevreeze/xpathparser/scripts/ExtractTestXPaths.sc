@@ -8,9 +8,9 @@
 // It creates an output property file with test XPath expressions that must be successfully parsed (at
 // least). The keys are the test case names.
 
-// Taking yaidom version 1.6.4
+// Taking yaidom version 1.8.0
 
-import $ivy.`eu.cdevreeze.yaidom::yaidom:1.6.4`
+import $ivy.`eu.cdevreeze.yaidom::yaidom:1.8.0`
 
 // Imports that (must) remain available after this initialization script
 
