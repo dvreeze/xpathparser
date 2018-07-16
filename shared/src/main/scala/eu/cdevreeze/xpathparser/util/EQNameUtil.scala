@@ -29,10 +29,16 @@ import eu.cdevreeze.xpathparser.ast.ElementNameTest
 import eu.cdevreeze.xpathparser.ast.ElementTypeTest
 import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.NamedFunctionRef
+import eu.cdevreeze.xpathparser.ast.NillableElementNameAndTypeTest
+import eu.cdevreeze.xpathparser.ast.NillableElementTypeTest
+import eu.cdevreeze.xpathparser.ast.NonEmptySingleType
 import eu.cdevreeze.xpathparser.ast.Param
+import eu.cdevreeze.xpathparser.ast.PotentiallyEmptySingleType
+import eu.cdevreeze.xpathparser.ast.SchemaAttributeTest
+import eu.cdevreeze.xpathparser.ast.SchemaElementTest
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
-import eu.cdevreeze.xpathparser.ast.VarRef
 import eu.cdevreeze.xpathparser.ast.VariableBinding
+import eu.cdevreeze.xpathparser.ast.VarRef
 import eu.cdevreeze.xpathparser.ast.XPathExpr
 
 /**
@@ -101,6 +107,12 @@ object EQNameUtil {
     val eqnamesInTypes: Set[EQName] =
       expr.findAllElemsOfType(classTag[AtomicOrUnionType]).map(_.tpe).toSet
 
+    val eqnamesInNonEmptySingleTypes: Set[EQName] =
+      expr.findAllElemsOfType(classTag[NonEmptySingleType]).map(_.name).toSet
+
+    val eqnamesInPotentiallyEmptySingleTypes: Set[EQName] =
+      expr.findAllElemsOfType(classTag[PotentiallyEmptySingleType]).map(_.name).toSet
+
     // EQNames in kind tests
 
     val eqnamesInAttributeNameTests: Set[EQName] =
@@ -121,6 +133,18 @@ object EQNameUtil {
     val eqnamesInElementNameAndTypeTests: Set[EQName] =
       expr.findAllElemsOfType(classTag[ElementNameAndTypeTest]).flatMap(t => List(t.name, t.tpe)).toSet
 
+    val eqnamesInNillableElementTypeTests: Set[EQName] =
+      expr.findAllElemsOfType(classTag[NillableElementTypeTest]).map(_.tpe).toSet
+
+    val eqnamesInNillableElementNameAndTypeTests: Set[EQName] =
+      expr.findAllElemsOfType(classTag[NillableElementNameAndTypeTest]).flatMap(t => List(t.name, t.tpe)).toSet
+
+    val eqnamesInSchemaElementTests: Set[EQName] =
+      expr.findAllElemsOfType(classTag[SchemaElementTest]).map(_.name).toSet
+
+    val eqnamesInSchemaAttributeTests: Set[EQName] =
+      expr.findAllElemsOfType(classTag[SchemaAttributeTest]).map(_.name).toSet
+
     eqnamesInVarRefs
       .union(eqnamesInNamesOfCalledFunctions)
       .union(eqnamesInNamedFunctionRefs)
@@ -129,12 +153,18 @@ object EQNameUtil {
       .union(eqnamesInSimpleNameTests)
       .union(eqnamesInArrowFunctionSpecifiers)
       .union(eqnamesInTypes)
+      .union(eqnamesInNonEmptySingleTypes)
+      .union(eqnamesInPotentiallyEmptySingleTypes)
       .union(eqnamesInAttributeNameTests)
       .union(eqnamesInAttributeTypeTests)
       .union(eqnamesInAttributeNameAndTypeTests)
       .union(eqnamesInElementNameTests)
       .union(eqnamesInElementTypeTests)
       .union(eqnamesInElementNameAndTypeTests)
+      .union(eqnamesInNillableElementTypeTests)
+      .union(eqnamesInNillableElementNameAndTypeTests)
+      .union(eqnamesInSchemaElementTests)
+      .union(eqnamesInSchemaAttributeTests)
   }
 
   /**
