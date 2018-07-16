@@ -30,14 +30,13 @@ import eu.cdevreeze.xpathparser.ast.ElementTypeTest
 import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.NamedFunctionRef
 import eu.cdevreeze.xpathparser.ast.Param
-import eu.cdevreeze.xpathparser.ast.PrefixWildcard
 import eu.cdevreeze.xpathparser.ast.SimpleNameTest
 import eu.cdevreeze.xpathparser.ast.VarRef
 import eu.cdevreeze.xpathparser.ast.VariableBinding
 import eu.cdevreeze.xpathparser.ast.XPathExpr
 
 /**
- * Utility to query for used EQNames (and namespace prefixes).
+ * Utility to query for used EQNames (and namespace prefixes in those EQNames that are QNames).
  *
  * This utility can be handy when searching for all namespace prefixes used in an XML document, if the document
  * can have XPath expressions in attribute values or element text according to the schema.
@@ -47,17 +46,15 @@ import eu.cdevreeze.xpathparser.ast.XPathExpr
 object EQNameUtil {
 
   /**
-   * Finds the namespace prefixes used in the given XPath expression, including those found in prefix wildcards.
+   * Finds the namespace prefixes used in QNames in the given XPath expression.
+   *
+   * Note that this function does not look for namespace prefixes in (prefix) wildcards.
+   *
+   * In other words, returns `findUsedEQNames(expr).flatMap(n => findPrefix(n))`.
    */
-  def findUsedPrefixesIncludingThoseInWildcards(expr: XPathExpr): Set[String] = {
-    findUsedPrefixes(expr, true)
-  }
-
-  /**
-   * Finds the namespace prefixes used in the given XPath expression, excluding those found in prefix wildcards.
-   */
-  def findUsedPrefixesExcludingThoseInWildcards(expr: XPathExpr): Set[String] = {
-    findUsedPrefixes(expr, false)
+  def findUsedPrefixes(expr: XPathExpr): Set[String] = {
+    val prefixesInEQNames: Set[String] = findUsedEQNames(expr).flatMap(n => findPrefix(n))
+    prefixesInEQNames
   }
 
   /**
@@ -84,7 +81,7 @@ object EQNameUtil {
     val eqnamesInVariableBindings: Set[EQName] =
       expr.findAllElemsOfType(classTag[VariableBinding]).map(_.varName).toSet
 
-    // EQNames in (names in) params, which concerns inline function expressions, which do not occur in XPath 2.0
+    // EQNames in (names of) params, which concerns inline function expressions
 
     val eqnamesInParams: Set[EQName] =
       expr.findAllElemsOfType(classTag[Param]).map(_.paramName).toSet
@@ -94,7 +91,7 @@ object EQNameUtil {
     val eqnamesInSimpleNameTests: Set[EQName] =
       expr.findAllElemsOfType(classTag[SimpleNameTest]).map(_.name).toSet
 
-    // EQNames in arrow function specifiers, which do not occur in XPath 2.0
+    // EQNames in arrow function specifiers
 
     val eqnamesInArrowFunctionSpecifiers: Set[EQName] =
       expr.findAllElemsOfType(classTag[EQNameAsArrowFunctionSpecifier]).map(_.eqName).toSet
@@ -140,20 +137,11 @@ object EQNameUtil {
       .union(eqnamesInElementNameAndTypeTests)
   }
 
-  private def findUsedPrefixes(expr: XPathExpr, includePrefixesInPrefixWildcards: Boolean): Set[String] = {
-    val prefixesInEQNames: Set[String] = findUsedEQNames(expr).flatMap(n => findPrefix(n))
-
-    val prefixesInPrefixWildcards: Set[String] =
-      if (includePrefixesInPrefixWildcards) {
-        expr.findAllElemsOfType(classTag[PrefixWildcard]).map(_.prefix.name).filter(_.nonEmpty).toSet
-      } else {
-        Set.empty
-      }
-
-    prefixesInEQNames.union(prefixesInPrefixWildcards)
-  }
-
-  private def findPrefix(eqname: EQName): Option[String] = {
+  /**
+   * Returns the optional prefix of the given EQName, if it is a QName,
+   * and returns None otherwise.
+   */
+  def findPrefix(eqname: EQName): Option[String] = {
     eqname match {
       case EQName.URIQualifiedName(_) => None
       case EQName.QName(qn) => qn.prefixOption
