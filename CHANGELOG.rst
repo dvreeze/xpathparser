@@ -3,6 +3,13 @@ CHANGELOG
 =========
 
 
+0.5.1
+=====
+
+This release is like version 0.5.0, but adds ``EQNameUtil``. This utility can help in finding namespace prefixes
+occurring in XPath expressions.
+
+
 0.5.0
 =====
 

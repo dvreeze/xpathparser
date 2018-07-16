@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   name         := "xpathparser",
   description  := "XPath parser and XPath AST API",
   organization := "eu.cdevreeze.xpathparser",
-  version      := "0.6.0-SNAPSHOT",
+  version      := "0.5.1-SNAPSHOT",
 
   scalaVersion       := scalaVer,
   crossScalaVersions := crossScalaVer,
@@ -61,7 +61,7 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .in(file("."))
   .settings(commonSettings: _*)
   .jvmSettings(
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.4.0")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.0")
   )
   .jsSettings(
     // Do we need this jsEnv?
@@ -71,7 +71,7 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3",
 
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.4.0")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.0")
   )
 
 lazy val xpathparserJVM = xpathparser.jvm
