@@ -18,6 +18,7 @@ package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.common.EName
+import fastparse.NoWhitespace._
 
 /**
  * EQName parsing support. Note that EQNames are non-delimiting terminal symbols.
@@ -28,17 +29,17 @@ import eu.cdevreeze.xpathparser.common.EName
  * @author Chris de Vreeze
  */
 object EQNames {
-  import fastparse.all._
+  import fastparse._
 
   private val DT = DelimitingTerminals
 
   // We could change the order of the 2 branches below, but I'd rather explicitly use a small lookahead.
 
-  val eqName: P[EQName] =
+  def eqName[_: P]: P[EQName] =
     P(!"Q{" ~ qName | uriQualifiedName)
 
-  val qName: P[EQName.QName] =
-    P(NCNames.ncName ~ (":" ~ NCNames.ncName).?) map {
+  def qName[_: P]: P[EQName.QName] =
+    P(NCNames.ncName ~ (":" ~ NCNames.ncName).?).map {
       case (s1, s2Opt) =>
         if (s2Opt.isEmpty) {
           EQName.QName.parse(s1.name)
@@ -47,8 +48,8 @@ object EQNames {
         }
     }
 
-  val uriQualifiedName: P[EQName.URIQualifiedName] =
-    P(DT.bracedUriLiteral ~ NCNames.ncName) map {
+  def uriQualifiedName[_: P]: P[EQName.URIQualifiedName] =
+    P(DT.bracedUriLiteral ~ NCNames.ncName).map {
       case (uriLit, localPart) =>
         EQName.URIQualifiedName(EName(uriLit.namespaceOption, localPart.name))
     }

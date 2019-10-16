@@ -81,15 +81,15 @@ import eu.cdevreeze.xpathparser.common.EName
  */
 class ParseXPathTest extends FunSuite {
 
-  import fastparse.all.Parsed
+  import fastparse._
 
-  import XPathElemParser.expr
+  import XPathElemParser._
   import XPathParser.xpathExpr
 
   test("testParseSlash") {
     val exprString = "/"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
   }
@@ -97,7 +97,7 @@ class ParseXPathTest extends FunSuite {
   test("testParseDoubleSlash") {
     val exprString = "//"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -105,7 +105,7 @@ class ParseXPathTest extends FunSuite {
   test("testParseSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -129,7 +129,7 @@ class ParseXPathTest extends FunSuite {
   test("testParseSimplePathExprWithWhitespace") {
     val exprString = "   /p:a//p:b/p:c//p:d/p:e   "
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -153,11 +153,11 @@ class ParseXPathTest extends FunSuite {
   test("testParseSimplePathExprWithError") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e{"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
 
-    val partialParseResult = expr.parse(exprString)
+    val partialParseResult = parse(exprString, expr(_))
 
     assertSuccess(partialParseResult)
   }
@@ -169,7 +169,7 @@ class ParseXPathTest extends FunSuite {
       "if(xff:has-fallback-value(xs:QName('varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear'))) " +
         "then true() else not(count($varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear) ge 1)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -209,7 +209,7 @@ class ParseXPathTest extends FunSuite {
       "$varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers =  " +
         "sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember) "
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -246,7 +246,7 @@ class ParseXPathTest extends FunSuite {
         " + sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSevenVariables1_ShareCapitalNumberSharesOtherMovements)" +
         " =  $varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSevenVariables1_ShareCapitalNumberSharesMovement "
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -275,7 +275,7 @@ class ParseXPathTest extends FunSuite {
       "xfi:fact-has-explicit-dimension-value($varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems," +
         "xs:QName('venj-bw2-dim:FinancialStatementsTypeAxis'),xs:QName('venj-bw2-dm:SeparateMember'))"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -317,7 +317,7 @@ class ParseXPathTest extends FunSuite {
         "(xfi:period-start(xfi:period($varArc_DocumentInformation_MsgContextDatesParamPPEtCE1_AllItems)) = " +
         "(xs:dateTime($FinancialReportingPeriodCurrentStartDateParam)))))else (false()))"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -351,7 +351,7 @@ class ParseXPathTest extends FunSuite {
       " $AuditorsFees = - sum($varArc_NotesAuditorsFeesBreakdown_MsgSeparateSumOfChildrenParentDebitDimensionFilter1_ChildrenOfAuditorsFeesCredit)+ " +
         "sum($varArc_NotesAuditorsFeesBreakdown_MsgSeparateSumOfChildrenParentDebitDimensionFilter1_ChildrenOfAuditorsFeesDebit)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -378,7 +378,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       "xfi:identifier-scheme(xfi:identifier($varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems)) eq 'http://www.kvk.nl/kvk-id'"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -407,7 +407,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       s"""Q{$XfiNs}identifier-scheme(Q{$XfiNs}identifier($$varArc_EntityInformation_MsgEqualToIdentifierScheme1_AllItems)) eq 'http://www.kvk.nl/kvk-id'"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -431,7 +431,7 @@ class ParseXPathTest extends FunSuite {
   test("testMultipleExprSingles") {
     val exprString = "/p:a/p:b[@xlink:type = 'arc'], if (//p:c) then //p:c else //p:d"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -457,7 +457,7 @@ class ParseXPathTest extends FunSuite {
       """let $f := function($a) { starts-with($a, "E") }
         return local:filter(("Ethel", "Enid", "Gertrude"), $f)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -489,7 +489,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = "$books//book[contains(title, 'XQuery')]/title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -511,7 +511,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = "$books///book[contains(title, 'XQuery')]/title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -521,7 +521,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = "$books//book[contains(title,, 'XQuery')]/title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -531,7 +531,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = "$books//book[contains(description, 'A ''fine book''')]/title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -549,7 +549,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = "$books//book[contains(description, 'A 'fine book'')]/title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -560,7 +560,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """for $w in //text()/tokenize(., '\W+')[.!=''] return lower-case($w)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -590,7 +590,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       "//a/child::b/following-sibling::d[@id = $id1]/child::c/../preceding::y/e[@id = $id2]/ancestor::x/child::title/text()"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -619,7 +619,7 @@ class ParseXPathTest extends FunSuite {
   test("testOccurrenceIndicator") {
     val exprString = "4 treat as item() + - 5"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -636,7 +636,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       """xhtml:span[ancestor::xhtml:p | ancestor::xhtml:div][not(contains(@style, 'mso-list:'))]"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -655,7 +655,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       """Q{http://www.w3.org/2005/xpath-functions}nilled#1(/root)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -678,7 +678,7 @@ class ParseXPathTest extends FunSuite {
   "Sa" : "Saturday"
 }"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -701,7 +701,7 @@ class ParseXPathTest extends FunSuite {
   "Sa"
 }"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -734,7 +734,7 @@ class ParseXPathTest extends FunSuite {
 }
 """
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -772,7 +772,7 @@ class ParseXPathTest extends FunSuite {
   "Sa" : "Saturday"
 }("Su")"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -786,7 +786,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """$b("book")("author")(1)("last")"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -800,7 +800,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """a:*"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -812,7 +812,7 @@ class ParseXPathTest extends FunSuite {
   test("testLocalNameWildcard") {
     val exprString = """*:a"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -824,7 +824,7 @@ class ParseXPathTest extends FunSuite {
   test("testAnyWildcard") {
     val exprString = """*"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -836,7 +836,7 @@ class ParseXPathTest extends FunSuite {
   test("testNamespaceWildcard") {
     val exprString = """Q{http://www.example.org/customnamespace}*"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -852,7 +852,7 @@ class ParseXPathTest extends FunSuite {
   test("testEmptyNamespaceWildcard") {
     val exprString = """Q{}*"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -870,7 +870,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a:b}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFailure(parseResult)
   }
@@ -880,7 +880,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a : b}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -889,11 +889,11 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a: b}""").get.value
+      parse("""map{a: b}""", xpathExpr(_)).get.value
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a :b}""").get.value
+      parse("""map{a :b}""", xpathExpr(_)).get.value
     }
   }
 
@@ -902,7 +902,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a:b:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -918,11 +918,11 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a:b: c}""").get.value
+      parse("""map{a:b: c}""", xpathExpr(_)).get.value
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a:b :c}""").get.value
+      parse("""map{a:b :c}""", xpathExpr(_)).get.value
     }
   }
 
@@ -931,7 +931,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a : b:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -947,11 +947,11 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a: b:c}""").get.value
+      parse("""map{a: b:c}""", xpathExpr(_)).get.value
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a :b:c}""").get.value
+      parse("""map{a :b:c}""", xpathExpr(_)).get.value
     }
   }
 
@@ -960,7 +960,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a:*:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -976,11 +976,11 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a:*: c}""").get.value
+      parse("""map{a:*: c}""", xpathExpr(_)).get.value
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a:* :c}""").get.value
+      parse("""map{a:* :c}""", xpathExpr(_)).get.value
     }
   }
 
@@ -989,7 +989,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{a : *:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1005,12 +1005,12 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{a: *:c}""").get.value
+      parse("""map{a: *:c}""", xpathExpr(_)).get.value
     }
 
     // Note the delimiting terminal ":*", which makes the parsing fail
 
-    assertFailure(xpathExpr.parse("""map{a :*:c}"""))
+    assertFailure(parse("""map{a :*:c}""", xpathExpr(_)))
   }
 
   test("testMapConstructorWithLocalNameWildcardKey") {
@@ -1018,7 +1018,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{*:b:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1034,11 +1034,11 @@ class ParseXPathTest extends FunSuite {
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{*:b: c}""").get.value
+      parse("""map{*:b: c}""", xpathExpr(_)).get.value
     }
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{*:b :c}""").get.value
+      parse("""map{*:b :c}""", xpathExpr(_)).get.value
     }
   }
 
@@ -1047,7 +1047,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map{* : b:c}"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1064,10 +1064,10 @@ class ParseXPathTest extends FunSuite {
 
     // Note the delimiting terminal "*:", which makes the parsing fail
 
-    assertFailure(xpathExpr.parse("""map{*: b:c}"""))
+    assertFailure(parse("""map{*: b:c}""", xpathExpr(_)))
 
     assertResult(parseResult.get.value) {
-      xpathExpr.parse("""map{* :b:c}""").get.value
+      parse("""map{* :b:c}""", xpathExpr(_)).get.value
     }
   }
 
@@ -1077,7 +1077,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       """[ $x, local:items(), (), (27, 17, 0) ]"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1096,7 +1096,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       """array{ $x, local:items(), (), (27, 17, 0) }"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1110,7 +1110,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """[ [1, 2, 3], [4, 5, 6]](2)(2)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1124,7 +1124,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """array { (), (27, 17, 0) }(2)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1138,7 +1138,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """map { "first" : "Jenna", "last" : "Scott" }?first"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1152,7 +1152,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """([1,2,3], [4,5,6])?2"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1166,7 +1166,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """$string => upper-case() => normalize-unicode() => tokenize("\s+")"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1186,7 +1186,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{}*/string()"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1205,7 +1205,7 @@ class ParseXPathTest extends FunSuite {
     val exprString =
       """(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{http://www.example.com/customnamespace}*/string()"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -1223,7 +1223,7 @@ class ParseXPathTest extends FunSuite {
 
     val exprString = """(doc("books.xml")/bib/book/author)[1]"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 

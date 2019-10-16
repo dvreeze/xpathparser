@@ -41,14 +41,14 @@ import eu.cdevreeze.xpathparser.ast.XPathElem
  */
 class VariableBindingTest extends FunSuite {
 
-  import fastparse.all.Parsed
+  import fastparse._
 
   import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
 
   test("testBindingsInSlash") {
     val exprString = "/"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -59,7 +59,7 @@ class VariableBindingTest extends FunSuite {
   test("testBindingsInSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -74,7 +74,7 @@ class VariableBindingTest extends FunSuite {
       "if(xff:has-fallback-value(xs:QName('varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear'))) " +
         "then true() else not(count($varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear) ge 1)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFreeVariableNames(parseResult.get.value, Set(
       EQName.QName("varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear")))
@@ -88,7 +88,7 @@ class VariableBindingTest extends FunSuite {
       "$varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers =  " +
         "sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember) "
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertFreeVariableNames(parseResult.get.value, Set(
       EQName.QName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers"),
@@ -103,7 +103,7 @@ class VariableBindingTest extends FunSuite {
       "xfi:fact-has-explicit-dimension-value($varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems," +
         "xs:QName('venj-bw2-dim:FinancialStatementsTypeAxis'),xs:QName('venj-bw2-dm:SeparateMember'))"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -119,7 +119,7 @@ class VariableBindingTest extends FunSuite {
       """let $f := function($a) { starts-with($a, "E") }
         return local:filter(("Ethel", "Enid", "Gertrude"), $f)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -149,7 +149,7 @@ class VariableBindingTest extends FunSuite {
 
     val exprString = """for $w in //text()/tokenize(., '\W+')[.!=''] return lower-case($w)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -172,7 +172,7 @@ class VariableBindingTest extends FunSuite {
       """let $f := function($a) { starts-with($a, $b) }
         return local:filter(("Ethel", "Enid", "Gertrude", $c, $a), $f)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -221,7 +221,7 @@ class VariableBindingTest extends FunSuite {
                 $m in (($n+1) to (count($varArc_ELRName_PrtFactsNECovA_Set01)))
               return (($varArc_ELRName_PrtFactsNECovA_Set01[$n] = $varArc_ELRName_PrtFactsNECovA_Set01[$m]))) = true())""".trim
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     // Note that $n is never free, not even in the variable binding for $m.
 

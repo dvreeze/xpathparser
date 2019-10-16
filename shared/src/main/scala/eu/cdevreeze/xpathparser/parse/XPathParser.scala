@@ -17,6 +17,7 @@
 package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.XPathExpr
+import fastparse.MultiLineWhitespace._
 
 /**
  * XPath 3.1 parsing support, using FastParse.
@@ -30,8 +31,7 @@ import eu.cdevreeze.xpathparser.ast.XPathExpr
  */
 object XPathParser {
 
-  import XPathElemParser.White._
-  import fastparse.noApi._
+  import fastparse._
 
   /**
    * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. Comments are not supported,
@@ -40,6 +40,6 @@ object XPathParser {
    * The parser consumes the entire input string or else parsing cannot be successful. Leading or trailing
    * whitespace is silently ignored.
    */
-  val xpathExpr: P[XPathExpr] =
+  def xpathExpr[_: P]: P[XPathExpr] =
     P(Start ~ XPathElemParser.expr ~ End)
 }

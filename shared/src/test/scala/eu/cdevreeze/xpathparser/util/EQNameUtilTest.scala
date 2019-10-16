@@ -26,14 +26,14 @@ import org.scalatest.FunSuite
  */
 class EQNameUtilTest extends FunSuite {
 
-  import fastparse.all.Parsed
+  import fastparse._
 
   import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
 
   test("testPrefixesInSlash") {
     val exprString = "/"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -43,7 +43,7 @@ class EQNameUtilTest extends FunSuite {
   test("testPrefixesInSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -57,7 +57,7 @@ class EQNameUtilTest extends FunSuite {
       "if(xff:has-fallback-value(xs:QName('varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear'))) " +
         "then true() else not(count($varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear) ge 1)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -71,7 +71,7 @@ class EQNameUtilTest extends FunSuite {
       "$varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers =  " +
         "sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember) "
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -85,7 +85,7 @@ class EQNameUtilTest extends FunSuite {
       "xfi:fact-has-explicit-dimension-value($varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems," +
         "xs:QName('venj-bw2-dim:FinancialStatementsTypeAxis'),xs:QName('venj-bw2-dm:SeparateMember'))"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -101,7 +101,7 @@ class EQNameUtilTest extends FunSuite {
       """let $f := function($a) { starts-with($a, "E") }
         return local:filter(("Ethel", "Enid", "Gertrude"), $f)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -113,7 +113,7 @@ class EQNameUtilTest extends FunSuite {
 
     val exprString = """for $p:w in //fn:text()/fn:tokenize(., '\W+')[.!=''] return fn:lower-case($p:w)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -127,7 +127,7 @@ class EQNameUtilTest extends FunSuite {
       """let $p1:f := function($p2:a) { starts-with($p2:a, $p3:b) }
         return local:filter(("Ethel", "Enid", "Gertrude", $p4:c, $Q{}d, $Q{http://www.example.org/}e, $p2:a), $p1:f)"""
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -143,7 +143,7 @@ class EQNameUtilTest extends FunSuite {
                 $m in (($n+1) to (fn:count($varArc_ELRName_PrtFactsNECovA_Set01)))
               return (($varArc_ELRName_PrtFactsNECovA_Set01[$n] = $varArc_ELRName_PrtFactsNECovA_Set01[$m]))) = fn:true())""".trim
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -153,7 +153,7 @@ class EQNameUtilTest extends FunSuite {
   test("testPrefixesInCastExpr") {
     val exprString = "xs:NCName('entity') cast as xs:ENTITY"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -163,7 +163,7 @@ class EQNameUtilTest extends FunSuite {
   test("testPrefixesInNamedFunctionRef") {
     val exprString = "exists(fn:minutes-from-duration#1)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 
@@ -173,7 +173,7 @@ class EQNameUtilTest extends FunSuite {
   test("testPrefixesInSimpleNameTest") {
     val exprString = "let $var := /works return fn:count($var/child::p:employee)"
 
-    val parseResult = xpathExpr.parse(exprString)
+    val parseResult = parse(exprString, xpathExpr(_))
 
     assertSuccess(parseResult)
 

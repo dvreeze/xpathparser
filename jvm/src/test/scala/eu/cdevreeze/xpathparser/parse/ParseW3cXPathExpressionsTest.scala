@@ -16,7 +16,8 @@
 
 package eu.cdevreeze.xpathparser.parse
 
-import scala.collection.JavaConverters.propertiesAsScalaMapConverter
+import scala.collection.mutable
+import fastparse._
 import org.scalatest.FunSuite
 
 /**
@@ -26,15 +27,17 @@ import org.scalatest.FunSuite
  */
 class ParseW3cXPathExpressionsTest extends FunSuite {
 
-  import XPathParser.xpathExpr
-
   // See for example http://blog.echo.sh/2013/05/12/dynamically-creating-tests-with-scalatest.html.
 
   private val testInputs: Map[String, String] = {
     val props = new java.util.Properties
     props.loadFromXML(classOf[ParseW3cXPathExpressionsTest].getResourceAsStream("/testXPaths.xml"))
 
-    props.asScala.toMap.filterKeys(_.indexOf("Comment") < 0)
+    // Circumventing propertiesAsScalaMapConverter and its Scala version issues (CollectionConverters moved)
+    val propMap: mutable.Map[String, String] = mutable.Map.empty
+    props.forEach { (propName, propValue) => propMap.update(propName.toString, propValue.toString) }
+
+    propMap.toMap.filter(_._1.indexOf("Comment") < 0).toMap
   }
 
   testInputs foreach {
@@ -42,13 +45,13 @@ class ParseW3cXPathExpressionsTest extends FunSuite {
       test(name) {
         // No need to trim the expression first.
 
-        val parseResult = xpathExpr.parse(exprString)
+        val parseResult = parse(exprString, XPathParser.xpathExpr(_))
 
         assertSuccess(parseResult)
       }
   }
 
-  private def assertSuccess(parseResult: fastparse.all.Parsed[_]): Unit = {
+  private def assertSuccess(parseResult: fastparse.Parsed[_]): Unit = {
     assertResult(true) {
       parseResult.fold(
         (parser, pos, extra) => false,

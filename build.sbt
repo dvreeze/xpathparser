@@ -8,9 +8,9 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "2.12.6"
+val scalaVer = "2.13.1"
 
-val crossScalaVer = Seq(scalaVer, "2.11.12")
+val crossScalaVer = Seq(scalaVer, "2.12.10")
 
 lazy val commonSettings = Seq(
   name         := "xpathparser",
@@ -22,8 +22,6 @@ lazy val commonSettings = Seq(
   crossScalaVersions := crossScalaVer,
 
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-target:jvm-1.8"),
-
-  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
 
   publishArtifact in Test := false,
   publishMavenStyle := true,
@@ -39,9 +37,9 @@ lazy val commonSettings = Seq(
   pomExtra := pomData,
   pomIncludeRepository := { _ => false },
 
-  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "1.0.0",
+  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.1.3",
 
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.5" % "test"
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
 )
 
 lazy val root = project.in(file("."))
@@ -61,17 +59,17 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .in(file("."))
   .settings(commonSettings: _*)
   .jvmSettings(
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.0")
+    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.1")
   )
   .jsSettings(
     // Do we need this jsEnv?
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.6",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.7",
 
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.3",
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.5"
 
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.0")
+    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.1")
   )
 
 lazy val xpathparserJVM = xpathparser.jvm

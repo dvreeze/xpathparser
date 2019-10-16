@@ -21,7 +21,7 @@ package eu.cdevreeze.xpathparser.common
  *
  * @author Chris de Vreeze
  */
-final case class EName(namespaceUriOption: Option[String], localPart: String) extends Immutable {
+final case class EName(namespaceUriOption: Option[String], localPart: String) {
   require(namespaceUriOption ne null) // scalastyle:off null
   require(localPart ne null) // scalastyle:off null
 

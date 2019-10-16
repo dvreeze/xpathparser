@@ -32,7 +32,7 @@ import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.XPathExpr
 import eu.cdevreeze.xpathparser.parse.XPathParser
 import eu.cdevreeze.xpathparser.util.VariableBindingUtil
-import fastparse.core.Parsed
+import fastparse._
 
 /**
  * Program that checks the syntax of an XPath expression, showing if it can be successfully parsed.
@@ -50,11 +50,11 @@ object XPathSyntaxChecker {
 
   @JSExport("checkSyntax")
   def checkSyntax(xpathString: String): Unit = {
-    val parseResult: Parsed[XPathExpr, Char, String] = XPathParser.xpathExpr.parse(xpathString)
+    val parseResult: Parsed[XPathExpr] = parse(xpathString, XPathParser.xpathExpr(_))
 
     parseResult.fold(
-      (parser, pos, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure[Char, String]]),
-      (expr, pos) => showSuccess(parseResult.asInstanceOf[Parsed.Success[XPathExpr, Char, String]]))
+      (parser, pos, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure]),
+      (expr, pos) => showSuccess(parseResult.asInstanceOf[Parsed.Success[XPathExpr]]))
   }
 
   @JSExport("clear")
@@ -78,7 +78,7 @@ object XPathSyntaxChecker {
     xpathTextArea.style.color = "black"
   }
 
-  private def showSuccess(parseResult: Parsed.Success[XPathExpr, Char, String]): Unit = {
+  private def showSuccess(parseResult: Parsed.Success[XPathExpr]): Unit = {
     xpathTextArea.style.color = "green"
 
     val freeVariablesUList = getFreeVariablesUList()
@@ -113,7 +113,7 @@ object XPathSyntaxChecker {
     addCodeString(codeElement, "\n" + codeString)
   }
 
-  private def showFailure(parseResult: Parsed.Failure[Char, String]): Unit = {
+  private def showFailure(parseResult: Parsed.Failure): Unit = {
     xpathTextArea.style.color = "red"
 
     val freeVariablesUList = getFreeVariablesUList()

@@ -18,6 +18,7 @@ package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.StringLiteral
+import fastparse.NoWhitespace._
 
 /**
  * Delimiting terminal symbols. No whitespace is skipped during this tokenization.
@@ -32,106 +33,106 @@ import eu.cdevreeze.xpathparser.ast.StringLiteral
  * @author Chris de Vreeze
  */
 object DelimitingTerminals {
-  import fastparse.all._
+  import fastparse._
 
   // Exclamation marks and not-equals symbol
 
-  val exclamationMark: P[Unit] = P("!" ~ !"=")
+  def exclamationMark[_: P]: P[Unit] = P("!" ~ !"=")
 
-  val notEquals: P[Unit] = P("!=")
+  def notEquals[_: P]: P[Unit] = P("!=")
 
   // String literals
 
-  val stringLiteral: P[StringLiteral] = StringLiterals.stringLiteral
+  def stringLiteral[_: P]: P[StringLiteral] = StringLiterals.stringLiteral
 
-  val hash: P[Unit] = P("#")
+  def hash[_: P]: P[Unit] = P("#")
 
-  val dollar: P[Unit] = P("$")
+  def dollar[_: P]: P[Unit] = P("$")
 
-  val openParenthesis: P[Unit] = P("(")
+  def openParenthesis[_: P]: P[Unit] = P("(")
 
-  val closeParenthesis: P[Unit] = P(")")
+  def closeParenthesis[_: P]: P[Unit] = P(")")
 
   // Asterisk and asterisk-colon
 
-  val asterisk: P[Unit] = P("*" ~ !":")
+  def asterisk[_: P]: P[Unit] = P("*" ~ !":")
 
-  val asteriskColon: P[Unit] = P("*:")
+  def asteriskColon[_: P]: P[Unit] = P("*:")
 
-  val plus: P[Unit] = P("+")
+  def plus[_: P]: P[Unit] = P("+")
 
-  val comma: P[Unit] = P(",")
+  def comma[_: P]: P[Unit] = P(",")
 
-  val minus: P[Unit] = P("-")
+  def minus[_: P]: P[Unit] = P("-")
 
   // Single and double dots
 
-  val dot: P[Unit] = P("." ~ !".")
+  def dot[_: P]: P[Unit] = P("." ~ !".")
 
-  val doubleDot: P[Unit] = P("..")
+  def doubleDot[_: P]: P[Unit] = P("..")
 
   // Single and double slashes
 
-  val slash: P[Unit] = P("/" ~ !"/")
+  def slash[_: P]: P[Unit] = P("/" ~ !"/")
 
-  val doubleSlash: P[Unit] = P("//")
+  def doubleSlash[_: P]: P[Unit] = P("//")
 
   // Single and double colons, colon-asterisk and assignment symbol
 
-  val colon: P[Unit] = P(":" ~ !(":" | "*" | "="))
+  def colon[_: P]: P[Unit] = P(":" ~ !(":" | "*" | "="))
 
-  val doubleColon: P[Unit] = P("::")
+  def doubleColon[_: P]: P[Unit] = P("::")
 
-  val colonAsterisk: P[Unit] = P(":*")
+  def colonAsterisk[_: P]: P[Unit] = P(":*")
 
-  val assignmentSymbol: P[Unit] = P(":=")
+  def assignmentSymbol[_: P]: P[Unit] = P(":=")
 
   // Symbols starting with less-than character
 
-  val lessThan: P[Unit] = P("<" ~ !("=" | "<"))
+  def lessThan[_: P]: P[Unit] = P("<" ~ !("=" | "<"))
 
-  val lessThanOrEqual: P[Unit] = P("<=")
+  def lessThanOrEqual[_: P]: P[Unit] = P("<=")
 
-  val precedes: P[Unit] = P("<<")
+  def precedes[_: P]: P[Unit] = P("<<")
 
   // Symbols starting with greater-than character
 
-  val greaterThan: P[Unit] = P(">" ~ !("=" | ">"))
+  def greaterThan[_: P]: P[Unit] = P(">" ~ !("=" | ">"))
 
-  val greaterThanOrEqual: P[Unit] = P(">=")
+  def greaterThanOrEqual[_: P]: P[Unit] = P(">=")
 
-  val follows: P[Unit] = P(">>")
+  def follows[_: P]: P[Unit] = P(">>")
 
   // Symbols starting with the equals character
 
-  val equals: P[Unit] = P("=" ~ !">")
+  def equals[_: P]: P[Unit] = P("=" ~ !">")
 
-  val doubleArrow: P[Unit] = P("=>")
+  def doubleArrow[_: P]: P[Unit] = P("=>")
 
-  val questionMark: P[Unit] = P("?")
+  def questionMark[_: P]: P[Unit] = P("?")
 
-  val at: P[Unit] = P("@")
+  def at[_: P]: P[Unit] = P("@")
 
   // Braced URI literal
 
-  val bracedUriLiteral: P[BracedUriLiteral] =
+  def bracedUriLiteral[_: P]: P[BracedUriLiteral] =
     P("Q{" ~ CharPred(isAllowedNamespaceUriChar).rep.! ~ "}") map {
       rawNs => if (rawNs.isEmpty) BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
     }
 
-  val openBracket: P[Unit] = P("[")
+  def openBracket[_: P]: P[Unit] = P("[")
 
-  val closeBracket: P[Unit] = P("]")
+  def closeBracket[_: P]: P[Unit] = P("]")
 
-  val openBrace: P[Unit] = P("{")
+  def openBrace[_: P]: P[Unit] = P("{")
 
-  val closeBrace: P[Unit] = P("}")
+  def closeBrace[_: P]: P[Unit] = P("}")
 
   // String concatenation and union symbols
 
-  val verticalBar: P[Unit] = P("|" ~ !"|")
+  def verticalBar[_: P]: P[Unit] = P("|" ~ !"|")
 
-  val doubleVerticalBar: P[Unit] = P("||")
+  def doubleVerticalBar[_: P]: P[Unit] = P("||")
 
   private def isAllowedNamespaceUriChar(c: Char): Boolean = {
     // TODO Is this correct?
@@ -141,37 +142,37 @@ object DelimitingTerminals {
 
   object StringLiterals {
 
-    val stringLiteral: P[StringLiteral] =
+    def stringLiteral[_: P]: P[StringLiteral] =
       P(aposStringLiteral | quoteStringLiteral)
 
     // TODO Make more efficient
 
     // Note the use of cuts here, which may hinder re-use in XPathParser, unless we switch off cuts where needed.
 
-    private val aposStringLiteral: P[StringLiteral] =
+    private def aposStringLiteral[_: P]: P[StringLiteral] =
       P("'" ~/ (escapeApos | nonEscapedCharInAposStringLiteral).rep.! ~ "'") map { v =>
         // Why do we still need the "unescaping" here?
 
         StringLiteral(v.replace("''", "'"))
       }
 
-    private val quoteStringLiteral: P[StringLiteral] =
+    private def quoteStringLiteral[_: P]: P[StringLiteral] =
       P("\"" ~/ (escapeQuote | nonEscapedCharInQuoteStringLiteral).rep.! ~ "\"") map { v =>
         // Why do we still need the "unescaping" here?
 
         StringLiteral(v.replace("\"\"", "\""))
       }
 
-    private val escapeApos: P[String] =
+    private def escapeApos[_: P]: P[String] =
       P("'".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.size == 1))
 
-    private val nonEscapedCharInAposStringLiteral: P[String] =
+    private def nonEscapedCharInAposStringLiteral[_: P]: P[String] =
       P(CharPred(_ != '\'').!) map (_.ensuring(_.size == 1))
 
-    private val escapeQuote: P[String] =
+    private def escapeQuote[_: P]: P[String] =
       P("\"".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.size == 1))
 
-    private val nonEscapedCharInQuoteStringLiteral: P[String] =
+    private def nonEscapedCharInQuoteStringLiteral[_: P]: P[String] =
       P(CharPred(_ != '"').!) map (_.ensuring(_.size == 1))
   }
 }
