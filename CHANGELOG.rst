@@ -3,6 +3,13 @@ CHANGELOG
 =========
 
 
+0.6.0
+=====
+
+This release moves the project to FastParse 2, and it cross-builds to Scala 2.13 and Scala 2.12, dropping support for Scala 2.11.
+Obviously, this release is not backward compatible with version 0.5.1.
+
+
 0.5.1
 =====
 

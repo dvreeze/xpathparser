@@ -5,9 +5,9 @@
 // This script expects an input property file with test XPaths, like src/test/resources/testXPaths.
 // It then runs the tests, and shows which ones fail.
 
-// Taking xpathparser version 0.5.1
+// Taking xpathparser version 0.6.0
 
-import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.5.1`
+import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.6.0`
 
 // Imports that (must) remain available after this initialization script
 
@@ -16,13 +16,13 @@ import java.io._
 import java.util.Properties
 
 import scala.collection.immutable
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.classTag
 import scala.util._
 
 import eu.cdevreeze.xpathparser.ast._
-import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
-import fastparse.all._
+import eu.cdevreeze.xpathparser.parse.XPathParser._
+import fastparse._
 
 println("Usage: runTests(testInputFile)")
 
@@ -32,9 +32,9 @@ def runTests(testInputFile: File): Unit = {
   
   val testMapping: Map[String, String] = props.asScala.toMap
   
-  val rawParsedXPathMapping = testMapping mapValues { exprString =>
-    Try(xpathExpr.parse(exprString.trim))
-  }
+  val rawParsedXPathMapping = testMapping.view.mapValues { exprString =>
+    Try(parse(exprString.trim, xpathExpr(_)))
+  }.toMap
   
   val parseExceptionMapping = rawParsedXPathMapping collect { 
     case (testName, t @ Failure(_)) => (testName -> t)
@@ -49,7 +49,7 @@ def runTests(testInputFile: File): Unit = {
   }
 
   val parseSuccessMapping: Map[String, XPathExpr] = parsedXPathMapping collect {
-    case (testName, t: Parsed.Success[_]) => (testName -> t.get.value.asInstanceOf[XPathExpr])
+    case (testName, t: Parsed.Success[_]) => (testName -> t.value.asInstanceOf[XPathExpr])
   }
   
   println()
