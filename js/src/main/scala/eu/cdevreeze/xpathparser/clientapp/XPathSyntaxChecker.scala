@@ -53,8 +53,8 @@ object XPathSyntaxChecker {
     val parseResult: Parsed[XPathExpr] = parse(xpathString, XPathParser.xpathExpr(_))
 
     parseResult.fold(
-      (parser, pos, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure]),
-      (expr, pos) => showSuccess(parseResult.asInstanceOf[Parsed.Success[XPathExpr]]))
+      (label, index, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure]),
+      (value, index) => showSuccess(parseResult.asInstanceOf[Parsed.Success[XPathExpr]]))
   }
 
   @JSExport("clear")

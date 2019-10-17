@@ -50,7 +50,7 @@ object NonDelimitingTerminals {
     }
 
   def doubleLiteral[_: P]: P[DoubleLiteral] =
-    P(CharsWhile(c => "0123456789.eE+-".contains(c)).!) filter (v => isDoubleLiteral(v)) map { v =>
+    P(CharsWhileIn("0123456789.eE+\\-").!) filter (v => isDoubleLiteral(v)) map { v =>
       DoubleLiteral(v.toDouble)
     }
 
