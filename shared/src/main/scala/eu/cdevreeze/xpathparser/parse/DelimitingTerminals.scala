@@ -164,15 +164,15 @@ object DelimitingTerminals {
       }
 
     private def escapeApos[_: P]: P[String] =
-      P("'".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.size == 1))
+      P("'".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.length == 1))
 
     private def nonEscapedCharInAposStringLiteral[_: P]: P[String] =
-      P(CharPred(_ != '\'').!) map (_.ensuring(_.size == 1))
+      P(CharPred(_ != '\'').!) map (_.ensuring(_.length == 1))
 
     private def escapeQuote[_: P]: P[String] =
-      P("\"".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.size == 1))
+      P("\"".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.length == 1))
 
     private def nonEscapedCharInQuoteStringLiteral[_: P]: P[String] =
-      P(CharPred(_ != '"').!) map (_.ensuring(_.size == 1))
+      P(CharPred(_ != '"').!) map (_.ensuring(_.length == 1))
   }
 }

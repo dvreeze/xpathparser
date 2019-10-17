@@ -132,13 +132,13 @@ object XPathElemParser {
   def additiveExpr[_: P]: P[AdditiveExpr] =
     P(multiplicativeExpr ~ ((DT.plus | DT.minus).! ~/ multiplicativeExpr).rep).map {
       case (firstExp, opExpPairs) =>
-        AdditiveExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (AdditionOp.parse(kv._1) -> kv._2)))
+        AdditiveExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => AdditionOp.parse(kv._1) -> kv._2))
     }
 
   def multiplicativeExpr[_: P]: P[MultiplicativeExpr] =
     P(unionExpr ~ ((DT.asterisk | (NDT.divWord | NDT.idivWord | NDT.modWord)).! ~/ unionExpr).rep).map {
       case (firstExp, opExpPairs) =>
-        MultiplicativeExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (MultiplicativeOp.parse(kv._1) -> kv._2)))
+        MultiplicativeExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => MultiplicativeOp.parse(kv._1) -> kv._2))
     }
 
   def unionExpr[_: P]: P[UnionExpr] =
@@ -149,7 +149,7 @@ object XPathElemParser {
   def intersectExceptExpr[_: P]: P[IntersectExceptExpr] =
     P(instanceOfExpr ~ ((NDT.intersectWord | NDT.exceptWord).! ~/ instanceOfExpr).rep).map {
       case (firstExp, opExpPairs) =>
-        IntersectExceptExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (IntersectExceptOp.parse(kv._1) -> kv._2)))
+        IntersectExceptExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => IntersectExceptOp.parse(kv._1) -> kv._2))
     }
 
   def instanceOfExpr[_: P]: P[InstanceOfExpr] =
@@ -254,7 +254,7 @@ object XPathElemParser {
   def relativePathExpr[_: P]: P[RelativePathExpr] =
     P(stepExpr ~ ((DT.slash | DT.doubleSlash).! ~/ stepExpr).rep).map {
       case (firstExp, opExpPairs) =>
-        RelativePathExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => (StepOp.parse(kv._1) -> kv._2)))
+        RelativePathExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => StepOp.parse(kv._1) -> kv._2))
     }
 
   // The 2 branches of a stepExpr are relatively easy to distinguish. Note that both branches may start with an EQName (or "keyword"), and other than that
@@ -513,10 +513,10 @@ object XPathElemParser {
 
   def keySpecifier[_: P]: P[KeySpecifier] =
     P(ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr).map {
-      case (nm: NCName) => NamedKeySpecifier(nm)
-      case (intLit: IntegerLiteral) => PositionalKeySpecifier(intLit)
+      case nm: NCName => NamedKeySpecifier(nm)
+      case intLit: IntegerLiteral => PositionalKeySpecifier(intLit)
       case "*" => WildcardKeySpecifier
-      case (exp: ParenthesizedExpr) => ParenthesizedExprKeySpecifier(exp)
+      case exp: ParenthesizedExpr => ParenthesizedExprKeySpecifier(exp)
     }
 
   def paramList[_: P]: P[ParamList] =
