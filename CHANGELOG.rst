@@ -3,6 +3,12 @@ CHANGELOG
 =========
 
 
+0.6.1
+=====
+
+This release upgrades dependencies, including scalajs, which is now version 1.0.1.
+
+
 0.6.0
 =====
 
