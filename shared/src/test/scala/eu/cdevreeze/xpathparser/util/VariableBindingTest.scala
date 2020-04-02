@@ -18,7 +18,7 @@ package eu.cdevreeze.xpathparser.util
 
 import scala.reflect.classTag
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.ForExpr
@@ -39,7 +39,7 @@ import eu.cdevreeze.xpathparser.ast.XPathElem
  *
  * @author Chris de Vreeze
  */
-class VariableBindingTest extends FunSuite {
+class VariableBindingTest extends AnyFunSuite {
 
   import fastparse._
 

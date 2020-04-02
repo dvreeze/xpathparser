@@ -17,14 +17,14 @@
 package eu.cdevreeze.xpathparser.util
 
 import eu.cdevreeze.xpathparser.ast.XPathExpr
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * EQNameUtil test case.
  *
  * @author Chris de Vreeze
  */
-class EQNameUtilTest extends FunSuite {
+class EQNameUtilTest extends AnyFunSuite {
 
   import fastparse._
 

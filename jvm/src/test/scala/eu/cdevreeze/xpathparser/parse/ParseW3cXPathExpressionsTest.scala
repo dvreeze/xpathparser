@@ -18,14 +18,14 @@ package eu.cdevreeze.xpathparser.parse
 
 import scala.collection.mutable
 import fastparse._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * XPath parsing test case, taking test data from the W3C test suite https://dev.w3.org/2011/QT3-test-suite.
  *
  * @author Chris de Vreeze
  */
-class ParseW3cXPathExpressionsTest extends FunSuite {
+class ParseW3cXPathExpressionsTest extends AnyFunSuite {
 
   // See for example http://blog.echo.sh/2013/05/12/dynamically-creating-tests-with-scalatest.html.
 

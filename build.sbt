@@ -37,9 +37,9 @@ lazy val commonSettings = Seq(
   pomExtra := pomData,
   pomIncludeRepository := { _ => false },
 
-  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.1.3",
+  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
 
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % "test"
 )
 
 lazy val root = project.in(file("."))
@@ -59,17 +59,17 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .in(file("."))
   .settings(commonSettings: _*)
   .jvmSettings(
-    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.1")
+    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
   )
   .jsSettings(
     // Do we need this jsEnv?
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
 
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.5"
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.9"
 
-    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.5.1")
+    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
   )
 
 lazy val xpathparserJVM = xpathparser.jvm

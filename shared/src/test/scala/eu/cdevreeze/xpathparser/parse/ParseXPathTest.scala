@@ -18,7 +18,7 @@ package eu.cdevreeze.xpathparser.parse
 
 import scala.reflect.classTag
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import eu.cdevreeze.xpathparser.ast.AbbrevForwardStep
 import eu.cdevreeze.xpathparser.ast.AbbrevReverseStep
@@ -79,7 +79,7 @@ import eu.cdevreeze.xpathparser.common.EName
  *
  * @author Chris de Vreeze
  */
-class ParseXPathTest extends FunSuite {
+class ParseXPathTest extends AnyFunSuite {
 
   import fastparse._
 

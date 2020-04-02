@@ -17,14 +17,14 @@
 package eu.cdevreeze.xpathparser.parse
 
 import fastparse._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * XPath extraction test case.
  *
  * @author Chris de Vreeze
  */
-class ExtractXPathTest extends FunSuite {
+class ExtractXPathTest extends AnyFunSuite {
 
   import fastparse.Parsed
 
