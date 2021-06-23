@@ -1177,7 +1177,7 @@ class ParseXPathTest extends AnyFunSuite {
     assertResult(3) {
       val arrowExprs = parseResult.get.value.findAllElemsOrSelfOfType(classTag[CompoundArrowExpr])
 
-      arrowExprs.flatMap(_.arrowFunctionCalls).size
+      arrowExprs.flatMap(_.arrowFunctionCalls.toVector).size
     }
   }
 

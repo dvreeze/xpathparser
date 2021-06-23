@@ -53,13 +53,13 @@ object XPathElemParser {
   import fastparse._
 
   def expr[_: P]: P[Expr] =
-    P(exprSingle.rep(min = 1, sep = DT.comma)).map {
-      exprs => Expr(NonEmptyVector.fromVectorUnsafe(exprs.toVector))
+    P(exprSingle.rep(min = 1, sep = DT.comma)).map { exprs =>
+      Expr(NonEmptyVector.fromVectorUnsafe(exprs.toVector))
     }
 
   def enclosedExpr[_: P]: P[EnclosedExpr] =
-    P(DT.openBrace ~ expr.? ~ DT.closeBrace).map {
-      expOpt => EnclosedExpr(expOpt)
+    P(DT.openBrace ~ expr.? ~ DT.closeBrace).map { expOpt =>
+      EnclosedExpr(expOpt)
     }
 
   // The branches of exprSingle are easy to distinguish. All but one start with a different keyword.
@@ -89,8 +89,11 @@ object XPathElemParser {
     }
 
   def quantifiedExpr[_: P]: P[QuantifiedExpr] =
-    P((NDT.someWord | NDT.everyWord).! ~/ simpleBindingInQuantifiedExpr.rep(min = 1, sep = DT.comma) ~ NDT.satisfiesWord ~ exprSingle).map {
-      case (quant, bindings, satisfiesExp) => QuantifiedExpr(Quantifier.parse(quant), NonEmptyVector.fromVectorUnsafe(bindings.toVector), satisfiesExp)
+    P(
+      (NDT.someWord | NDT.everyWord).! ~/ simpleBindingInQuantifiedExpr
+        .rep(min = 1, sep = DT.comma) ~ NDT.satisfiesWord ~ exprSingle).map {
+      case (quant, bindings, satisfiesExp) =>
+        QuantifiedExpr(Quantifier.parse(quant), NonEmptyVector.fromVectorUnsafe(bindings.toVector), satisfiesExp)
     }
 
   def simpleBindingInQuantifiedExpr[_: P]: P[SimpleBindingInQuantifiedExpr] =
@@ -99,35 +102,36 @@ object XPathElemParser {
     }
 
   def ifExpr[_: P]: P[IfExpr] =
-    P(NDT.ifWord ~/ DT.openParenthesis ~ expr ~ DT.closeParenthesis ~ NDT.thenWord ~ exprSingle ~ NDT.elseWord ~ exprSingle).map {
-      case (e1, e2, e3) => IfExpr(e1, e2, e3)
-    }
+    P(NDT.ifWord ~/ DT.openParenthesis ~ expr ~ DT.closeParenthesis ~ NDT.thenWord ~ exprSingle ~ NDT.elseWord ~ exprSingle)
+      .map {
+        case (e1, e2, e3) => IfExpr(e1, e2, e3)
+      }
 
   def orExpr[_: P]: P[OrExpr] =
-    P(andExpr.rep(min = 1, sep = NDT.orWord ~/ Pass)).map {
-      exps => OrExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
+    P(andExpr.rep(min = 1, sep = NDT.orWord ~/ Pass)).map { exps =>
+      OrExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def andExpr[_: P]: P[AndExpr] =
-    P(comparisonExpr.rep(min = 1, sep = NDT.andWord ~/ Pass)).map {
-      exps => AndExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
+    P(comparisonExpr.rep(min = 1, sep = NDT.andWord ~/ Pass)).map { exps =>
+      AndExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def comparisonExpr[_: P]: P[ComparisonExpr] =
     P(stringConcatExpr ~ (comp ~/ stringConcatExpr).?).map {
       case (expr1, Some((op, expr2))) => CompoundComparisonExpr(expr1, op, expr2)
-      case (expr, None) => expr
+      case (expr, None)               => expr
     }
 
   def stringConcatExpr[_: P]: P[StringConcatExpr] =
-    P(rangeExpr.rep(min = 1, sep = DT.doubleVerticalBar ~/ Pass)).map {
-      exps => StringConcatExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
+    P(rangeExpr.rep(min = 1, sep = DT.doubleVerticalBar ~/ Pass)).map { exps =>
+      StringConcatExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def rangeExpr[_: P]: P[RangeExpr] =
     P(additiveExpr ~ (NDT.toWord ~/ additiveExpr).?).map {
       case (additiveExp1, Some(additiveExp2)) => CompoundRangeExpr(additiveExp1, additiveExp2)
-      case (additiveExp, None) => additiveExp
+      case (additiveExp, None)                => additiveExp
     }
 
   def additiveExpr[_: P]: P[AdditiveExpr] =
@@ -185,9 +189,9 @@ object XPathElemParser {
 
   def arrowFunctionSpecifier[_: P]: P[ArrowFunctionSpecifier] =
     P(eqName | varRef | parenthesizedExpr).map {
-      case nm: EQName => EQNameAsArrowFunctionSpecifier(nm)
-      case ref@VarRef(_) => VarRefAsArrowFunctionSpecifier(ref)
-      case exp@ParenthesizedExpr(_) => ParenthesizedExprAsArrowFunctionSpecifier(exp)
+      case nm: EQName                 => EQNameAsArrowFunctionSpecifier(nm)
+      case ref @ VarRef(_)            => VarRefAsArrowFunctionSpecifier(ref)
+      case exp @ ParenthesizedExpr(_) => ParenthesizedExprAsArrowFunctionSpecifier(exp)
     }
 
   def unaryExpr[_: P]: P[UnaryExpr] =
@@ -199,8 +203,8 @@ object XPathElemParser {
     P(simpleMapExpr)
 
   def simpleMapExpr[_: P]: P[SimpleMapExpr] =
-    P(pathExpr.rep(min = 1, sep = DT.exclamationMark)).map {
-      exps => SimpleMapExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
+    P(pathExpr.rep(min = 1, sep = DT.exclamationMark)).map { exps =>
+      SimpleMapExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   // According to constraint xgc:leading-lone-slash, we need to look ahead just one token to determine if a slash is a path
@@ -228,28 +232,29 @@ object XPathElemParser {
   // an open bracket, or a question mark. (Note that, like context items, decimal and double literals may start with dots.)
 
   private def canStartPostfixExpr[_: P]: P[Unit] =
-    P(literal | varRef | DT.openParenthesis | contextItemExpr | eqName |
-      NDT.functionWord | NDT.mapWord | NDT.arrayWord | DT.openBracket | DT.questionMark).map(_ => ())
+    P(
+      literal | varRef | DT.openParenthesis | contextItemExpr | eqName |
+        NDT.functionWord | NDT.mapWord | NDT.arrayWord | DT.openBracket | DT.questionMark).map(_ => ())
 
   // Looking ahead to distinguish a single slash from a double slash, and to recognize the start of a relativePathExpr.
   // See xgc:leading-lone-slash constraint.
 
   def slashOnlyPathExpr[_: P]: P[PathExpr] =
-    P(DT.slash ~ !canStartRelativePathExpr).map {
-      _ => SlashOnlyPathExpr
+    P(DT.slash ~ !canStartRelativePathExpr).map { _ =>
+      SlashOnlyPathExpr
     }
 
   // See above. Note that the next token is not a slash, because 2 slashes together make up one token,
   // and because canStartRelativePathExpr implies that the next token cannot be a slash anyway.
 
   def pathExprStartingWithSingleSlash[_: P]: P[PathExpr] =
-    P(DT.slash ~ &(canStartRelativePathExpr) ~ relativePathExpr).map {
-      expr => PathExprStartingWithSingleSlash(expr)
+    P(DT.slash ~ &(canStartRelativePathExpr) ~ relativePathExpr).map { expr =>
+      PathExprStartingWithSingleSlash(expr)
     }
 
   def pathExprStartingWithDoubleSlash[_: P]: P[PathExpr] =
-    P(DT.doubleSlash ~ relativePathExpr).map {
-      expr => PathExprStartingWithDoubleSlash(expr)
+    P(DT.doubleSlash ~ relativePathExpr).map { expr =>
+      PathExprStartingWithDoubleSlash(expr)
     }
 
   def relativePathExpr[_: P]: P[RelativePathExpr] =
@@ -296,13 +301,13 @@ object XPathElemParser {
     P(simpleAbbrevForwardStep | attributeAxisAbbrevForwardStep)
 
   def simpleAbbrevForwardStep[_: P]: P[SimpleAbbrevForwardStep] =
-    P(nodeTest).map {
-      nodeTest => SimpleAbbrevForwardStep(nodeTest)
+    P(nodeTest).map { nodeTest =>
+      SimpleAbbrevForwardStep(nodeTest)
     }
 
   def attributeAxisAbbrevForwardStep[_: P]: P[AttributeAxisAbbrevForwardStep] =
-    P(DT.at ~ nodeTest).map {
-      nodeTest => AttributeAxisAbbrevForwardStep(nodeTest)
+    P(DT.at ~ nodeTest).map { nodeTest =>
+      AttributeAxisAbbrevForwardStep(nodeTest)
     }
 
   def nonAbbrevForwardStep[_: P]: P[NonAbbrevForwardStep] =
@@ -311,17 +316,18 @@ object XPathElemParser {
     }
 
   def forwardAxis[_: P]: P[ForwardAxis] =
-    P((NDT.childWord | NDT.descendantWord | NDT.attributeWord | NDT.selfWord | NDT.descendantOrSelfWord |
-      NDT.followingSiblingWord | NDT.followingWord | NDT.namespaceWord).! ~ DT.doubleColon).map {
+    P(
+      (NDT.childWord | NDT.descendantWord | NDT.attributeWord | NDT.selfWord | NDT.descendantOrSelfWord |
+        NDT.followingSiblingWord | NDT.followingWord | NDT.namespaceWord).! ~ DT.doubleColon).map {
 
-      case "child" => ForwardAxis.Child
-      case "descendant" => ForwardAxis.Descendant
-      case "attribute" => ForwardAxis.Attribute
-      case "self" => ForwardAxis.Self
+      case "child"              => ForwardAxis.Child
+      case "descendant"         => ForwardAxis.Descendant
+      case "attribute"          => ForwardAxis.Attribute
+      case "self"               => ForwardAxis.Self
       case "descendant-or-self" => ForwardAxis.DescendantOrSelf
-      case "following-sibling" => ForwardAxis.FollowingSibling
-      case "following" => ForwardAxis.Following
-      case "namespace" => ForwardAxis.Namespace
+      case "following-sibling"  => ForwardAxis.FollowingSibling
+      case "following"          => ForwardAxis.Following
+      case "namespace"          => ForwardAxis.Namespace
     }
 
   def reverseStep[_: P]: P[ReverseStep] =
@@ -336,13 +342,14 @@ object XPathElemParser {
     }
 
   def reverseAxis[_: P]: P[ReverseAxis] =
-    P((NDT.parentWord | NDT.ancestorWord | NDT.precedingSiblingWord | NDT.precedingWord | NDT.ancestorOrSelfWord).! ~ DT.doubleColon).map {
-      case "parent" => ReverseAxis.Parent
-      case "ancestor" => ReverseAxis.Ancestor
-      case "preceding-sibling" => ReverseAxis.PrecedingSibling
-      case "preceding" => ReverseAxis.Preceding
-      case "ancestor-or-self" => ReverseAxis.AncestorOrSelf
-    }
+    P((NDT.parentWord | NDT.ancestorWord | NDT.precedingSiblingWord | NDT.precedingWord | NDT.ancestorOrSelfWord).! ~ DT.doubleColon)
+      .map {
+        case "parent"            => ReverseAxis.Parent
+        case "ancestor"          => ReverseAxis.Ancestor
+        case "preceding-sibling" => ReverseAxis.PrecedingSibling
+        case "preceding"         => ReverseAxis.Preceding
+        case "ancestor-or-self"  => ReverseAxis.AncestorOrSelf
+      }
 
   // The 2 branches of a nodeTest are easy to distinguish, with limited lookahead.
   // We first try branch kindTest, which always starts with a "keyword". If that fails, we try the nameTest branch.
@@ -362,8 +369,8 @@ object XPathElemParser {
     P(simpleNameTest | wildcard)
 
   def simpleNameTest[_: P]: P[SimpleNameTest] =
-    P(eqName ~ !DT.colonAsterisk).map {
-      name => SimpleNameTest(name)
+    P(eqName ~ !DT.colonAsterisk).map { name =>
+      SimpleNameTest(name)
     }
 
   // See ws:explicit constraint.
@@ -381,13 +388,13 @@ object XPathElemParser {
     P(NDT.documentNodeWord ~ DT.openParenthesis ~ DT.closeParenthesis).map(_ => SimpleDocumentTest)
 
   def documentTestContainingElementTest[_: P]: P[DocumentTestContainingElementTest] =
-    P(NDT.documentNodeWord ~ DT.openParenthesis ~ elementTest ~ DT.closeParenthesis).map {
-      elemTest => DocumentTestContainingElementTest(elemTest)
+    P(NDT.documentNodeWord ~ DT.openParenthesis ~ elementTest ~ DT.closeParenthesis).map { elemTest =>
+      DocumentTestContainingElementTest(elemTest)
     }
 
   def documentTestContainingSchemaElementTest[_: P]: P[DocumentTestContainingSchemaElementTest] =
-    P(NDT.documentNodeWord ~ DT.openParenthesis ~ schemaElementTest ~ DT.closeParenthesis).map {
-      schemaElmTest => DocumentTestContainingSchemaElementTest(schemaElmTest)
+    P(NDT.documentNodeWord ~ DT.openParenthesis ~ schemaElementTest ~ DT.closeParenthesis).map { schemaElmTest =>
+      DocumentTestContainingSchemaElementTest(schemaElmTest)
     }
 
   def elementTest[_: P]: P[ElementTest] =
@@ -399,8 +406,8 @@ object XPathElemParser {
     P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis).map(_ => AnyElementTest)
 
   def elementNameTest[_: P]: P[ElementNameTest] =
-    P(NDT.elementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map {
-      name => ElementNameTest(name)
+    P(NDT.elementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map { name =>
+      ElementNameTest(name)
     }
 
   def elementNameAndTypeTest[_: P]: P[ElementNameAndTypeTest] =
@@ -414,14 +421,15 @@ object XPathElemParser {
     }
 
   def elementTypeTest[_: P]: P[ElementTypeTest] =
-    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis).map {
-      tpe => ElementTypeTest(tpe)
+    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis).map { tpe =>
+      ElementTypeTest(tpe)
     }
 
   def nillableElementTypeTest[_: P]: P[NillableElementTypeTest] =
-    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis).map {
-      tpe => NillableElementTypeTest(tpe)
-    }
+    P(NDT.elementWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.questionMark ~ DT.closeParenthesis)
+      .map { tpe =>
+        NillableElementTypeTest(tpe)
+      }
 
   def attributeTest[_: P]: P[AttributeTest] =
     P(anyAttributeTest | attributeNameTest | attributeNameAndTypeTest | attributeTypeTest)
@@ -432,8 +440,8 @@ object XPathElemParser {
     P(NDT.attributeWord ~ DT.openParenthesis ~ DT.asterisk.? ~ DT.closeParenthesis).map(_ => AnyAttributeTest)
 
   def attributeNameTest[_: P]: P[AttributeNameTest] =
-    P(NDT.attributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map {
-      name => AttributeNameTest(name)
+    P(NDT.attributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map { name =>
+      AttributeNameTest(name)
     }
 
   def attributeNameAndTypeTest[_: P]: P[AttributeNameAndTypeTest] =
@@ -442,18 +450,18 @@ object XPathElemParser {
     }
 
   def attributeTypeTest[_: P]: P[AttributeTypeTest] =
-    P(NDT.attributeWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis).map {
-      tpe => AttributeTypeTest(tpe)
+    P(NDT.attributeWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.comma ~ eqName ~ DT.closeParenthesis).map { tpe =>
+      AttributeTypeTest(tpe)
     }
 
   def schemaElementTest[_: P]: P[SchemaElementTest] =
-    P(NDT.schemaElementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map {
-      name => SchemaElementTest(name)
+    P(NDT.schemaElementWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map { name =>
+      SchemaElementTest(name)
     }
 
   def schemaAttributeTest[_: P]: P[SchemaAttributeTest] =
-    P(NDT.schemaAttributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map {
-      name => SchemaAttributeTest(name)
+    P(NDT.schemaAttributeWord ~ DT.openParenthesis ~ eqName ~ DT.closeParenthesis).map { name =>
+      SchemaAttributeTest(name)
     }
 
   def piTest[_: P]: P[PITest] =
@@ -463,13 +471,13 @@ object XPathElemParser {
     P(NDT.processingInstructionWord ~ DT.openParenthesis ~ DT.closeParenthesis).map(_ => SimplePITest)
 
   def targetPiTest[_: P]: P[TargetPITest] =
-    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ ncName ~ DT.closeParenthesis).map {
-      name => TargetPITest(name)
+    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ ncName ~ DT.closeParenthesis).map { name =>
+      TargetPITest(name)
     }
 
   def dataPiTest[_: P]: P[DataPITest] =
-    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ stringLiteral ~ DT.closeParenthesis).map {
-      stringLit => DataPITest(stringLit)
+    P(NDT.processingInstructionWord ~ DT.openParenthesis ~ stringLiteral ~ DT.closeParenthesis).map { stringLit =>
+      DataPITest(stringLit)
     }
 
   def commentTest[_: P]: P[CommentTest.type] =
@@ -492,8 +500,8 @@ object XPathElemParser {
     }
 
   def argumentList[_: P]: P[ArgumentList] =
-    P(DT.openParenthesis ~ argument.rep(sep = DT.comma) ~ DT.closeParenthesis).map {
-      args => ArgumentList(NonEmptyVector.fromVectorUnsafe(args.toVector))
+    P(DT.openParenthesis ~ argument.rep(sep = DT.comma) ~ DT.closeParenthesis).map { args =>
+      ArgumentList(args.toIndexedSeq)
     }
 
   def argument[_: P]: P[Argument] =
@@ -503,26 +511,26 @@ object XPathElemParser {
     P(DT.questionMark).map(_ => ArgumentPlaceholder)
 
   def exprSingleArgument[_: P]: P[ExprSingleArgument] =
-    P(exprSingle).map {
-      exp => ExprSingleArgument(exp)
+    P(exprSingle).map { exp =>
+      ExprSingleArgument(exp)
     }
 
   def lookup[_: P]: P[PostfixLookup] =
-    P(DT.questionMark ~ keySpecifier).map {
-      keySpec => PostfixLookup(keySpec)
+    P(DT.questionMark ~ keySpecifier).map { keySpec =>
+      PostfixLookup(keySpec)
     }
 
   def keySpecifier[_: P]: P[KeySpecifier] =
     P(ncName | integerLiteral | DT.asterisk.! | parenthesizedExpr).map {
-      case nm: NCName => NamedKeySpecifier(nm)
+      case nm: NCName             => NamedKeySpecifier(nm)
       case intLit: IntegerLiteral => PositionalKeySpecifier(intLit)
-      case "*" => WildcardKeySpecifier
+      case "*"                    => WildcardKeySpecifier
       case exp: ParenthesizedExpr => ParenthesizedExprKeySpecifier(exp)
     }
 
   def paramList[_: P]: P[ParamList] =
-    P(param.rep(min = 1, sep = DT.comma)).map {
-      pars => ParamList(pars.toIndexedSeq)
+    P(param.rep(min = 1, sep = DT.comma)).map { pars =>
+      ParamList(pars.toIndexedSeq)
     }
 
   def param[_: P]: P[Param] =
@@ -531,8 +539,8 @@ object XPathElemParser {
     }
 
   def predicate[_: P]: P[Predicate] =
-    P(DT.openBracket ~ expr ~ DT.closeBracket).map {
-      exp => Predicate(exp)
+    P(DT.openBracket ~ expr ~ DT.closeBracket).map { exp =>
+      Predicate(exp)
     }
 
   // Primary expressions
@@ -540,8 +548,9 @@ object XPathElemParser {
   // The branches of a primaryExpr are relatively easy to distinguish. See above.
 
   def primaryExpr[_: P]: P[PrimaryExpr] =
-    P(literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr |
-      mapConstructor | arrayConstructor | unaryLookup)
+    P(
+      literal | varRef | parenthesizedExpr | contextItemExpr | functionCall | functionItemExpr |
+        mapConstructor | arrayConstructor | unaryLookup)
 
   def literal[_: P]: P[Literal] =
     P(stringLiteral | numericLiteral)
@@ -558,13 +567,13 @@ object XPathElemParser {
     P(NDT.integerLiteral)
 
   def varRef[_: P]: P[VarRef] =
-    P(DT.dollar ~ eqName).map {
-      name => VarRef(name)
+    P(DT.dollar ~ eqName).map { name =>
+      VarRef(name)
     }
 
   def parenthesizedExpr[_: P]: P[ParenthesizedExpr] =
-    P(DT.openParenthesis ~ expr.? ~ DT.closeParenthesis).map {
-      expOption => ParenthesizedExpr(expOption)
+    P(DT.openParenthesis ~ expr.? ~ DT.closeParenthesis).map { expOption =>
+      ParenthesizedExpr(expOption)
     }
 
   def contextItemExpr[_: P]: P[ContextItemExpr.type] =
@@ -589,14 +598,15 @@ object XPathElemParser {
     }
 
   def inlineFunctionExpr[_: P]: P[InlineFunctionExpr] =
-    P(NDT.functionWord ~ DT.openParenthesis ~ paramList.? ~ DT.closeParenthesis ~ (NDT.asWord ~ sequenceType).? ~ enclosedExpr).map {
-      case (parListOption, resultTpeOption, body) =>
-        InlineFunctionExpr(parListOption, resultTpeOption, body)
-    }
+    P(NDT.functionWord ~ DT.openParenthesis ~ paramList.? ~ DT.closeParenthesis ~ (NDT.asWord ~ sequenceType).? ~ enclosedExpr)
+      .map {
+        case (parListOption, resultTpeOption, body) =>
+          InlineFunctionExpr(parListOption, resultTpeOption, body)
+      }
 
   def mapConstructor[_: P]: P[MapConstructor] =
-    P(NDT.mapWord ~ DT.openBrace ~/ mapConstructorEntry.rep(sep = DT.comma) ~ DT.closeBrace).map {
-      entries => MapConstructor(entries.toIndexedSeq)
+    P(NDT.mapWord ~ DT.openBrace ~/ mapConstructorEntry.rep(sep = DT.comma) ~ DT.closeBrace).map { entries =>
+      MapConstructor(entries.toIndexedSeq)
     }
 
   def mapConstructorEntry[_: P]: P[MapConstructorEntry] =
@@ -608,18 +618,18 @@ object XPathElemParser {
     P(squareArrayConstructor | curlyArrayConstructor)
 
   def squareArrayConstructor[_: P]: P[SquareArrayConstructor] =
-    P(DT.openBracket ~ exprSingle.rep(sep = DT.comma) ~ DT.closeBracket).map {
-      members => SquareArrayConstructor(members.toIndexedSeq)
+    P(DT.openBracket ~ exprSingle.rep(sep = DT.comma) ~ DT.closeBracket).map { members =>
+      SquareArrayConstructor(members.toIndexedSeq)
     }
 
   def curlyArrayConstructor[_: P]: P[CurlyArrayConstructor] =
-    P(NDT.arrayWord ~ enclosedExpr).map {
-      exp => CurlyArrayConstructor(exp)
+    P(NDT.arrayWord ~ enclosedExpr).map { exp =>
+      CurlyArrayConstructor(exp)
     }
 
   def unaryLookup[_: P]: P[UnaryLookup] =
-    P(DT.questionMark ~ keySpecifier).map {
-      keySpec => UnaryLookup(keySpec)
+    P(DT.questionMark ~ keySpecifier).map { keySpec =>
+      UnaryLookup(keySpec)
     }
 
   // Types
@@ -634,19 +644,19 @@ object XPathElemParser {
 
   def nonEmptySequenceType[_: P]: P[SequenceType] =
     P(itemType ~ (DT.questionMark | DT.asterisk | DT.plus).!.?).map {
-      case (tpe, None) => ExactlyOneSequenceType(tpe)
+      case (tpe, None)      => ExactlyOneSequenceType(tpe)
       case (tpe, Some("?")) => ZeroOrOneSequenceType(tpe)
       case (tpe, Some("*")) => ZeroOrMoreSequenceType(tpe)
       case (tpe, Some("+")) => OneOrMoreSequenceType(tpe)
-      case _ => EmptySequenceType
+      case _                => EmptySequenceType
     }
 
   def itemType[_: P]: P[ItemType] =
     P(kindTestItemType | anyItemType | anyFunctionTest | typedFunctionTest | atomicOrUnionType | parenthesizedItemType | mapTest | arrayTest)
 
   def kindTestItemType[_: P]: P[KindTestItemType] =
-    P(kindTest).map {
-      kindTst => KindTestItemType(kindTst)
+    P(kindTest).map { kindTst =>
+      KindTestItemType(kindTst)
     }
 
   def anyItemType[_: P]: P[AnyItemType.type] =
@@ -656,26 +666,28 @@ object XPathElemParser {
     P(NDT.functionWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis).map(_ => AnyFunctionTest)
 
   def typedFunctionTest[_: P]: P[TypedFunctionTest] =
-    P(NDT.functionWord ~ DT.openParenthesis ~ sequenceType.rep(sep = DT.comma) ~ DT.closeParenthesis ~ NDT.asWord ~ sequenceType).map {
+    P(
+      NDT.functionWord ~ DT.openParenthesis ~ sequenceType
+        .rep(sep = DT.comma) ~ DT.closeParenthesis ~ NDT.asWord ~ sequenceType).map {
       case (parTpes, resultTpe) => TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
     }
 
   def atomicOrUnionType[_: P]: P[AtomicOrUnionType] =
-    P(eqName).map {
-      tpe => AtomicOrUnionType(tpe)
+    P(eqName).map { tpe =>
+      AtomicOrUnionType(tpe)
     }
 
   def parenthesizedItemType[_: P]: P[ParenthesizedItemType] =
-    P(DT.openParenthesis ~ itemType ~ DT.closeParenthesis).map {
-      tpe => ParenthesizedItemType(tpe)
+    P(DT.openParenthesis ~ itemType ~ DT.closeParenthesis).map { tpe =>
+      ParenthesizedItemType(tpe)
     }
 
   def mapTest[_: P]: P[MapTest] =
     P(anyMapTest | typedMapTest)
 
   def anyMapTest[_: P]: P[AnyMapTest.type] =
-    P(NDT.mapWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis).map {
-      _ => AnyMapTest
+    P(NDT.mapWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis).map { _ =>
+      AnyMapTest
     }
 
   def typedMapTest[_: P]: P[TypedMapTest] =
@@ -687,18 +699,18 @@ object XPathElemParser {
     P(anyArrayTest | typedArrayTest)
 
   def anyArrayTest[_: P]: P[AnyArrayTest.type] =
-    P(NDT.arrayWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis).map {
-      _ => AnyArrayTest
+    P(NDT.arrayWord ~ DT.openParenthesis ~ DT.asterisk ~ DT.closeParenthesis).map { _ =>
+      AnyArrayTest
     }
 
   def typedArrayTest[_: P]: P[TypedArrayTest] =
-    P(NDT.arrayWord ~ DT.openParenthesis ~ sequenceType ~ DT.closeParenthesis).map {
-      et => TypedArrayTest(et)
+    P(NDT.arrayWord ~ DT.openParenthesis ~ sequenceType ~ DT.closeParenthesis).map { et =>
+      TypedArrayTest(et)
     }
 
   def singleType[_: P]: P[SingleType] =
     P(eqName ~ DT.questionMark.!.?).map {
-      case (tpe, None) => NonEmptySingleType(tpe)
+      case (tpe, None)    => NonEmptySingleType(tpe)
       case (tpe, Some(_)) => PotentiallyEmptySingleType(tpe)
     }
 
@@ -718,8 +730,9 @@ object XPathElemParser {
     P((NDT.eqWord | NDT.neWord | NDT.ltWord | NDT.leWord | NDT.gtWord | NDT.geWord).!).map(s => ValueComp.parse(s))
 
   def generalComp[_: P]: P[GeneralComp] =
-    P((DT.equals | DT.notEquals | DT.lessThan | DT.lessThanOrEqual |
-      DT.greaterThan | DT.greaterThanOrEqual).!).map(s => GeneralComp.parse(s))
+    P(
+      (DT.equals | DT.notEquals | DT.lessThan | DT.lessThanOrEqual |
+        DT.greaterThan | DT.greaterThanOrEqual).!).map(s => GeneralComp.parse(s))
 
   def nodeComp[_: P]: P[NodeComp] =
     P((NDT.isWord | DT.precedes | DT.follows).!).map(s => NodeComp.parse(s))
@@ -744,5 +757,6 @@ object XPathElemParser {
     EQName.QName("schema-element"),
     EQName.QName("switch"),
     EQName.QName("text"),
-    EQName.QName("typeswitch"))
+    EQName.QName("typeswitch")
+  )
 }

@@ -848,9 +848,9 @@ final case class Predicate(expr: Expr) extends Postfix {
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
-final case class ArgumentList(arguments: NonEmptyVector[Argument]) extends Postfix {
+final case class ArgumentList(arguments: IndexedSeq[Argument]) extends Postfix {
 
-  def children: IndexedSeq[XPathElem] = arguments.toVector
+  def children: IndexedSeq[XPathElem] = arguments
 }
 
 final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix {

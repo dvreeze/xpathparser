@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.xpathparser.util
 
-import cats.data.NonEmptyVector
-
 import scala.reflect.classTag
 import eu.cdevreeze.xpathparser.ast.ArgumentList
 import eu.cdevreeze.xpathparser.ast.AtomicOrUnionType
@@ -211,7 +209,7 @@ object EQNameUtil {
   val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] = {
     case FunctionCall(
         EQName.QName(PrefixedName("xs", "QName")),
-        ArgumentList(NonEmptyVector(ExprSingleArgument(StringLiteral(s)), Vector.empty))) =>
+        ArgumentList(IndexedSeq(ExprSingleArgument(StringLiteral(s))))) =>
       val qn = QName.parse(s)
       Some(Set(EQName.QName(qn)))
     case _: XPathElem =>
