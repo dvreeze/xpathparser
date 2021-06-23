@@ -143,7 +143,7 @@ object XPathElemParser {
 
   def unionExpr[_: P]: P[UnionExpr] =
     P(intersectExceptExpr ~ ((NDT.unionWord | DT.verticalBar) ~/ intersectExceptExpr).rep).map {
-      case (expr, exprSeq) => UnionExpr(expr +: exprSeq.toIndexedSeq)
+      case (expr, exprSeq) => UnionExpr(exprSeq.toIndexedSeq.prepended(expr))
     }
 
   def intersectExceptExpr[_: P]: P[IntersectExceptExpr] =
