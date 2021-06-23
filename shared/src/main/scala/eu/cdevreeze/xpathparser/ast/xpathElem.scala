@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.xpathparser.ast
 
+import cats.data.NonEmptyVector
 import eu.cdevreeze.xpathparser.queryapi.ElemLike
 
 /**
@@ -36,7 +37,8 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * </ul>
  *
  * It would be natural for the AST types to have IS-A relationships modeled as type inheritance, and HAS-A
- * relationships modeled as composition. Where feasible, this approach has been followed.
+ * relationships modeled as composition. Where feasible, this approach has been followed. Consequently, sealed trait inheritance
+ * has been used a lot (IS-A instead of HAS-A), and unnecessarily deep object trees are prevented in this way.
  *
  * Having such an AST of a successfully parsed XPath expression, it must be easy to reliably find used namespace prefixes, for example.
  *
@@ -112,19 +114,22 @@ sealed trait Expr extends XPathExpr
 
 sealed trait SimpleExpr extends Expr
 
-final case class CompoundExpr(exprSingleSeq: IndexedSeq[ExprSingle]) extends Expr {
-  require(exprSingleSeq.size >= 2, s"At least 2 expression-singles must be provided but found 0 or 1 such expression")
+final case class CompoundExpr(firstExprSingle: ExprSingle, remainingExprSingleSeq: NonEmptyVector[ExprSingle])
+    extends Expr {
+
+  def exprSingleSeq: IndexedSeq[ExprSingle] = remainingExprSingleSeq.toVector.prepended(firstExprSingle)
 
   def children: IndexedSeq[XPathElem] = exprSingleSeq
 }
 
 object Expr {
 
-  def apply(exprSingleSeq: IndexedSeq[ExprSingle]): Expr = {
-    if (exprSingleSeq.size == 1) {
+  def apply(exprSingleSeq: NonEmptyVector[ExprSingle]): Expr = {
+    if (exprSingleSeq.toVector.sizeIs == 1) {
       exprSingleSeq.head
     } else {
-      CompoundExpr(exprSingleSeq)
+      assert(exprSingleSeq.toVector.sizeIs >= 2)
+      CompoundExpr(exprSingleSeq.head, NonEmptyVector.fromVectorUnsafe(exprSingleSeq.tail))
     }
   }
 }
@@ -134,34 +139,34 @@ object Expr {
  */
 sealed trait ExprSingle extends SimpleExpr
 
-final case class ForExpr(simpleForBindings: IndexedSeq[SimpleForBinding], returnExpr: ExprSingle)
+final case class ForExpr(simpleForBindings: NonEmptyVector[SimpleForBinding], returnExpr: ExprSingle)
     extends ExprSingle
     with VariableIntroducingExpr {
 
-  def children: IndexedSeq[XPathElem] = simpleForBindings.appended(returnExpr)
+  def children: IndexedSeq[XPathElem] = simpleForBindings.toVector.appended(returnExpr)
 
-  def variableBindings: IndexedSeq[VariableBinding] = simpleForBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleForBindings.toVector
 }
 
-final case class LetExpr(simpleLetBindings: IndexedSeq[SimpleLetBinding], returnExpr: ExprSingle)
+final case class LetExpr(simpleLetBindings: NonEmptyVector[SimpleLetBinding], returnExpr: ExprSingle)
     extends ExprSingle
     with VariableIntroducingExpr {
 
-  def children: IndexedSeq[XPathElem] = simpleLetBindings.appended(returnExpr)
+  def children: IndexedSeq[XPathElem] = simpleLetBindings.toVector.appended(returnExpr)
 
-  def variableBindings: IndexedSeq[VariableBinding] = simpleLetBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleLetBindings.toVector
 }
 
 final case class QuantifiedExpr(
     quantifier: Quantifier,
-    simpleBindings: IndexedSeq[SimpleBindingInQuantifiedExpr],
+    simpleBindings: NonEmptyVector[SimpleBindingInQuantifiedExpr],
     satisfiesExpr: ExprSingle)
     extends ExprSingle
     with VariableIntroducingExpr {
 
-  def children: IndexedSeq[XPathElem] = simpleBindings.prepended(quantifier).appended(satisfiesExpr)
+  def children: IndexedSeq[XPathElem] = simpleBindings.toVector.prepended(quantifier).appended(satisfiesExpr)
 
-  def variableBindings: IndexedSeq[VariableBinding] = simpleBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleBindings.toVector
 
   def returnExpr: XPathElem = satisfiesExpr
 }
@@ -175,19 +180,21 @@ sealed trait OrExpr extends ExprSingle
 
 sealed trait SimpleOrExpr extends OrExpr
 
-final case class CompoundOrExpr(andExprs: IndexedSeq[AndExpr]) extends OrExpr {
-  require(andExprs.size >= 2, s"At least 2 and-expressions must be provided but found 0 or 1 such expression")
+final case class CompoundOrExpr(firstAndExpr: AndExpr, remainingAndExprs: NonEmptyVector[AndExpr]) extends OrExpr {
+
+  def andExprs: IndexedSeq[AndExpr] = remainingAndExprs.toVector.prepended(firstAndExpr)
 
   def children: IndexedSeq[XPathElem] = andExprs
 }
 
 object OrExpr {
 
-  def apply(andExprs: IndexedSeq[AndExpr]): OrExpr = {
-    if (andExprs.size == 1) {
+  def apply(andExprs: NonEmptyVector[AndExpr]): OrExpr = {
+    if (andExprs.toVector.sizeIs == 1) {
       andExprs.head
     } else {
-      CompoundOrExpr(andExprs)
+      assert(andExprs.toVector.sizeIs >= 2)
+      CompoundOrExpr(andExprs.head, NonEmptyVector.fromVectorUnsafe(andExprs.tail))
     }
   }
 }
@@ -196,21 +203,24 @@ sealed trait AndExpr extends SimpleOrExpr
 
 sealed trait SimpleAndExpr extends AndExpr
 
-final case class CompoundAndExpr(comparisonExprs: IndexedSeq[ComparisonExpr]) extends AndExpr {
-  require(
-    comparisonExprs.size >= 2,
-    s"At least 2 comparison-expressions must be provided but found 0 or 1 such expression")
+final case class CompoundAndExpr(
+    firstComparisonExpr: ComparisonExpr,
+    remainingComparisonExprs: NonEmptyVector[ComparisonExpr])
+    extends AndExpr {
+
+  def comparisonExprs: IndexedSeq[ComparisonExpr] = remainingComparisonExprs.toVector.prepended(firstComparisonExpr)
 
   def children: IndexedSeq[XPathElem] = comparisonExprs
 }
 
 object AndExpr {
 
-  def apply(comparisonExprs: IndexedSeq[ComparisonExpr]): AndExpr = {
-    if (comparisonExprs.size == 1) {
+  def apply(comparisonExprs: NonEmptyVector[ComparisonExpr]): AndExpr = {
+    if (comparisonExprs.toVector.sizeIs == 1) {
       comparisonExprs.head
     } else {
-      CompoundAndExpr(comparisonExprs)
+      assert(comparisonExprs.toVector.sizeIs >= 2)
+      CompoundAndExpr(comparisonExprs.head, NonEmptyVector.fromVectorUnsafe(comparisonExprs.tail))
     }
   }
 }
@@ -239,19 +249,22 @@ sealed trait StringConcatExpr extends SimpleComparisonExpr
 
 sealed trait SimpleStringConcatExpr extends StringConcatExpr
 
-final case class CompoundStringConcatExpr(rangeExprs: IndexedSeq[RangeExpr]) extends StringConcatExpr {
-  require(rangeExprs.size >= 2, s"At least 2 range-expressions must be provided but found 0 or 1 such expression")
+final case class CompoundStringConcatExpr(firstRangeExpr: RangeExpr, remainingRangeExprs: NonEmptyVector[RangeExpr])
+    extends StringConcatExpr {
+
+  def rangeExprs: IndexedSeq[RangeExpr] = remainingRangeExprs.toVector.prepended(firstRangeExpr)
 
   def children: IndexedSeq[XPathElem] = rangeExprs
 }
 
 object StringConcatExpr {
 
-  def apply(rangeExprs: IndexedSeq[RangeExpr]): StringConcatExpr = {
-    if (rangeExprs.size == 1) {
+  def apply(rangeExprs: NonEmptyVector[RangeExpr]): StringConcatExpr = {
+    if (rangeExprs.toVector.sizeIs == 1) {
       rangeExprs.head
     } else {
-      CompoundStringConcatExpr(rangeExprs)
+      assert(rangeExprs.toVector.sizeIs >= 2)
+      CompoundStringConcatExpr(rangeExprs.head, NonEmptyVector.fromVectorUnsafe(rangeExprs.tail))
     }
   }
 }
@@ -273,15 +286,12 @@ sealed trait AdditiveExpr extends SimpleRangeExpr
 sealed trait SimpleAdditiveExpr extends AdditiveExpr
 
 final case class CompoundAdditiveExpr(
-    firstExpr: MultiplicativeExpr,
-    operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)])
+    firstMultiplicativeExpr: MultiplicativeExpr,
+    op: AdditionOp,
+    remainder: AdditiveExpr)
     extends AdditiveExpr {
 
-  require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
-
-  def children: IndexedSeq[XPathElem] = {
-    operatorExprPairs.flatMap(p => List(p._1, p._2)).prepended(firstExpr)
-  }
+  def children: IndexedSeq[XPathElem] = IndexedSeq(firstMultiplicativeExpr, op, remainder)
 }
 
 object AdditiveExpr {
@@ -293,7 +303,9 @@ object AdditiveExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      CompoundAdditiveExpr(firstExpr, operatorExprPairs)
+      val (op, nextFirstExpr) = operatorExprPairs.head
+      // Recursive call
+      CompoundAdditiveExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
     }
   }
 }
@@ -303,25 +315,23 @@ sealed trait MultiplicativeExpr extends SimpleAdditiveExpr
 sealed trait SimpleMultiplicativeExpr extends MultiplicativeExpr
 
 final case class CompoundMultiplicativeExpr(
-    firstExpr: UnionExpr,
-    operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)])
+    firstUnionExpr: UnionExpr,
+    op: MultiplicativeOp,
+    remainder: MultiplicativeExpr)
     extends MultiplicativeExpr {
 
-  require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
-
-  def children: IndexedSeq[XPathElem] = {
-    operatorExprPairs.flatMap(p => List(p._1, p._2)).prepended(firstExpr)
-  }
+  def children: IndexedSeq[XPathElem] = IndexedSeq(firstUnionExpr, op, remainder)
 }
 
 object MultiplicativeExpr {
 
   def apply(firstExpr: UnionExpr, operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr = {
-
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      CompoundMultiplicativeExpr(firstExpr, operatorExprPairs)
+      val (op, nextFirstExpr) = operatorExprPairs.head
+      // Recursive call
+      CompoundMultiplicativeExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
     }
   }
 }
@@ -333,21 +343,25 @@ sealed trait UnionExpr extends SimpleMultiplicativeExpr
 
 sealed trait SimpleUnionExpr extends UnionExpr
 
-final case class CompoundUnionExpr(intersectExceptExprs: IndexedSeq[IntersectExceptExpr]) extends UnionExpr {
-  require(
-    intersectExceptExprs.size >= 2,
-    s"At least 2 intersect-except-expressions must be provided but found 0 or 1 such expression")
+final case class CompoundUnionExpr(
+    firstIntersectExceptExpr: IntersectExceptExpr,
+    remainingIntersectExceptExprs: NonEmptyVector[IntersectExceptExpr])
+    extends UnionExpr {
+
+  def intersectExceptExprs: IndexedSeq[IntersectExceptExpr] =
+    remainingIntersectExceptExprs.toVector.prepended(firstIntersectExceptExpr)
 
   def children: IndexedSeq[XPathElem] = intersectExceptExprs
 }
 
 object UnionExpr {
 
-  def apply(intersectExceptExprs: IndexedSeq[IntersectExceptExpr]): UnionExpr = {
-    if (intersectExceptExprs.size == 1) {
+  def apply(intersectExceptExprs: NonEmptyVector[IntersectExceptExpr]): UnionExpr = {
+    if (intersectExceptExprs.toVector.sizeIs == 1) {
       intersectExceptExprs.head
     } else {
-      CompoundUnionExpr(intersectExceptExprs)
+      assert(intersectExceptExprs.toVector.sizeIs >= 2)
+      CompoundUnionExpr(intersectExceptExprs.head, NonEmptyVector.fromVectorUnsafe(intersectExceptExprs.tail))
     }
   }
 }
@@ -360,15 +374,12 @@ sealed trait IntersectExceptExpr extends SimpleUnionExpr
 sealed trait SimpleIntersectExceptExpr extends IntersectExceptExpr
 
 final case class CompoundIntersectExceptExpr(
-    firstExpr: InstanceOfExpr,
-    operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)])
+    firstInstanceOfExpr: InstanceOfExpr,
+    op: IntersectExceptOp,
+    remainder: IntersectExceptExpr)
     extends IntersectExceptExpr {
 
-  require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
-
-  def children: IndexedSeq[XPathElem] = {
-    operatorExprPairs.flatMap(p => List(p._1, p._2)).prepended(firstExpr)
-  }
+  def children: IndexedSeq[XPathElem] = IndexedSeq(firstInstanceOfExpr, op, remainder)
 }
 
 object IntersectExceptExpr {
@@ -380,7 +391,9 @@ object IntersectExceptExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      CompoundIntersectExceptExpr(firstExpr, operatorExprPairs)
+      val (op, nextFirstExpr) = operatorExprPairs.head
+      // Recursive call
+      CompoundIntersectExceptExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
     }
   }
 }
@@ -397,11 +410,7 @@ final case class CompoundInstanceOfExpr(treatExpr: TreatExpr, sequenceType: Sequ
 object InstanceOfExpr {
 
   def apply(treatExpr: TreatExpr, sequenceTypeOption: Option[SequenceType]): InstanceOfExpr = {
-    if (sequenceTypeOption.isEmpty) {
-      treatExpr
-    } else {
-      CompoundInstanceOfExpr(treatExpr, sequenceTypeOption.get)
-    }
+    sequenceTypeOption.map(seqType => CompoundInstanceOfExpr(treatExpr, seqType)).getOrElse(treatExpr)
   }
 }
 
@@ -417,11 +426,7 @@ final case class CompoundTreatExpr(castableExpr: CastableExpr, sequenceType: Seq
 object TreatExpr {
 
   def apply(castableExpr: CastableExpr, sequenceTypeOption: Option[SequenceType]): TreatExpr = {
-    if (sequenceTypeOption.isEmpty) {
-      castableExpr
-    } else {
-      CompoundTreatExpr(castableExpr, sequenceTypeOption.get)
-    }
+    sequenceTypeOption.map(seqType => CompoundTreatExpr(castableExpr, seqType)).getOrElse(castableExpr)
   }
 }
 
@@ -437,11 +442,7 @@ final case class CompoundCastableExpr(castExpr: CastExpr, singleType: SingleType
 object CastableExpr {
 
   def apply(castExpr: CastExpr, singleTypeOption: Option[SingleType]): CastableExpr = {
-    if (singleTypeOption.isEmpty) {
-      castExpr
-    } else {
-      CompoundCastableExpr(castExpr, singleTypeOption.get)
-    }
+    singleTypeOption.map(singleType => CompoundCastableExpr(castExpr, singleType)).getOrElse(castExpr)
   }
 }
 
@@ -457,11 +458,7 @@ final case class CompoundCastExpr(arrowExpr: ArrowExpr, singleType: SingleType) 
 object CastExpr {
 
   def apply(arrowExpr: ArrowExpr, singleTypeOption: Option[SingleType]): CastExpr = {
-    if (singleTypeOption.isEmpty) {
-      arrowExpr
-    } else {
-      CompoundCastExpr(arrowExpr, singleTypeOption.get)
-    }
+    singleTypeOption.map(singleType => CompoundCastExpr(arrowExpr, singleType)).getOrElse(arrowExpr)
   }
 }
 
@@ -469,11 +466,10 @@ sealed trait ArrowExpr extends SimpleCastExpr
 
 sealed trait SimpleArrowExpr extends ArrowExpr
 
-final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall])
+final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: NonEmptyVector[ArrowFunctionCall])
     extends ArrowExpr {
-  require(arrowFunctionCalls.size >= 1, s"At least 1 arrow-function-call must be provided but found none")
 
-  def children: IndexedSeq[XPathElem] = arrowFunctionCalls.prepended(unaryExpr)
+  def children: IndexedSeq[XPathElem] = arrowFunctionCalls.toVector.prepended(unaryExpr)
 }
 
 object ArrowExpr {
@@ -482,7 +478,7 @@ object ArrowExpr {
     if (arrowFunctionCalls.isEmpty) {
       unaryExpr
     } else {
-      CompoundArrowExpr(unaryExpr, arrowFunctionCalls)
+      CompoundArrowExpr(unaryExpr, NonEmptyVector.fromVectorUnsafe(arrowFunctionCalls.toVector))
     }
   }
 }
@@ -514,10 +510,9 @@ sealed trait UnaryExpr extends SimpleArrowExpr
 
 sealed trait SimpleUnaryExpr extends UnaryExpr
 
-final case class CompoundUnaryExpr(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr {
-  require(ops.size >= 1, s"At least 1 operator must be provided but found none")
+final case class CompoundUnaryExpr(ops: NonEmptyVector[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr {
 
-  def children: IndexedSeq[XPathElem] = ops.appended(valueExpr)
+  def children: IndexedSeq[XPathElem] = ops.toVector.appended(valueExpr)
 }
 
 object UnaryExpr {
@@ -526,7 +521,7 @@ object UnaryExpr {
     if (ops.isEmpty) {
       valueExpr
     } else {
-      CompoundUnaryExpr(ops, valueExpr)
+      CompoundUnaryExpr(NonEmptyVector.fromVectorUnsafe(ops.toVector), valueExpr)
     }
   }
 }
@@ -540,19 +535,22 @@ sealed trait SimpleMapExpr extends ValueExpr
 
 sealed trait SimpleSimpleMapExpr extends SimpleMapExpr
 
-final case class CompoundSimpleMapExpr(pathExprs: IndexedSeq[PathExpr]) extends SimpleMapExpr {
-  require(pathExprs.size >= 2, s"At least 2 path-expressions must be provided but found 0 or 1 such expression")
+final case class CompoundSimpleMapExpr(firstPathExpr: PathExpr, remainingPathExprs: NonEmptyVector[PathExpr])
+    extends SimpleMapExpr {
+
+  def pathExprs: IndexedSeq[PathExpr] = remainingPathExprs.toVector.prepended(firstPathExpr)
 
   def children: IndexedSeq[XPathElem] = pathExprs
 }
 
 object SimpleMapExpr {
 
-  def apply(pathExprs: IndexedSeq[PathExpr]): SimpleMapExpr = {
-    if (pathExprs.size == 1) {
+  def apply(pathExprs: NonEmptyVector[PathExpr]): SimpleMapExpr = {
+    if (pathExprs.toVector.sizeIs == 1) {
       pathExprs.head
     } else {
-      CompoundSimpleMapExpr(pathExprs)
+      assert(pathExprs.toVector.sizeIs >= 2)
+      CompoundSimpleMapExpr(pathExprs.head, NonEmptyVector.fromVectorUnsafe(pathExprs.tail))
     }
   }
 }
@@ -584,24 +582,21 @@ sealed trait RelativePathExpr extends PathExpr
 
 sealed trait SimpleRelativePathExpr extends RelativePathExpr
 
-final case class CompoundRelativePathExpr(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)])
+final case class CompoundRelativePathExpr(firstStepExpr: StepExpr, op: StepOp, remainder: RelativePathExpr)
     extends RelativePathExpr {
 
-  require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
-
-  def children: IndexedSeq[XPathElem] = {
-    operatorExprPairs.flatMap(p => List(p._1, p._2)).prepended(firstExpr)
-  }
+  def children: IndexedSeq[XPathElem] = IndexedSeq(firstStepExpr, op, remainder)
 }
 
 object RelativePathExpr {
 
   def apply(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr = {
-
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      CompoundRelativePathExpr(firstExpr, operatorExprPairs)
+      val (op, nextFirstExpr) = operatorExprPairs.head
+      // Recursive call
+      CompoundRelativePathExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
     }
   }
 }
@@ -620,21 +615,18 @@ sealed trait PostfixExpr extends StepExpr
 
 sealed trait SimplePostfixExpr extends PostfixExpr
 
-final case class CompoundPostfixExpr(primaryExpr: PrimaryExpr, postfixes: IndexedSeq[Postfix]) extends PostfixExpr {
+final case class CompoundPostfixExpr(primaryExpr: PrimaryExpr, postfixes: NonEmptyVector[Postfix]) extends PostfixExpr {
 
-  require(postfixes.size >= 1, s"At least 1 postfix must be provided but found none")
-
-  def children: IndexedSeq[XPathElem] = postfixes.prepended(primaryExpr)
+  def children: IndexedSeq[XPathElem] = postfixes.toVector.prepended(primaryExpr)
 }
 
 object PostfixExpr {
 
   def apply(primaryExpr: PrimaryExpr, postfixes: IndexedSeq[Postfix]): PostfixExpr = {
-
     if (postfixes.isEmpty) {
       primaryExpr
     } else {
-      CompoundPostfixExpr(primaryExpr, postfixes)
+      CompoundPostfixExpr(primaryExpr, NonEmptyVector.fromVectorUnsafe(postfixes.toVector))
     }
   }
 }
@@ -856,9 +848,9 @@ final case class Predicate(expr: Expr) extends Postfix {
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
-final case class ArgumentList(arguments: IndexedSeq[Argument]) extends Postfix {
+final case class ArgumentList(arguments: NonEmptyVector[Argument]) extends Postfix {
 
-  def children: IndexedSeq[XPathElem] = arguments
+  def children: IndexedSeq[XPathElem] = arguments.toVector
 }
 
 final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix {
@@ -1015,14 +1007,37 @@ sealed trait ForwardAxis extends XPathElem with LeafElem
 
 object ForwardAxis {
 
-  case object Child extends ForwardAxis { override def toString: String = "child" }
-  case object Descendant extends ForwardAxis { override def toString: String = "descendant" }
-  case object Attribute extends ForwardAxis { override def toString: String = "attribute" }
-  case object Self extends ForwardAxis { override def toString: String = "self" }
-  case object DescendantOrSelf extends ForwardAxis { override def toString: String = "descendant-or-self" }
-  case object FollowingSibling extends ForwardAxis { override def toString: String = "following-sibling" }
-  case object Following extends ForwardAxis { override def toString: String = "following" }
-  case object Namespace extends ForwardAxis { override def toString: String = "namespace" }
+  case object Child extends ForwardAxis {
+    override def toString: String = "child"
+  }
+
+  case object Descendant extends ForwardAxis {
+    override def toString: String = "descendant"
+  }
+
+  case object Attribute extends ForwardAxis {
+    override def toString: String = "attribute"
+  }
+
+  case object Self extends ForwardAxis {
+    override def toString: String = "self"
+  }
+
+  case object DescendantOrSelf extends ForwardAxis {
+    override def toString: String = "descendant-or-self"
+  }
+
+  case object FollowingSibling extends ForwardAxis {
+    override def toString: String = "following-sibling"
+  }
+
+  case object Following extends ForwardAxis {
+    override def toString: String = "following"
+  }
+
+  case object Namespace extends ForwardAxis {
+    override def toString: String = "namespace"
+  }
 
   def parse(s: String): ForwardAxis = s match {
     case "child"              => Child
@@ -1040,11 +1055,25 @@ sealed trait ReverseAxis extends XPathElem with LeafElem
 
 object ReverseAxis {
 
-  case object Parent extends ReverseAxis { override def toString: String = "parent" }
-  case object Ancestor extends ReverseAxis { override def toString: String = "ancestor" }
-  case object PrecedingSibling extends ReverseAxis { override def toString: String = "preceding-sibling" }
-  case object Preceding extends ReverseAxis { override def toString: String = "preceding" }
-  case object AncestorOrSelf extends ReverseAxis { override def toString: String = "ancestor-or-self" }
+  case object Parent extends ReverseAxis {
+    override def toString: String = "parent"
+  }
+
+  case object Ancestor extends ReverseAxis {
+    override def toString: String = "ancestor"
+  }
+
+  case object PrecedingSibling extends ReverseAxis {
+    override def toString: String = "preceding-sibling"
+  }
+
+  case object Preceding extends ReverseAxis {
+    override def toString: String = "preceding"
+  }
+
+  case object AncestorOrSelf extends ReverseAxis {
+    override def toString: String = "ancestor-or-self"
+  }
 
   def parse(s: String): ReverseAxis = s match {
     case "parent"            => Parent
@@ -1060,17 +1089,36 @@ object ReverseAxis {
 sealed trait Comp extends XPathElem with LeafElem
 
 sealed trait ValueComp extends Comp
+
 sealed trait GeneralComp extends Comp
+
 sealed trait NodeComp extends Comp
 
 object ValueComp {
 
-  case object Eq extends ValueComp { override def toString: String = "eq" }
-  case object Ne extends ValueComp { override def toString: String = "ne" }
-  case object Lt extends ValueComp { override def toString: String = "lt" }
-  case object Le extends ValueComp { override def toString: String = "le" }
-  case object Gt extends ValueComp { override def toString: String = "gt" }
-  case object Ge extends ValueComp { override def toString: String = "ge" }
+  case object Eq extends ValueComp {
+    override def toString: String = "eq"
+  }
+
+  case object Ne extends ValueComp {
+    override def toString: String = "ne"
+  }
+
+  case object Lt extends ValueComp {
+    override def toString: String = "lt"
+  }
+
+  case object Le extends ValueComp {
+    override def toString: String = "le"
+  }
+
+  case object Gt extends ValueComp {
+    override def toString: String = "gt"
+  }
+
+  case object Ge extends ValueComp {
+    override def toString: String = "ge"
+  }
 
   def parse(s: String): ValueComp = s match {
     case "eq" => Eq
@@ -1084,12 +1132,29 @@ object ValueComp {
 
 object GeneralComp {
 
-  case object Eq extends GeneralComp { override def toString: String = "=" }
-  case object Ne extends GeneralComp { override def toString: String = "!=" }
-  case object Lt extends GeneralComp { override def toString: String = "<" }
-  case object Le extends GeneralComp { override def toString: String = "<=" }
-  case object Gt extends GeneralComp { override def toString: String = ">" }
-  case object Ge extends GeneralComp { override def toString: String = ">=" }
+  case object Eq extends GeneralComp {
+    override def toString: String = "="
+  }
+
+  case object Ne extends GeneralComp {
+    override def toString: String = "!="
+  }
+
+  case object Lt extends GeneralComp {
+    override def toString: String = "<"
+  }
+
+  case object Le extends GeneralComp {
+    override def toString: String = "<="
+  }
+
+  case object Gt extends GeneralComp {
+    override def toString: String = ">"
+  }
+
+  case object Ge extends GeneralComp {
+    override def toString: String = ">="
+  }
 
   def parse(s: String): GeneralComp = s match {
     case "="  => Eq
@@ -1103,9 +1168,17 @@ object GeneralComp {
 
 object NodeComp {
 
-  case object Is extends NodeComp { override def toString: String = "is" }
-  case object Precedes extends NodeComp { override def toString: String = "<<" }
-  case object Follows extends NodeComp { override def toString: String = ">>" }
+  case object Is extends NodeComp {
+    override def toString: String = "is"
+  }
+
+  case object Precedes extends NodeComp {
+    override def toString: String = "<<"
+  }
+
+  case object Follows extends NodeComp {
+    override def toString: String = ">>"
+  }
 
   def parse(s: String): NodeComp = s match {
     case "is" => Is
@@ -1118,8 +1191,13 @@ sealed trait AdditionOp extends XPathElem with LeafElem
 
 object AdditionOp {
 
-  case object Plus extends AdditionOp { override def toString: String = "+" }
-  case object Minus extends AdditionOp { override def toString: String = "-" }
+  case object Plus extends AdditionOp {
+    override def toString: String = "+"
+  }
+
+  case object Minus extends AdditionOp {
+    override def toString: String = "-"
+  }
 
   def parse(s: String): AdditionOp = s match {
     case "+" => Plus
@@ -1131,10 +1209,21 @@ sealed trait MultiplicativeOp extends XPathElem with LeafElem
 
 object MultiplicativeOp {
 
-  case object Times extends MultiplicativeOp { override def toString: String = "*" }
-  case object Div extends MultiplicativeOp { override def toString: String = "div" }
-  case object IDiv extends MultiplicativeOp { override def toString: String = "idiv" }
-  case object Mod extends MultiplicativeOp { override def toString: String = "mod" }
+  case object Times extends MultiplicativeOp {
+    override def toString: String = "*"
+  }
+
+  case object Div extends MultiplicativeOp {
+    override def toString: String = "div"
+  }
+
+  case object IDiv extends MultiplicativeOp {
+    override def toString: String = "idiv"
+  }
+
+  case object Mod extends MultiplicativeOp {
+    override def toString: String = "mod"
+  }
 
   def parse(s: String): MultiplicativeOp = s match {
     case "*"    => Times
@@ -1148,8 +1237,13 @@ sealed trait IntersectExceptOp extends XPathElem with LeafElem
 
 object IntersectExceptOp {
 
-  case object Intersect extends IntersectExceptOp { override def toString: String = "intersect" }
-  case object Except extends IntersectExceptOp { override def toString: String = "except" }
+  case object Intersect extends IntersectExceptOp {
+    override def toString: String = "intersect"
+  }
+
+  case object Except extends IntersectExceptOp {
+    override def toString: String = "except"
+  }
 
   def parse(s: String): IntersectExceptOp = s match {
     case "intersect" => Intersect
@@ -1161,8 +1255,13 @@ sealed trait UnaryOp extends XPathElem with LeafElem
 
 object UnaryOp {
 
-  case object Plus extends UnaryOp { override def toString: String = "+" }
-  case object Minus extends UnaryOp { override def toString: String = "-" }
+  case object Plus extends UnaryOp {
+    override def toString: String = "+"
+  }
+
+  case object Minus extends UnaryOp {
+    override def toString: String = "-"
+  }
 
   def parse(s: String): UnaryOp = s match {
     case "+" => Plus
@@ -1174,8 +1273,13 @@ sealed trait StepOp extends XPathElem with LeafElem
 
 object StepOp {
 
-  case object SingleSlash extends StepOp { override def toString: String = "/" }
-  case object DoubleSlash extends StepOp { override def toString: String = "//" }
+  case object SingleSlash extends StepOp {
+    override def toString: String = "/"
+  }
+
+  case object DoubleSlash extends StepOp {
+    override def toString: String = "//"
+  }
 
   def parse(s: String): StepOp = s match {
     case "/"  => SingleSlash
@@ -1189,8 +1293,13 @@ sealed trait Quantifier extends XPathElem with LeafElem
 
 object Quantifier {
 
-  case object SomeQuantifier extends Quantifier { override def toString: String = "some" }
-  case object EveryQuantifier extends Quantifier { override def toString: String = "every" }
+  case object SomeQuantifier extends Quantifier {
+    override def toString: String = "some"
+  }
+
+  case object EveryQuantifier extends Quantifier {
+    override def toString: String = "every"
+  }
 
   def parse(s: String): Quantifier = s match {
     case "some"  => SomeQuantifier

@@ -16,8 +16,9 @@
 
 package eu.cdevreeze.xpathparser.util
 
-import scala.reflect.classTag
+import cats.data.NonEmptyVector
 
+import scala.reflect.classTag
 import eu.cdevreeze.xpathparser.ast.ArgumentList
 import eu.cdevreeze.xpathparser.ast.AtomicOrUnionType
 import eu.cdevreeze.xpathparser.ast.AttributeNameAndTypeTest
@@ -200,7 +201,7 @@ object EQNameUtil {
   def findPrefix(eqname: EQName): Option[String] = {
     eqname match {
       case EQName.URIQualifiedName(_) => None
-      case EQName.QName(qn) => qn.prefixOption
+      case EQName.QName(qn)           => qn.prefixOption
     }
   }
 
@@ -209,9 +210,8 @@ object EQNameUtil {
    */
   val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] = {
     case FunctionCall(
-      EQName.QName(PrefixedName("xs", "QName")),
-      ArgumentList(Vector(ExprSingleArgument(StringLiteral(s))))) =>
-
+        EQName.QName(PrefixedName("xs", "QName")),
+        ArgumentList(NonEmptyVector(ExprSingleArgument(StringLiteral(s)), Vector.empty))) =>
       val qn = QName.parse(s)
       Some(Set(EQName.QName(qn)))
     case _: XPathElem =>

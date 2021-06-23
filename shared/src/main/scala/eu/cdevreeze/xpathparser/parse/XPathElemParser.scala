@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.xpathparser.parse
 
+import cats.data.NonEmptyVector
 import eu.cdevreeze.xpathparser.ast._
 import fastparse.MultiLineWhitespace._
 
@@ -53,7 +54,7 @@ object XPathElemParser {
 
   def expr[_: P]: P[Expr] =
     P(exprSingle.rep(min = 1, sep = DT.comma)).map {
-      exprs => Expr(exprs.toIndexedSeq)
+      exprs => Expr(NonEmptyVector.fromVectorUnsafe(exprs.toVector))
     }
 
   def enclosedExpr[_: P]: P[EnclosedExpr] =
@@ -69,7 +70,7 @@ object XPathElemParser {
 
   def forExpr[_: P]: P[ForExpr] =
     P(NDT.forWord ~/ simpleForBinding.rep(min = 1, sep = DT.comma) ~ NDT.returnWord ~ exprSingle).map {
-      case (bindings, returnExp) => ForExpr(bindings.toIndexedSeq, returnExp)
+      case (bindings, returnExp) => ForExpr(NonEmptyVector.fromVectorUnsafe(bindings.toVector), returnExp)
     }
 
   def simpleForBinding[_: P]: P[SimpleForBinding] =
@@ -79,7 +80,7 @@ object XPathElemParser {
 
   def letExpr[_: P]: P[LetExpr] =
     P(NDT.letWord ~/ simpleLetBinding.rep(min = 1, sep = DT.comma) ~ NDT.returnWord ~ exprSingle).map {
-      case (bindings, returnExp) => LetExpr(bindings.toIndexedSeq, returnExp)
+      case (bindings, returnExp) => LetExpr(NonEmptyVector.fromVectorUnsafe(bindings.toVector), returnExp)
     }
 
   def simpleLetBinding[_: P]: P[SimpleLetBinding] =
@@ -89,7 +90,7 @@ object XPathElemParser {
 
   def quantifiedExpr[_: P]: P[QuantifiedExpr] =
     P((NDT.someWord | NDT.everyWord).! ~/ simpleBindingInQuantifiedExpr.rep(min = 1, sep = DT.comma) ~ NDT.satisfiesWord ~ exprSingle).map {
-      case (quant, bindings, satisfiesExp) => QuantifiedExpr(Quantifier.parse(quant), bindings.toIndexedSeq, satisfiesExp)
+      case (quant, bindings, satisfiesExp) => QuantifiedExpr(Quantifier.parse(quant), NonEmptyVector.fromVectorUnsafe(bindings.toVector), satisfiesExp)
     }
 
   def simpleBindingInQuantifiedExpr[_: P]: P[SimpleBindingInQuantifiedExpr] =
@@ -104,12 +105,12 @@ object XPathElemParser {
 
   def orExpr[_: P]: P[OrExpr] =
     P(andExpr.rep(min = 1, sep = NDT.orWord ~/ Pass)).map {
-      exps => OrExpr(exps.toIndexedSeq)
+      exps => OrExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def andExpr[_: P]: P[AndExpr] =
     P(comparisonExpr.rep(min = 1, sep = NDT.andWord ~/ Pass)).map {
-      exps => AndExpr(exps.toIndexedSeq)
+      exps => AndExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def comparisonExpr[_: P]: P[ComparisonExpr] =
@@ -120,7 +121,7 @@ object XPathElemParser {
 
   def stringConcatExpr[_: P]: P[StringConcatExpr] =
     P(rangeExpr.rep(min = 1, sep = DT.doubleVerticalBar ~/ Pass)).map {
-      exps => StringConcatExpr(exps.toIndexedSeq)
+      exps => StringConcatExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   def rangeExpr[_: P]: P[RangeExpr] =
@@ -143,7 +144,7 @@ object XPathElemParser {
 
   def unionExpr[_: P]: P[UnionExpr] =
     P(intersectExceptExpr ~ ((NDT.unionWord | DT.verticalBar) ~/ intersectExceptExpr).rep).map {
-      case (expr, exprSeq) => UnionExpr(exprSeq.toIndexedSeq.prepended(expr))
+      case (expr, exprSeq) => UnionExpr(NonEmptyVector.fromVectorUnsafe(exprSeq.toVector.prepended(expr)))
     }
 
   def intersectExceptExpr[_: P]: P[IntersectExceptExpr] =
@@ -199,7 +200,7 @@ object XPathElemParser {
 
   def simpleMapExpr[_: P]: P[SimpleMapExpr] =
     P(pathExpr.rep(min = 1, sep = DT.exclamationMark)).map {
-      exps => SimpleMapExpr(exps.toIndexedSeq)
+      exps => SimpleMapExpr(NonEmptyVector.fromVectorUnsafe(exps.toVector))
     }
 
   // According to constraint xgc:leading-lone-slash, we need to look ahead just one token to determine if a slash is a path
@@ -492,7 +493,7 @@ object XPathElemParser {
 
   def argumentList[_: P]: P[ArgumentList] =
     P(DT.openParenthesis ~ argument.rep(sep = DT.comma) ~ DT.closeParenthesis).map {
-      args => ArgumentList(args.toIndexedSeq)
+      args => ArgumentList(NonEmptyVector.fromVectorUnsafe(args.toVector))
     }
 
   def argument[_: P]: P[Argument] =
