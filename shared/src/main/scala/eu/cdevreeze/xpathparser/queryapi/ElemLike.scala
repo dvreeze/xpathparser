@@ -16,7 +16,6 @@
 
 package eu.cdevreeze.xpathparser.queryapi
 
-import scala.collection.immutable
 import scala.reflect.ClassTag
 
 /**
@@ -28,19 +27,19 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
   import ElemApi.anyElem
 
-  def children: immutable.IndexedSeq[E]
+  def children: IndexedSeq[E]
 
   // Finding topmost descendant elements (of a certain type, obeying some predicate)
 
-  final def findTopmostElems(p: E => Boolean): immutable.IndexedSeq[E] = {
+  final def findTopmostElems(p: E => Boolean): IndexedSeq[E] = {
     children.flatMap(_.findTopmostElemsOrSelf(p))
   }
 
-  final def findAllTopmostElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
+  final def findAllTopmostElemsOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A] = {
     findTopmostElemsOfType(cls)(anyElem)
   }
 
-  final def findTopmostElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A] = {
+  final def findTopmostElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] = {
     implicit val tag = cls
 
     findTopmostElems {
@@ -53,20 +52,20 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
   // Finding topmost descendant-or-self elements (of a certain type, obeying some predicate)
 
-  final def findTopmostElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E] = {
+  final def findTopmostElemsOrSelf(p: E => Boolean): IndexedSeq[E] = {
     if (p(self)) {
-      immutable.IndexedSeq(self)
+      IndexedSeq(self)
     } else {
       // Recursive calls
       children.flatMap(_.findTopmostElemsOrSelf(p))
     }
   }
 
-  final def findAllTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
+  final def findAllTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A] = {
     findTopmostElemsOrSelfOfType(cls)(anyElem)
   }
 
-  final def findTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A] = {
+  final def findTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] = {
     implicit val tag = cls
 
     findTopmostElemsOrSelf {
@@ -79,19 +78,19 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
   // Filtering descendant elements (of a certain type, obeying some predicate)
 
-  final def filterElems(p: E => Boolean): immutable.IndexedSeq[E] = {
+  final def filterElems(p: E => Boolean): IndexedSeq[E] = {
     children.flatMap(_.filterElemsOrSelf(p))
   }
 
-  final def findAllElems: immutable.IndexedSeq[E] = {
+  final def findAllElems: IndexedSeq[E] = {
     filterElems(_ => true)
   }
 
-  final def findAllElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
+  final def findAllElemsOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A] = {
     filterElemsOfType(cls)(anyElem)
   }
 
-  final def filterElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A] = {
+  final def filterElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] = {
     implicit val tag = cls
 
     filterElems {
@@ -104,20 +103,20 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
   // Filtering descendant-or-self elements (of a certain type, obeying some predicate)
 
-  final def filterElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E] = {
+  final def filterElemsOrSelf(p: E => Boolean): IndexedSeq[E] = {
     // Recursive calls
-    immutable.IndexedSeq(self).filter(p) ++ children.flatMap(_.filterElemsOrSelf(p))
+    IndexedSeq(self).filter(p) ++ children.flatMap(_.filterElemsOrSelf(p))
   }
 
-  final def findAllElemsOrSelf: immutable.IndexedSeq[E] = {
+  final def findAllElemsOrSelf: IndexedSeq[E] = {
     filterElemsOrSelf(_ => true)
   }
 
-  final def findAllElemsOrSelfOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A] = {
+  final def findAllElemsOrSelfOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A] = {
     filterElemsOrSelfOfType(cls)(anyElem)
   }
 
-  final def filterElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A] = {
+  final def filterElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] = {
     implicit val tag = cls
 
     filterElemsOrSelf {

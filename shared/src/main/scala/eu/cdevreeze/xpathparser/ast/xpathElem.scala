@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.xpathparser.ast
 
-import scala.collection.immutable
-
 import eu.cdevreeze.xpathparser.queryapi.ElemLike
 
 /**
@@ -51,7 +49,7 @@ sealed trait XPathElem extends ElemLike[XPathElem] {
   /**
    * Returns the (immediate) child elements of this element.
    */
-  def children: immutable.IndexedSeq[XPathElem]
+  def children: IndexedSeq[XPathElem]
 }
 
 /**
@@ -59,7 +57,7 @@ sealed trait XPathElem extends ElemLike[XPathElem] {
  */
 sealed trait LeafElem extends XPathElem {
 
-  final def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq()
+  final def children: IndexedSeq[XPathElem] = IndexedSeq()
 }
 
 /**
@@ -70,7 +68,7 @@ sealed trait VariableIntroducingExpr extends XPathElem {
   /**
    * Returns the variable bindings introduced by this element.
    */
-  def variableBindings: immutable.IndexedSeq[VariableBinding]
+  def variableBindings: IndexedSeq[VariableBinding]
 
   /**
    * Returns the "return expression".
@@ -81,7 +79,7 @@ sealed trait VariableIntroducingExpr extends XPathElem {
    * Returns the scope of the variable binding whose index is given as parameter.
    * The scope determines where variables can be bound by that variable binding.
    */
-  final def scopeOfVariableBinding(variableBindingIndex: Int): immutable.IndexedSeq[XPathElem] = {
+  final def scopeOfVariableBinding(variableBindingIndex: Int): IndexedSeq[XPathElem] = {
     require(
       0 <= variableBindingIndex && variableBindingIndex < variableBindings.size,
       s"Wrong variable binding index: $variableBindingIndex")
@@ -102,7 +100,7 @@ sealed trait XPathExpr extends XPathElem
  */
 final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = exprOption.toIndexedSeq
+  def children: IndexedSeq[XPathElem] = exprOption.toIndexedSeq
 }
 
 // Expressions
@@ -114,15 +112,15 @@ sealed trait Expr extends XPathExpr
 
 sealed trait SimpleExpr extends Expr
 
-final case class CompoundExpr(exprSingleSeq: immutable.IndexedSeq[ExprSingle]) extends Expr {
+final case class CompoundExpr(exprSingleSeq: IndexedSeq[ExprSingle]) extends Expr {
   require(exprSingleSeq.size >= 2, s"At least 2 expression-singles must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = exprSingleSeq
+  def children: IndexedSeq[XPathElem] = exprSingleSeq
 }
 
 object Expr {
 
-  def apply(exprSingleSeq: immutable.IndexedSeq[ExprSingle]): Expr = {
+  def apply(exprSingleSeq: IndexedSeq[ExprSingle]): Expr = {
     if (exprSingleSeq.size == 1) {
       exprSingleSeq.head
     } else {
@@ -137,31 +135,31 @@ object Expr {
 sealed trait ExprSingle extends SimpleExpr
 
 final case class ForExpr(
-  simpleForBindings: immutable.IndexedSeq[SimpleForBinding],
+  simpleForBindings: IndexedSeq[SimpleForBinding],
   returnExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = simpleForBindings :+ returnExpr
+  def children: IndexedSeq[XPathElem] = simpleForBindings :+ returnExpr
 
-  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleForBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleForBindings
 }
 
 final case class LetExpr(
-  simpleLetBindings: immutable.IndexedSeq[SimpleLetBinding],
+  simpleLetBindings: IndexedSeq[SimpleLetBinding],
   returnExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = simpleLetBindings :+ returnExpr
+  def children: IndexedSeq[XPathElem] = simpleLetBindings :+ returnExpr
 
-  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleLetBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleLetBindings
 }
 
 final case class QuantifiedExpr(
   quantifier: Quantifier,
-  simpleBindings: immutable.IndexedSeq[SimpleBindingInQuantifiedExpr],
+  simpleBindings: IndexedSeq[SimpleBindingInQuantifiedExpr],
   satisfiesExpr: ExprSingle) extends ExprSingle with VariableIntroducingExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = (quantifier +: simpleBindings) :+ satisfiesExpr
+  def children: IndexedSeq[XPathElem] = (quantifier +: simpleBindings) :+ satisfiesExpr
 
-  def variableBindings: immutable.IndexedSeq[VariableBinding] = simpleBindings
+  def variableBindings: IndexedSeq[VariableBinding] = simpleBindings
 
   def returnExpr: XPathElem = satisfiesExpr
 }
@@ -171,22 +169,22 @@ final case class IfExpr(
   thenExpr: ExprSingle,
   elseExpr: ExprSingle) extends ExprSingle {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(condition, thenExpr, elseExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(condition, thenExpr, elseExpr)
 }
 
 sealed trait OrExpr extends ExprSingle
 
 sealed trait SimpleOrExpr extends OrExpr
 
-final case class CompoundOrExpr(andExprs: immutable.IndexedSeq[AndExpr]) extends OrExpr {
+final case class CompoundOrExpr(andExprs: IndexedSeq[AndExpr]) extends OrExpr {
   require(andExprs.size >= 2, s"At least 2 and-expressions must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = andExprs
+  def children: IndexedSeq[XPathElem] = andExprs
 }
 
 object OrExpr {
 
-  def apply(andExprs: immutable.IndexedSeq[AndExpr]): OrExpr = {
+  def apply(andExprs: IndexedSeq[AndExpr]): OrExpr = {
     if (andExprs.size == 1) {
       andExprs.head
     } else {
@@ -199,15 +197,15 @@ sealed trait AndExpr extends SimpleOrExpr
 
 sealed trait SimpleAndExpr extends AndExpr
 
-final case class CompoundAndExpr(comparisonExprs: immutable.IndexedSeq[ComparisonExpr]) extends AndExpr {
+final case class CompoundAndExpr(comparisonExprs: IndexedSeq[ComparisonExpr]) extends AndExpr {
   require(comparisonExprs.size >= 2, s"At least 2 comparison-expressions must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = comparisonExprs
+  def children: IndexedSeq[XPathElem] = comparisonExprs
 }
 
 object AndExpr {
 
-  def apply(comparisonExprs: immutable.IndexedSeq[ComparisonExpr]): AndExpr = {
+  def apply(comparisonExprs: IndexedSeq[ComparisonExpr]): AndExpr = {
     if (comparisonExprs.size == 1) {
       comparisonExprs.head
     } else {
@@ -229,7 +227,7 @@ final case class CompoundComparisonExpr(
   comp: Comp,
   stringConcatExpr2: StringConcatExpr) extends ComparisonExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(stringConcatExpr1, comp, stringConcatExpr2)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(stringConcatExpr1, comp, stringConcatExpr2)
 }
 
 /**
@@ -239,15 +237,15 @@ sealed trait StringConcatExpr extends SimpleComparisonExpr
 
 sealed trait SimpleStringConcatExpr extends StringConcatExpr
 
-final case class CompoundStringConcatExpr(rangeExprs: immutable.IndexedSeq[RangeExpr]) extends StringConcatExpr {
+final case class CompoundStringConcatExpr(rangeExprs: IndexedSeq[RangeExpr]) extends StringConcatExpr {
   require(rangeExprs.size >= 2, s"At least 2 range-expressions must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = rangeExprs
+  def children: IndexedSeq[XPathElem] = rangeExprs
 }
 
 object StringConcatExpr {
 
-  def apply(rangeExprs: immutable.IndexedSeq[RangeExpr]): StringConcatExpr = {
+  def apply(rangeExprs: IndexedSeq[RangeExpr]): StringConcatExpr = {
     if (rangeExprs.size == 1) {
       rangeExprs.head
     } else {
@@ -265,7 +263,7 @@ sealed trait SimpleRangeExpr extends RangeExpr
 
 final case class CompoundRangeExpr(additiveExpr1: AdditiveExpr, additiveExpr2: AdditiveExpr) extends RangeExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(additiveExpr1, additiveExpr2)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(additiveExpr1, additiveExpr2)
 }
 
 sealed trait AdditiveExpr extends SimpleRangeExpr
@@ -274,11 +272,11 @@ sealed trait SimpleAdditiveExpr extends AdditiveExpr
 
 final case class CompoundAdditiveExpr(
   firstExpr: MultiplicativeExpr,
-  operatorExprPairs: immutable.IndexedSeq[(AdditionOp, MultiplicativeExpr)]) extends AdditiveExpr {
+  operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]) extends AdditiveExpr {
 
   require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = {
+  def children: IndexedSeq[XPathElem] = {
     firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
   }
 }
@@ -287,7 +285,7 @@ object AdditiveExpr {
 
   def apply(
     firstExpr: MultiplicativeExpr,
-    operatorExprPairs: immutable.IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr = {
+    operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr = {
 
     if (operatorExprPairs.isEmpty) {
       firstExpr
@@ -303,11 +301,11 @@ sealed trait SimpleMultiplicativeExpr extends MultiplicativeExpr
 
 final case class CompoundMultiplicativeExpr(
   firstExpr: UnionExpr,
-  operatorExprPairs: immutable.IndexedSeq[(MultiplicativeOp, UnionExpr)]) extends MultiplicativeExpr {
+  operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]) extends MultiplicativeExpr {
 
   require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = {
+  def children: IndexedSeq[XPathElem] = {
     firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
   }
 }
@@ -316,7 +314,7 @@ object MultiplicativeExpr {
 
   def apply(
     firstExpr: UnionExpr,
-    operatorExprPairs: immutable.IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr = {
+    operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr = {
 
     if (operatorExprPairs.isEmpty) {
       firstExpr
@@ -333,15 +331,15 @@ sealed trait UnionExpr extends SimpleMultiplicativeExpr
 
 sealed trait SimpleUnionExpr extends UnionExpr
 
-final case class CompoundUnionExpr(intersectExceptExprs: immutable.IndexedSeq[IntersectExceptExpr]) extends UnionExpr {
+final case class CompoundUnionExpr(intersectExceptExprs: IndexedSeq[IntersectExceptExpr]) extends UnionExpr {
   require(intersectExceptExprs.size >= 2, s"At least 2 intersect-except-expressions must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = intersectExceptExprs
+  def children: IndexedSeq[XPathElem] = intersectExceptExprs
 }
 
 object UnionExpr {
 
-  def apply(intersectExceptExprs: immutable.IndexedSeq[IntersectExceptExpr]): UnionExpr = {
+  def apply(intersectExceptExprs: IndexedSeq[IntersectExceptExpr]): UnionExpr = {
     if (intersectExceptExprs.size == 1) {
       intersectExceptExprs.head
     } else {
@@ -359,11 +357,11 @@ sealed trait SimpleIntersectExceptExpr extends IntersectExceptExpr
 
 final case class CompoundIntersectExceptExpr(
   firstExpr: InstanceOfExpr,
-  operatorExprPairs: immutable.IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]) extends IntersectExceptExpr {
+  operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]) extends IntersectExceptExpr {
 
   require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = {
+  def children: IndexedSeq[XPathElem] = {
     firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
   }
 }
@@ -372,7 +370,7 @@ object IntersectExceptExpr {
 
   def apply(
     firstExpr: InstanceOfExpr,
-    operatorExprPairs: immutable.IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]): IntersectExceptExpr = {
+    operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]): IntersectExceptExpr = {
 
     if (operatorExprPairs.isEmpty) {
       firstExpr
@@ -388,7 +386,7 @@ sealed trait SimpleInstanceOfExpr extends InstanceOfExpr
 
 final case class CompoundInstanceOfExpr(treatExpr: TreatExpr, sequenceType: SequenceType) extends InstanceOfExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(treatExpr, sequenceType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(treatExpr, sequenceType)
 }
 
 object InstanceOfExpr {
@@ -408,7 +406,7 @@ sealed trait SimpleTreatExpr extends TreatExpr
 
 final case class CompoundTreatExpr(castableExpr: CastableExpr, sequenceType: SequenceType) extends TreatExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(castableExpr, sequenceType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(castableExpr, sequenceType)
 }
 
 object TreatExpr {
@@ -428,7 +426,7 @@ sealed trait SimpleCastableExpr extends CastableExpr
 
 final case class CompoundCastableExpr(castExpr: CastExpr, singleType: SingleType) extends CastableExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(castExpr, singleType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(castExpr, singleType)
 }
 
 object CastableExpr {
@@ -448,7 +446,7 @@ sealed trait SimpleCastExpr extends CastExpr
 
 final case class CompoundCastExpr(arrowExpr: ArrowExpr, singleType: SingleType) extends CastExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(arrowExpr, singleType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(arrowExpr, singleType)
 }
 
 object CastExpr {
@@ -466,15 +464,15 @@ sealed trait ArrowExpr extends SimpleCastExpr
 
 sealed trait SimpleArrowExpr extends ArrowExpr
 
-final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: immutable.IndexedSeq[ArrowFunctionCall]) extends ArrowExpr {
+final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall]) extends ArrowExpr {
   require(arrowFunctionCalls.size >= 1, s"At least 1 arrow-function-call must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = unaryExpr +: arrowFunctionCalls
+  def children: IndexedSeq[XPathElem] = unaryExpr +: arrowFunctionCalls
 }
 
 object ArrowExpr {
 
-  def apply(unaryExpr: UnaryExpr, arrowFunctionCalls: immutable.IndexedSeq[ArrowFunctionCall]): ArrowExpr = {
+  def apply(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall]): ArrowExpr = {
     if (arrowFunctionCalls.isEmpty) {
       unaryExpr
     } else {
@@ -485,7 +483,7 @@ object ArrowExpr {
 
 final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifier, argumentList: ArgumentList) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(arrowFunctionSpecifier, argumentList)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(arrowFunctionSpecifier, argumentList)
 }
 
 // Note that an arrow function specifier should extend Expr indirectly, but then an EQName must be an expression too
@@ -496,27 +494,27 @@ final case class EQNameAsArrowFunctionSpecifier(eqName: EQName) extends ArrowFun
 
 final case class VarRefAsArrowFunctionSpecifier(varRef: VarRef) extends ArrowFunctionSpecifier {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(varRef)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(varRef)
 }
 
 final case class ParenthesizedExprAsArrowFunctionSpecifier(parenthesizedExpr: ParenthesizedExpr) extends ArrowFunctionSpecifier {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(parenthesizedExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(parenthesizedExpr)
 }
 
 sealed trait UnaryExpr extends SimpleArrowExpr
 
 sealed trait SimpleUnaryExpr extends UnaryExpr
 
-final case class CompoundUnaryExpr(ops: immutable.IndexedSeq[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr {
+final case class CompoundUnaryExpr(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr {
   require(ops.size >= 1, s"At least 1 operator must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = ops :+ valueExpr
+  def children: IndexedSeq[XPathElem] = ops :+ valueExpr
 }
 
 object UnaryExpr {
 
-  def apply(ops: immutable.IndexedSeq[UnaryOp], valueExpr: ValueExpr): UnaryExpr = {
+  def apply(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr): UnaryExpr = {
     if (ops.isEmpty) {
       valueExpr
     } else {
@@ -534,15 +532,15 @@ sealed trait SimpleMapExpr extends ValueExpr
 
 sealed trait SimpleSimpleMapExpr extends SimpleMapExpr
 
-final case class CompoundSimpleMapExpr(pathExprs: immutable.IndexedSeq[PathExpr]) extends SimpleMapExpr {
+final case class CompoundSimpleMapExpr(pathExprs: IndexedSeq[PathExpr]) extends SimpleMapExpr {
   require(pathExprs.size >= 2, s"At least 2 path-expressions must be provided but found 0 or 1 such expression")
 
-  def children: immutable.IndexedSeq[XPathElem] = pathExprs
+  def children: IndexedSeq[XPathElem] = pathExprs
 }
 
 object SimpleMapExpr {
 
-  def apply(pathExprs: immutable.IndexedSeq[PathExpr]): SimpleMapExpr = {
+  def apply(pathExprs: IndexedSeq[PathExpr]): SimpleMapExpr = {
     if (pathExprs.size == 1) {
       pathExprs.head
     } else {
@@ -563,12 +561,12 @@ case object SlashOnlyPathExpr extends PathExpr with LeafElem
 
 final case class PathExprStartingWithSingleSlash(relativePathExpr: RelativePathExpr) extends PathExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(relativePathExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(relativePathExpr)
 }
 
 final case class PathExprStartingWithDoubleSlash(relativePathExpr: RelativePathExpr) extends PathExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(relativePathExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(relativePathExpr)
 }
 
 /**
@@ -580,11 +578,11 @@ sealed trait SimpleRelativePathExpr extends RelativePathExpr
 
 final case class CompoundRelativePathExpr(
   firstExpr: StepExpr,
-  operatorExprPairs: immutable.IndexedSeq[(StepOp, StepExpr)]) extends RelativePathExpr {
+  operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]) extends RelativePathExpr {
 
   require(operatorExprPairs.size >= 1, s"At least 1 operator-expression-pair must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = {
+  def children: IndexedSeq[XPathElem] = {
     firstExpr +: operatorExprPairs.flatMap(p => List(p._1, p._2))
   }
 }
@@ -593,7 +591,7 @@ object RelativePathExpr {
 
   def apply(
     firstExpr: StepExpr,
-    operatorExprPairs: immutable.IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr = {
+    operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr = {
 
     if (operatorExprPairs.isEmpty) {
       firstExpr
@@ -619,18 +617,18 @@ sealed trait SimplePostfixExpr extends PostfixExpr
 
 final case class CompoundPostfixExpr(
   primaryExpr: PrimaryExpr,
-  postfixes: immutable.IndexedSeq[Postfix]) extends PostfixExpr {
+  postfixes: IndexedSeq[Postfix]) extends PostfixExpr {
 
   require(postfixes.size >= 1, s"At least 1 postfix must be provided but found none")
 
-  def children: immutable.IndexedSeq[XPathElem] = primaryExpr +: postfixes
+  def children: IndexedSeq[XPathElem] = primaryExpr +: postfixes
 }
 
 object PostfixExpr {
 
   def apply(
     primaryExpr: PrimaryExpr,
-    postfixes: immutable.IndexedSeq[Postfix]): PostfixExpr = {
+    postfixes: IndexedSeq[Postfix]): PostfixExpr = {
 
     if (postfixes.isEmpty) {
       primaryExpr
@@ -645,17 +643,17 @@ object PostfixExpr {
  */
 sealed trait AxisStep extends StepExpr {
 
-  def predicateList: immutable.IndexedSeq[Predicate]
+  def predicateList: IndexedSeq[Predicate]
 }
 
-final case class ForwardAxisStep(step: ForwardStep, predicateList: immutable.IndexedSeq[Predicate]) extends AxisStep {
+final case class ForwardAxisStep(step: ForwardStep, predicateList: IndexedSeq[Predicate]) extends AxisStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = step +: predicateList
+  def children: IndexedSeq[XPathElem] = step +: predicateList
 }
 
-final case class ReverseAxisStep(step: ReverseStep, predicateList: immutable.IndexedSeq[Predicate]) extends AxisStep {
+final case class ReverseAxisStep(step: ReverseStep, predicateList: IndexedSeq[Predicate]) extends AxisStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = step +: predicateList
+  def children: IndexedSeq[XPathElem] = step +: predicateList
 }
 
 sealed trait ForwardStep extends XPathElem {
@@ -665,31 +663,31 @@ sealed trait ForwardStep extends XPathElem {
 
 final case class NonAbbrevForwardStep(forwardAxis: ForwardAxis, nodeTest: NodeTest) extends ForwardStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(forwardAxis, nodeTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(forwardAxis, nodeTest)
 }
 
 sealed trait AbbrevForwardStep extends ForwardStep
 
 final case class SimpleAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(nodeTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(nodeTest)
 }
 
 final case class AttributeAxisAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(nodeTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(nodeTest)
 }
 
 sealed trait ReverseStep extends XPathElem
 
 final case class NonAbbrevReverseStep(reverseAxis: ReverseAxis, nodeTest: NodeTest) extends ReverseStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(reverseAxis, nodeTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(reverseAxis, nodeTest)
 }
 
 case object AbbrevReverseStep extends ReverseStep {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq()
+  def children: IndexedSeq[XPathElem] = IndexedSeq()
 }
 
 sealed trait NodeTest extends XPathElem
@@ -716,12 +714,12 @@ case object SimpleDocumentTest extends DocumentTest with LeafElem
 
 final case class DocumentTestContainingElementTest(elementTest: ElementTest) extends DocumentTest {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(elementTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(elementTest)
 }
 
 final case class DocumentTestContainingSchemaElementTest(schemaElementTest: SchemaElementTest) extends DocumentTest {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(schemaElementTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(schemaElementTest)
 }
 
 sealed trait ElementTest extends KindTest
@@ -762,7 +760,7 @@ final case class TargetPITest(target: NCName) extends PITest with LeafElem
 // TODO Is this correct?
 final case class DataPITest(data: StringLiteral) extends PITest {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(data)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(data)
 }
 
 case object CommentTest extends KindTest with LeafElem
@@ -799,14 +797,14 @@ final case class VarRef(varName: EQName) extends PrimaryExpr with LeafElem
 
 final case class ParenthesizedExpr(exprOption: Option[Expr]) extends PrimaryExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = exprOption.toIndexedSeq
+  def children: IndexedSeq[XPathElem] = exprOption.toIndexedSeq
 }
 
 case object ContextItemExpr extends PrimaryExpr with LeafElem
 
 final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) extends PrimaryExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(argumentList)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(argumentList)
 }
 
 sealed trait FunctionItemExpr extends PrimaryExpr
@@ -818,51 +816,51 @@ final case class InlineFunctionExpr(
   resultTypeOption: Option[SequenceType],
   body: EnclosedExpr) extends FunctionItemExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = paramListOption.toIndexedSeq ++ resultTypeOption.toIndexedSeq :+ body
+  def children: IndexedSeq[XPathElem] = paramListOption.toIndexedSeq ++ resultTypeOption.toIndexedSeq :+ body
 }
 
-final case class MapConstructor(entries: immutable.IndexedSeq[MapConstructorEntry]) extends PrimaryExpr {
+final case class MapConstructor(entries: IndexedSeq[MapConstructorEntry]) extends PrimaryExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = entries
+  def children: IndexedSeq[XPathElem] = entries
 }
 
 sealed trait ArrayConstructor extends PrimaryExpr
 
 final case class UnaryLookup(keySpecifier: KeySpecifier) extends PrimaryExpr {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keySpecifier)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(keySpecifier)
 }
 
-final case class SquareArrayConstructor(members: immutable.IndexedSeq[ExprSingle]) extends ArrayConstructor {
+final case class SquareArrayConstructor(members: IndexedSeq[ExprSingle]) extends ArrayConstructor {
 
-  def children: immutable.IndexedSeq[XPathElem] = members
+  def children: IndexedSeq[XPathElem] = members
 }
 
 final case class CurlyArrayConstructor(expr: EnclosedExpr) extends ArrayConstructor {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
 final case class MapConstructorEntry(keyExpr: ExprSingle, valueExpr: ExprSingle) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keyExpr, valueExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(keyExpr, valueExpr)
 }
 
 sealed trait Postfix extends XPathElem
 
 final case class Predicate(expr: Expr) extends Postfix {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
-final case class ArgumentList(arguments: immutable.IndexedSeq[Argument]) extends Postfix {
+final case class ArgumentList(arguments: IndexedSeq[Argument]) extends Postfix {
 
-  def children: immutable.IndexedSeq[XPathElem] = arguments
+  def children: IndexedSeq[XPathElem] = arguments
 }
 
 final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keySpecifier)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(keySpecifier)
 }
 
 sealed trait KeySpecifier extends XPathElem
@@ -871,31 +869,31 @@ final case class NamedKeySpecifier(ncName: NCName) extends KeySpecifier with Lea
 
 final case class PositionalKeySpecifier(integerLiteral: IntegerLiteral) extends KeySpecifier {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(integerLiteral)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(integerLiteral)
 }
 
 case object WildcardKeySpecifier extends KeySpecifier with LeafElem
 
 final case class ParenthesizedExprKeySpecifier(parenthesizedExpr: ParenthesizedExpr) extends KeySpecifier {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(parenthesizedExpr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(parenthesizedExpr)
 }
 
-final case class ParamList(params: immutable.IndexedSeq[Param]) extends XPathElem {
+final case class ParamList(params: IndexedSeq[Param]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = params
+  def children: IndexedSeq[XPathElem] = params
 }
 
 final case class Param(paramName: EQName, typeDeclarationOption: Option[TypeDeclaration]) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = typeDeclarationOption.toIndexedSeq
+  def children: IndexedSeq[XPathElem] = typeDeclarationOption.toIndexedSeq
 }
 
 sealed trait Argument extends XPathElem
 
 final case class ExprSingleArgument(exprSingle: ExprSingle) extends Argument {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(exprSingle)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(exprSingle)
 }
 
 case object ArgumentPlaceholder extends Argument with LeafElem
@@ -914,17 +912,17 @@ sealed trait VariableBinding extends XPathElem {
 
 final case class SimpleForBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
 final case class SimpleLetBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
 final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle) extends VariableBinding {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(expr)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 }
 
 // Types
@@ -935,22 +933,22 @@ case object EmptySequenceType extends SequenceType with LeafElem
 
 final case class ExactlyOneSequenceType(itemType: ItemType) extends SequenceType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 }
 
 final case class ZeroOrOneSequenceType(itemType: ItemType) extends SequenceType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 }
 
 final case class ZeroOrMoreSequenceType(itemType: ItemType) extends SequenceType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 }
 
 final case class OneOrMoreSequenceType(itemType: ItemType) extends SequenceType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 }
 
 sealed trait SingleType extends XPathElem
@@ -963,7 +961,7 @@ sealed trait ItemType extends XPathElem
 
 final case class KindTestItemType(kindTest: KindTest) extends ItemType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(kindTest)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(kindTest)
 }
 
 case object AnyItemType extends ItemType with LeafElem
@@ -973,17 +971,17 @@ sealed trait FunctionTest extends ItemType
 case object AnyFunctionTest extends FunctionTest with LeafElem
 
 final case class TypedFunctionTest(
-  argumentTypes: immutable.IndexedSeq[SequenceType],
+  argumentTypes: IndexedSeq[SequenceType],
   resultType: SequenceType) extends FunctionTest {
 
-  def children: immutable.IndexedSeq[XPathElem] = argumentTypes :+ resultType
+  def children: IndexedSeq[XPathElem] = argumentTypes :+ resultType
 }
 
 final case class AtomicOrUnionType(tpe: EQName) extends ItemType with LeafElem
 
 final case class ParenthesizedItemType(itemType: ItemType) extends ItemType {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(itemType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 }
 
 sealed trait MapTest extends ItemType
@@ -992,7 +990,7 @@ case object AnyMapTest extends MapTest with LeafElem
 
 final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceType) extends MapTest {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(keyType, valueType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(keyType, valueType)
 }
 
 sealed trait ArrayTest extends ItemType
@@ -1001,12 +999,12 @@ case object AnyArrayTest extends ArrayTest with LeafElem
 
 final case class TypedArrayTest(elementType: SequenceType) extends ArrayTest {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(elementType)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(elementType)
 }
 
 final case class TypeDeclaration(tpe: SequenceType) extends XPathElem {
 
-  def children: immutable.IndexedSeq[XPathElem] = immutable.IndexedSeq(tpe)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(tpe)
 }
 
 // Axes

@@ -16,7 +16,6 @@
 
 package eu.cdevreeze.xpathparser.queryapi
 
-import scala.collection.immutable
 import scala.reflect.ClassTag
 
 /**
@@ -31,24 +30,24 @@ trait ElemApi[E <: ElemApi[E]] {
   /**
    * Finds all child elements.
    */
-  def children: immutable.IndexedSeq[E]
+  def children: IndexedSeq[E]
 
   // Finding topmost descendant elements (of a certain type, obeying some predicate)
 
   /**
    * Finds all topmost descendant elements obeying the given predicate.
    */
-  def findTopmostElems(p: E => Boolean): immutable.IndexedSeq[E]
+  def findTopmostElems(p: E => Boolean): IndexedSeq[E]
 
   /**
    * Finds all topmost descendant elements of the given element type.
    */
-  def findAllTopmostElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A]
+  def findAllTopmostElemsOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A]
 
   /**
    * Finds all topmost descendant elements of the given element type obeying the given predicate.
    */
-  def findTopmostElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A]
+  def findTopmostElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A]
 
   // Finding topmost descendant-or-self elements (of a certain type, obeying some predicate)
 
@@ -56,39 +55,39 @@ trait ElemApi[E <: ElemApi[E]] {
    * Finds all topmost elements-or-self obeying the given predicate. This is a core method in that
    * several methods are implemented directly or indirectly in terms of this one.
    */
-  def findTopmostElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E]
+  def findTopmostElemsOrSelf(p: E => Boolean): IndexedSeq[E]
 
   /**
    * Finds all topmost descendant-or-self elements of the given element type.
    */
-  def findAllTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A]
+  def findAllTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A]
 
   /**
    * Finds all topmost descendant-or-self elements of the given element type obeying the given predicate.
    */
-  def findTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A]
+  def findTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A]
 
   // Filtering descendant elements (of a certain type, obeying some predicate)
 
   /**
    * Finds all descendant elements obeying the given predicate.
    */
-  def filterElems(p: E => Boolean): immutable.IndexedSeq[E]
+  def filterElems(p: E => Boolean): IndexedSeq[E]
 
   /**
    * Finds all descendant elements.
    */
-  def findAllElems: immutable.IndexedSeq[E]
+  def findAllElems: IndexedSeq[E]
 
   /**
    * Finds all descendant elements of the given element type.
    */
-  def findAllElemsOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A]
+  def findAllElemsOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A]
 
   /**
    * Finds all descendant elements of the given element type obeying the given predicate.
    */
-  def filterElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A]
+  def filterElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A]
 
   // Filtering descendant-or-self elements (of a certain type, obeying some predicate)
 
@@ -96,22 +95,22 @@ trait ElemApi[E <: ElemApi[E]] {
    * Finds all descendant-or-self elements obeying the given predicate. This is a core method in that
    * several methods are implemented directly or indirectly in terms of this one.
    */
-  def filterElemsOrSelf(p: E => Boolean): immutable.IndexedSeq[E]
+  def filterElemsOrSelf(p: E => Boolean): IndexedSeq[E]
 
   /**
    * Finds all descendant-or-self elements.
    */
-  def findAllElemsOrSelf: immutable.IndexedSeq[E]
+  def findAllElemsOrSelf: IndexedSeq[E]
 
   /**
    * Finds all descendant-or-self elements of the given element type.
    */
-  def findAllElemsOrSelfOfType[A <: E](cls: ClassTag[A]): immutable.IndexedSeq[A]
+  def findAllElemsOrSelfOfType[A <: E](cls: ClassTag[A]): IndexedSeq[A]
 
   /**
    * Finds all descendant-or-self elements of the given element type obeying the given predicate.
    */
-  def filterElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): immutable.IndexedSeq[A]
+  def filterElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A]
 
   // Finding an optional element (of a certain type, obeying some predicate)
 

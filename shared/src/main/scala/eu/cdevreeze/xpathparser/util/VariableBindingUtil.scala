@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.xpathparser.util
 
-import scala.collection.immutable
-
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.VarRef
@@ -43,7 +41,7 @@ object VariableBindingUtil {
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
-  def findAllBoundVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): immutable.IndexedSeq[VarRef] = {
+  def findAllBoundVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): IndexedSeq[VarRef] = {
     // Many recursive calls are done below
 
     elem match {
@@ -71,7 +69,7 @@ object VariableBindingUtil {
       case e: VariableBinding =>
         findAllBoundVariables(e.expr, inheritedIntroducedVariables)
       case e @ VarRef(eqname) =>
-        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq(e) else immutable.IndexedSeq()
+        if (inheritedIntroducedVariables.contains(eqname)) IndexedSeq(e) else IndexedSeq()
       case e =>
         e.children.flatMap(che => findAllBoundVariables(che, inheritedIntroducedVariables))
     }
@@ -84,7 +82,7 @@ object VariableBindingUtil {
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
-  def findAllFreeVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): immutable.IndexedSeq[VarRef] = {
+  def findAllFreeVariables(elem: XPathElem, inheritedIntroducedVariables: Set[EQName]): IndexedSeq[VarRef] = {
     // Many recursive calls are done below
 
     elem match {
@@ -112,7 +110,7 @@ object VariableBindingUtil {
       case e: VariableBinding =>
         findAllFreeVariables(e.expr, inheritedIntroducedVariables)
       case e @ VarRef(eqname) =>
-        if (inheritedIntroducedVariables.contains(eqname)) immutable.IndexedSeq() else immutable.IndexedSeq(e)
+        if (inheritedIntroducedVariables.contains(eqname)) IndexedSeq() else IndexedSeq(e)
       case e =>
         e.children.flatMap(che => findAllFreeVariables(che, inheritedIntroducedVariables))
     }
@@ -121,14 +119,14 @@ object VariableBindingUtil {
   /**
    * Returns `findAllBoundVariables(elem, Set())`.
    */
-  def findAllBoundVariables(elem: XPathElem): immutable.IndexedSeq[VarRef] = {
+  def findAllBoundVariables(elem: XPathElem): IndexedSeq[VarRef] = {
     findAllBoundVariables(elem, Set())
   }
 
   /**
    * Returns `findAllFreeVariables(elem, Set())`.
    */
-  def findAllFreeVariables(elem: XPathElem): immutable.IndexedSeq[VarRef] = {
+  def findAllFreeVariables(elem: XPathElem): IndexedSeq[VarRef] = {
     findAllFreeVariables(elem, Set())
   }
 }
