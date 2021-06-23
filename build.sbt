@@ -8,43 +8,44 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "2.13.1"
+val scalaVer = "2.13.6"
+val crossScalaVer = Seq(scalaVer)
 
-val crossScalaVer = Seq(scalaVer, "2.12.10")
+ThisBuild / description  := "XPath parser and XPath AST API"
+ThisBuild / organization := "eu.cdevreeze.xpathparser"
+ThisBuild / version      := "0.7.0-SNAPSHOT"
 
-lazy val commonSettings = Seq(
-  name         := "xpathparser",
-  description  := "XPath parser and XPath AST API",
-  organization := "eu.cdevreeze.xpathparser",
-  version      := "0.7.0-SNAPSHOT",
+ThisBuild / scalaVersion       := scalaVer
+ThisBuild / crossScalaVersions := crossScalaVer
 
-  scalaVersion       := scalaVer,
-  crossScalaVersions := crossScalaVer,
+ThisBuild / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+  case (Some((3, _))) =>
+    Seq("-unchecked", "-source:3.0-migration")
+  case _ =>
+    Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w", "-Ytasty-reader", "-Xsource:3")
+})
 
-  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-target:jvm-1.8"),
+ThisBuild / Test / publishArtifact := false
+ThisBuild / publishMavenStyle := true
 
-  publishArtifact in Test := false,
-  publishMavenStyle := true,
+ThisBuild / publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  }
 
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-    },
+ThisBuild / pomExtra := pomData
+ThisBuild / pomIncludeRepository := { _ => false }
 
-  pomExtra := pomData,
-  pomIncludeRepository := { _ => false },
+// This is what I wanted to do, but that caused ScalaJS linker errors. Hence the repeated dependency below.
+// ThisBuild / libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4"
 
-  libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
-
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % "test"
-)
+ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % Test
 
 lazy val root = project.in(file("."))
   .aggregate(xpathparserJVM, xpathparserJS)
-  .settings(commonSettings: _*)
   .settings(
     name                 := "xpathparser",
     // Thanks, scala-java-time, for showing us how to prevent any publishing of root level artifacts:
@@ -57,17 +58,22 @@ lazy val root = project.in(file("."))
 lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("."))
-  .settings(commonSettings: _*)
   .jvmSettings(
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4"
+
     // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
   )
   .jsSettings(
     // Do we need this jsEnv?
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
+    scalaJSUseMainModuleInitializer := false,
 
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.5.9"
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
+
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6"
 
     // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
   )

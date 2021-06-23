@@ -3,19 +3,19 @@ language: scala
 
 install:
   - . $HOME/.nvm/nvm.sh
-  - nvm install stable
-  - nvm use stable
+  - nvm install 12.1.0
+  - nvm use 12.1.0
   - npm install
   - npm install jsdom
+
+# Unfortunately, a JDK 8 is missing here (this project must work on JDK 8)
 
 matrix:
   include:
   - jdk: oraclejdk9
-    scala: 2.12.10
-  - jdk: openjdk11
-    scala: 2.13.1
-  - jdk: oraclejdk9
-    scala: 2.13.1
+    scala: 2.13.6
+  - jdk: openjdk13
+    scala: 2.13.6
 
 script:
  - sbt ++$TRAVIS_SCALA_VERSION -J-Xmx2G test

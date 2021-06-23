@@ -1,13 +1,35 @@
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.0.1")
+// For a list of well-known plugins, see https://www.scala-sbt.org/1.x/docs/Community-Plugins.html.
+
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.6.0")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.4")
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.0")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.1")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.7.3")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.2")
 
-addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "0.4.0")
+// See https://github.com/albuch/sbt-dependency-check (the plugin checks potential security vulnerabilities)
+// Tasks: dependencyCheck, dependencyCheckAggregate, etc.
+addSbtPlugin("net.vonbuchholtz" % "sbt-dependency-check" % "3.1.2")
 
-addSbtPlugin("net.vonbuchholtz" % "sbt-dependency-check" % "2.0.0")
+// See https://github.com/rtimush/sbt-updates
+// Tasks: dependencyUpdates, dependencyUpdatesReport
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.5.3")
 
-libraryDependencies += "org.scala-js" %% "scalajs-env-jsdom-nodejs" % "1.0.0"
+// See https://github.com/cb372/sbt-explicit-dependencies (like maven-dependency-plugin:analyze)
+// Tasks: undeclaredCompileDependencies, undeclaredCompileDependenciesTest, unusedCompileDependencies etc.
+
+// The sbt-explicit-dependencies plugin does not work well with cross-platform builds, it seems. Is that still true?
+addSbtPlugin("com.github.cb372" % "sbt-explicit-dependencies" % "0.2.16")
+
+addSbtPlugin("ch.epfl.scala" % "sbt-missinglink" % "0.3.2")
+
+// See https://github.com/sbt/sbt-duplicates-finder (finds duplicates at level of classes etc.)
+// Should detect Saxon-HE and Saxon-EE together on classpath
+// Tasks: checkDuplicates, checkDuplicatesTest
+addSbtPlugin("com.github.sbt" % "sbt-duplicates-finder" % "1.1.0")
+
+addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "1.0.1")
+
+libraryDependencies += "org.scala-js" %% "scalajs-env-jsdom-nodejs" % "1.1.0"
+
