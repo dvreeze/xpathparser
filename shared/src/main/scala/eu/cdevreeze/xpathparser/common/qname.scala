@@ -50,7 +50,11 @@ object QName {
 
   /** Creates a `QName` from an optional prefix and a localPart */
   def apply(prefixOption: Option[String], localPart: String): QName =
-    prefixOption map { pref => PrefixedName(pref, localPart) } getOrElse (UnprefixedName(localPart))
+    prefixOption
+      .map { pref =>
+        PrefixedName(pref, localPart)
+      }
+      .getOrElse(UnprefixedName(localPart))
 
   /** Creates a `PrefixedName` from a prefix and a localPart */
   def apply(prefix: String, localPart: String): QName = PrefixedName(prefix, localPart)
@@ -83,6 +87,6 @@ object QName {
   def unapply(qname: QName): Option[(Option[String], String)] = qname match {
     case UnprefixedName(localPart)       => Some((None, localPart))
     case PrefixedName(prefix, localPart) => Some((Some(prefix), localPart))
-    case _                               => None
+    case null                            => None
   }
 }

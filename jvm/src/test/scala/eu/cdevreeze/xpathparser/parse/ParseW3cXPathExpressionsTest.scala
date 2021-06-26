@@ -17,6 +17,7 @@
 package eu.cdevreeze.xpathparser.parse
 
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 import cats.parse.{Parser => P}
 import eu.cdevreeze.xpathparser.ast.XPathExpr
@@ -37,8 +38,8 @@ class ParseW3cXPathExpressionsTest extends AnyFunSuite {
 
     // Circumventing propertiesAsScalaMapConverter and its Scala version issues (CollectionConverters moved)
     val propMap: mutable.Map[String, String] = mutable.Map.empty
-    props.forEach { (propName, propValue) =>
-      propMap.update(propName.toString, propValue.toString)
+    props.asScala.foreach { case (propName: String, propValue: String) =>
+      propMap.update(propName, propValue)
     }
 
     propMap.toMap.filter(_._1.indexOf("Comment") < 0).toMap

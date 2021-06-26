@@ -8,8 +8,8 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "2.13.6"
-val crossScalaVer = Seq(scalaVer)
+val scalaVer = "3.0.0"
+val crossScalaVer = Seq(scalaVer, "2.13.6")
 
 ThisBuild / description  := "XPath parser and XPath AST API"
 ThisBuild / organization := "eu.cdevreeze.xpathparser"
@@ -42,11 +42,10 @@ ThisBuild / pomIncludeRepository := { _ => false }
 val catsVersion = "2.6.1"
 
 // This is what I wanted to do, but that caused ScalaJS linker errors. Hence the repeated dependencies below.
-// ThisBuild / libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4"
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
 
-ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % Test
+ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % Test
 
 lazy val root = project.in(file("."))
   .aggregate(xpathparserJVM, xpathparserJS)
@@ -63,8 +62,6 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("."))
   .jvmSettings(
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
-
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
 
     libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
@@ -77,13 +74,21 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     scalaJSUseMainModuleInitializer := false,
 
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
+    libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+      case (Some((3, _))) =>
+        Seq(
+          // Hopefully for3Use2_13 soon not needed anymore
+          "org.scala-js" % "scalajs-dom_sjs1_2.13" % "1.1.0",
+        )
+      case _ =>
+        Seq(
+          "org.scala-js" % "scalajs-dom_sjs1_2.13" % "1.1.0",
+        )
+    }),
 
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
 
     libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
-
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
 
     libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6"
 
