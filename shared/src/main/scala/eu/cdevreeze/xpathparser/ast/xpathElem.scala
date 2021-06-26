@@ -1039,7 +1039,7 @@ object ForwardAxis {
     override def toString: String = "namespace"
   }
 
-  def parse(s: String): ForwardAxis = s match {
+  def parse(s: String): ForwardAxis = s.trim match {
     case "child"              => Child
     case "descendant"         => Descendant
     case "attribute"          => Attribute
@@ -1075,7 +1075,7 @@ object ReverseAxis {
     override def toString: String = "ancestor-or-self"
   }
 
-  def parse(s: String): ReverseAxis = s match {
+  def parse(s: String): ReverseAxis = s.trim match {
     case "parent"            => Parent
     case "ancestor"          => Ancestor
     case "preceding-sibling" => PrecedingSibling
@@ -1120,7 +1120,7 @@ object ValueComp {
     override def toString: String = "ge"
   }
 
-  def parse(s: String): ValueComp = s match {
+  def parse(s: String): ValueComp = s.trim match {
     case "eq" => Eq
     case "ne" => Ne
     case "lt" => Lt
@@ -1156,7 +1156,7 @@ object GeneralComp {
     override def toString: String = ">="
   }
 
-  def parse(s: String): GeneralComp = s match {
+  def parse(s: String): GeneralComp = s.trim match {
     case "="  => Eq
     case "!=" => Ne
     case "<"  => Lt
@@ -1180,7 +1180,7 @@ object NodeComp {
     override def toString: String = ">>"
   }
 
-  def parse(s: String): NodeComp = s match {
+  def parse(s: String): NodeComp = s.trim match {
     case "is" => Is
     case "<<" => Precedes
     case ">>" => Follows
@@ -1199,7 +1199,7 @@ object AdditionOp {
     override def toString: String = "-"
   }
 
-  def parse(s: String): AdditionOp = s match {
+  def parse(s: String): AdditionOp = s.trim match {
     case "+" => Plus
     case "-" => Minus
   }
@@ -1225,7 +1225,7 @@ object MultiplicativeOp {
     override def toString: String = "mod"
   }
 
-  def parse(s: String): MultiplicativeOp = s match {
+  def parse(s: String): MultiplicativeOp = s.trim match {
     case "*"    => Times
     case "div"  => Div
     case "idiv" => IDiv
@@ -1245,7 +1245,7 @@ object IntersectExceptOp {
     override def toString: String = "except"
   }
 
-  def parse(s: String): IntersectExceptOp = s match {
+  def parse(s: String): IntersectExceptOp = s.trim match {
     case "intersect" => Intersect
     case "except"    => Except
   }
@@ -1263,7 +1263,7 @@ object UnaryOp {
     override def toString: String = "-"
   }
 
-  def parse(s: String): UnaryOp = s match {
+  def parse(s: String): UnaryOp = s.trim match {
     case "+" => Plus
     case "-" => Minus
   }
@@ -1281,7 +1281,7 @@ object StepOp {
     override def toString: String = "//"
   }
 
-  def parse(s: String): StepOp = s match {
+  def parse(s: String): StepOp = s.trim match {
     case "/"  => SingleSlash
     case "//" => DoubleSlash
   }
@@ -1301,7 +1301,7 @@ object Quantifier {
     override def toString: String = "every"
   }
 
-  def parse(s: String): Quantifier = s match {
+  def parse(s: String): Quantifier = s.trim match {
     case "some"  => SomeQuantifier
     case "every" => EveryQuantifier
   }
