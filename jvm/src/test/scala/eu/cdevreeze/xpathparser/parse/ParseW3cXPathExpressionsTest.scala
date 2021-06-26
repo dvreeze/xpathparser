@@ -17,7 +17,9 @@
 package eu.cdevreeze.xpathparser.parse
 
 import scala.collection.mutable
-import fastparse._
+
+import cats.parse.{Parser => P}
+import eu.cdevreeze.xpathparser.ast.XPathExpr
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
@@ -35,27 +37,27 @@ class ParseW3cXPathExpressionsTest extends AnyFunSuite {
 
     // Circumventing propertiesAsScalaMapConverter and its Scala version issues (CollectionConverters moved)
     val propMap: mutable.Map[String, String] = mutable.Map.empty
-    props.forEach { (propName, propValue) => propMap.update(propName.toString, propValue.toString) }
+    props.forEach { (propName, propValue) =>
+      propMap.update(propName.toString, propValue.toString)
+    }
 
     propMap.toMap.filter(_._1.indexOf("Comment") < 0).toMap
   }
 
-  testInputs foreach {
+  testInputs.foreach {
     case (name, exprString) =>
       test(name) {
         // No need to trim the expression first.
 
-        val parseResult = parse(exprString, XPathParser.xpathExpr(_))
+        val parseResult = XPathParser.xpathExpr.parseAll(exprString)
 
         assertSuccess(parseResult)
       }
   }
 
-  private def assertSuccess(parseResult: fastparse.Parsed[_]): Unit = {
-    assertResult(true) {
-      parseResult.fold(
-        (parser, pos, extra) => false,
-        (expr, pos) => true)
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+    assertResult(true, parseResult) {
+      parseResult.isRight
     }
   }
 }

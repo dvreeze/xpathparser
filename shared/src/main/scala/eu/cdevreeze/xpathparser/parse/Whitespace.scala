@@ -16,31 +16,26 @@
 
 package eu.cdevreeze.xpathparser.parse
 
-import eu.cdevreeze.xpathparser.ast.XPathExpr
 import cats.parse.{Parser => P}
+import cats.parse.Parser0
 
 /**
- * XPath 3.1 parsing support, using cats-parse.
- *
- * Usage:
- * {{{
- * XPathParser.xpathExpr.parse(xpathString)
- * }}}
+ * Support for ignorable whitespace during parsing.
  *
  * @author Chris de Vreeze
  */
-object XPathParser {
+object Whitespace {
 
-  import Whitespace._
+  val whitespace: P[Unit] = P.charIn(" \t\r\n").void
+  val whitespaces0: Parser0[Unit] = whitespace.rep0.void
+  val whitespaces: P[Unit] = whitespace.rep.void
 
-  /**
-   * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. Comments are not supported,
-   * so will lead to parsing failures.
-   *
-   * The parser consumes the entire input string or else parsing cannot be successful. Leading or trailing
-   * whitespace is silently ignored.
-   */
-  val xpathExpr: P[XPathExpr] = P.defer {
-    (P.start.soft.with1 *> XPathElemParser.expr).soft <* (whitespaces0.soft ~ P.end)
+  implicit class SkippingWS[A](val parser: P[A]) extends AnyVal {
+
+    def skipWS: P[A] = Whitespace.skippingWS(parser)
   }
+
+  def skippingWS[A](parser: P[A]): P[A] = P.defer(whitespaces0.soft.with1 *> parser)
+
+  def skippingWS[A](parser0: Parser0[A]): Parser0[A] = P.defer0(whitespaces0.soft *> parser0)
 }

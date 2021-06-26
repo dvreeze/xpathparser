@@ -21,7 +21,7 @@ import eu.cdevreeze.xpathparser.ast.LocalNameWildcard
 import eu.cdevreeze.xpathparser.ast.NamespaceWildcard
 import eu.cdevreeze.xpathparser.ast.PrefixWildcard
 import eu.cdevreeze.xpathparser.ast.Wildcard
-import fastparse.NoWhitespace._
+import cats.parse.{Parser => P}
 
 /**
  * Wildcard parsing support. No whitespace skipping is performed. See ws:explicit constraint.
@@ -31,30 +31,29 @@ import fastparse.NoWhitespace._
  * @author Chris de Vreeze
  */
 object Wildcards {
-  import fastparse._
 
   private val DT = DelimitingTerminals
 
+  val prefixWildcard: P[PrefixWildcard] =
+    (NCNames.ncName.soft <* DT.colonAsterisk).map { nm =>
+      PrefixWildcard(nm)
+    }
+
+  val localNameWildcard: P[LocalNameWildcard] =
+    (DT.asteriskColon.soft *> NCNames.ncName).map { nm =>
+      LocalNameWildcard(nm)
+    }
+
+  val namespaceWildcard: P[NamespaceWildcard] =
+    (DT.bracedUriLiteral.soft <* DT.asterisk).map { uriLit =>
+      NamespaceWildcard(uriLit)
+    }
+
+  val anyWildcard: P[AnyWildcard.type] =
+    DT.asterisk.as(AnyWildcard)
+
   // Mind the order of parsing, trying to match AnyWildcard only at the end
 
-  def wildcard[_: P]: P[Wildcard] =
-    P(prefixWildcard | localNameWildcard | namespaceWildcard | anyWildcard)
-
-  def prefixWildcard[_: P]: P[PrefixWildcard] =
-    P(NCNames.ncName ~ DT.colonAsterisk) map {
-      nm => PrefixWildcard(nm)
-    }
-
-  def localNameWildcard[_: P]: P[LocalNameWildcard] =
-    P(DT.asteriskColon ~ NCNames.ncName) map {
-      nm => LocalNameWildcard(nm)
-    }
-
-  def namespaceWildcard[_: P]: P[NamespaceWildcard] =
-    P(DT.bracedUriLiteral ~ DT.asterisk) map {
-      uriLit => NamespaceWildcard(uriLit)
-    }
-
-  def anyWildcard[_: P]: P[AnyWildcard.type] =
-    P(DT.asterisk) map (_ => AnyWildcard)
+  val wildcard: P[Wildcard] =
+    P.defer(P.oneOf(prefixWildcard :: localNameWildcard :: namespaceWildcard :: anyWildcard :: Nil))
 }

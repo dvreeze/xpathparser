@@ -18,7 +18,8 @@ package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.StringLiteral
-import fastparse.NoWhitespace._
+import cats.parse.Accumulator0._
+import cats.parse.{Parser => P}
 
 /**
  * Delimiting terminal symbols. No whitespace is skipped during this tokenization.
@@ -33,106 +34,106 @@ import fastparse.NoWhitespace._
  * @author Chris de Vreeze
  */
 object DelimitingTerminals {
-  import fastparse._
 
   // Exclamation marks and not-equals symbol
 
-  def exclamationMark[_: P]: P[Unit] = P("!" ~ !"=")
+  val exclamationMark: P[Unit] = (P.string("!").soft ~ P.string("=").unary_!).void
 
-  def notEquals[_: P]: P[Unit] = P("!=")
+  val notEquals: P[Unit] = P.string("!=")
 
   // String literals
 
-  def stringLiteral[_: P]: P[StringLiteral] = StringLiterals.stringLiteral
+  val stringLiteral: P[StringLiteral] = StringLiterals.stringLiteral
 
-  def hash[_: P]: P[Unit] = P("#")
+  val hash: P[Unit] = P.string("#")
 
-  def dollar[_: P]: P[Unit] = P("$")
+  val dollar: P[Unit] = P.string("$")
 
-  def openParenthesis[_: P]: P[Unit] = P("(")
+  val openParenthesis: P[Unit] = P.string("(")
 
-  def closeParenthesis[_: P]: P[Unit] = P(")")
+  val closeParenthesis: P[Unit] = P.string(")")
 
   // Asterisk and asterisk-colon
 
-  def asterisk[_: P]: P[Unit] = P("*" ~ !":")
+  val asterisk: P[Unit] = (P.string("*").soft ~ P.string(":").unary_!).void
 
-  def asteriskColon[_: P]: P[Unit] = P("*:")
+  val asteriskColon: P[Unit] = P.string("*:")
 
-  def plus[_: P]: P[Unit] = P("+")
+  val plus: P[Unit] = P.string("+")
 
-  def comma[_: P]: P[Unit] = P(",")
+  val comma: P[Unit] = P.string(",")
 
-  def minus[_: P]: P[Unit] = P("-")
+  val minus: P[Unit] = P.string("-")
 
   // Single and double dots
 
-  def dot[_: P]: P[Unit] = P("." ~ !".")
+  val dot: P[Unit] = (P.string(".").soft ~ P.string(".").unary_!).void
 
-  def doubleDot[_: P]: P[Unit] = P("..")
+  val doubleDot: P[Unit] = P.string("..")
 
   // Single and double slashes
 
-  def slash[_: P]: P[Unit] = P("/" ~ !"/")
+  val slash: P[Unit] = (P.string("/").soft ~ P.string("/").unary_!).void
 
-  def doubleSlash[_: P]: P[Unit] = P("//")
+  val doubleSlash: P[Unit] = P.string("//")
 
   // Single and double colons, colon-asterisk and assignment symbol
 
-  def colon[_: P]: P[Unit] = P(":" ~ !(":" | "*" | "="))
+  val colon: P[Unit] = (P.string(":").soft ~ (P.string(":") | P.string("*") | P.string("=")).unary_!).void
 
-  def doubleColon[_: P]: P[Unit] = P("::")
+  val doubleColon: P[Unit] = P.string("::")
 
-  def colonAsterisk[_: P]: P[Unit] = P(":*")
+  val colonAsterisk: P[Unit] = P.string(":*")
 
-  def assignmentSymbol[_: P]: P[Unit] = P(":=")
+  val assignmentSymbol: P[Unit] = P.string(":=")
 
   // Symbols starting with less-than character
 
-  def lessThan[_: P]: P[Unit] = P("<" ~ !("=" | "<"))
+  val lessThan: P[Unit] = (P.string("<").soft ~ (P.string("=") | P.string("<")).unary_!).void
 
-  def lessThanOrEqual[_: P]: P[Unit] = P("<=")
+  val lessThanOrEqual: P[Unit] = P.string("<=")
 
-  def precedes[_: P]: P[Unit] = P("<<")
+  val precedes: P[Unit] = P.string("<<")
 
   // Symbols starting with greater-than character
 
-  def greaterThan[_: P]: P[Unit] = P(">" ~ !("=" | ">"))
+  val greaterThan: P[Unit] = (P.string(">").soft ~ (P.string("=") | P.string(">")).unary_!).void
 
-  def greaterThanOrEqual[_: P]: P[Unit] = P(">=")
+  val greaterThanOrEqual: P[Unit] = P.string(">=")
 
-  def follows[_: P]: P[Unit] = P(">>")
+  val follows: P[Unit] = P.string(">>")
 
   // Symbols starting with the equals character
 
-  def equals[_: P]: P[Unit] = P("=" ~ !">")
+  val equals: P[Unit] = (P.string("=").soft ~ P.string(">").unary_!).void
 
-  def doubleArrow[_: P]: P[Unit] = P("=>")
+  val doubleArrow: P[Unit] = P.string("=>")
 
-  def questionMark[_: P]: P[Unit] = P("?")
+  val questionMark: P[Unit] = P.string("?")
 
-  def at[_: P]: P[Unit] = P("@")
+  val at: P[Unit] = P.string("@")
 
   // Braced URI literal
 
-  def bracedUriLiteral[_: P]: P[BracedUriLiteral] =
-    P("Q{" ~ CharPred(isAllowedNamespaceUriChar).rep.! ~ "}") map {
-      rawNs => if (rawNs.isEmpty) BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
+  val bracedUriLiteral: P[BracedUriLiteral] = P.defer {
+    ((P.string("Q{").soft *> P.charsWhile0(isAllowedNamespaceUriChar)).soft <* P.string("}")).map { rawNs =>
+      if (rawNs.isEmpty) BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
     }
+  }
 
-  def openBracket[_: P]: P[Unit] = P("[")
+  val openBracket: P[Unit] = P.string("[")
 
-  def closeBracket[_: P]: P[Unit] = P("]")
+  val closeBracket: P[Unit] = P.string("]")
 
-  def openBrace[_: P]: P[Unit] = P("{")
+  val openBrace: P[Unit] = P.string("{")
 
-  def closeBrace[_: P]: P[Unit] = P("}")
+  val closeBrace: P[Unit] = P.string("}")
 
   // String concatenation and union symbols
 
-  def verticalBar[_: P]: P[Unit] = P("|" ~ !"|")
+  val verticalBar: P[Unit] = (P.string("|").soft ~ P.string("|").unary_!).void
 
-  def doubleVerticalBar[_: P]: P[Unit] = P("||")
+  val doubleVerticalBar: P[Unit] = P.string("||")
 
   private def isAllowedNamespaceUriChar(c: Char): Boolean = {
     // TODO Is this correct?
@@ -142,37 +143,61 @@ object DelimitingTerminals {
 
   object StringLiterals {
 
-    def stringLiteral[_: P]: P[StringLiteral] =
-      P(aposStringLiteral | quoteStringLiteral)
+    private def isApos(c: Char): Boolean = c == '\''
+    private def isNotApos(c: Char): Boolean = !isApos(c)
 
-    // TODO Make more efficient
+    private def isQuote(c: Char): Boolean = c == '"'
+    private def isNotQuote(c: Char): Boolean = !isQuote(c)
 
-    // Note the use of cuts here, which may hinder re-use in XPathParser, unless we switch off cuts where needed.
+    private val apos: P[String] = P.charWhere(isApos).string
+    private val quote: P[String] = P.charWhere(isQuote).string
 
-    private def aposStringLiteral[_: P]: P[StringLiteral] =
-      P("'" ~/ (escapeApos | nonEscapedCharInAposStringLiteral).rep.! ~ "'") map { v =>
+    private val endApos: P[Unit] = P.defer {
+      (apos.soft ~ apos.unary_!).void
+    }
+
+    private val endQuote: P[Unit] = P.defer {
+      (quote.soft ~ quote.unary_!).void
+    }
+
+    // Note the heavy use of backtracking here, if escaped aps/quote is found. I did not get a better alternative without backtracking working.
+
+    private val aposStringLiteralWithEscaping: P[StringLiteral] = P.defer {
+      (P.charsWhile0(isNotApos).soft.with1 ~
+        (P.charsWhile(isApos).filter(_.size % 2 == 0).backtrack.soft ~ P.charsWhile0(isNotApos)).rep).string.map { v =>
         // Why do we still need the "unescaping" here?
 
-        StringLiteral(v.replace("''", "'"))
+        StringLiteral(v.mkString.replace("''", "'"))
       }
+    }
 
-    private def quoteStringLiteral[_: P]: P[StringLiteral] =
-      P("\"" ~/ (escapeQuote | nonEscapedCharInQuoteStringLiteral).rep.! ~ "\"") map { v =>
-        // Why do we still need the "unescaping" here?
+    private val aposStringLiteral: P[StringLiteral] = P.defer {
+      P.oneOf(
+        ((apos.soft *> P.charsWhile0(isNotApos).map(StringLiteral(_))).soft <* endApos) ::
+          ((apos.soft *> aposStringLiteralWithEscaping).soft <* endApos) ::
+          Nil
+      )
+    }
 
-        StringLiteral(v.replace("\"\"", "\""))
+    private val quoteStringLiteralWithEscaping: P[StringLiteral] = P.defer {
+      (P.charsWhile0(isNotQuote).soft.with1 ~
+        (P.charsWhile(isQuote).filter(_.size % 2 == 0).backtrack.soft ~ P.charsWhile0(isNotQuote)).rep).string.map {
+        v =>
+          // Why do we still need the "unescaping" here?
+
+          StringLiteral(v.mkString.replace("\"\"", "\""))
       }
+    }
 
-    private def escapeApos[_: P]: P[String] =
-      P("'".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.length == 1))
+    private val quoteStringLiteral: P[StringLiteral] = P.defer {
+      P.oneOf(
+        ((quote.soft *> P.charsWhile0(isNotQuote).map(StringLiteral(_))).soft <* endQuote) ::
+          ((quote.soft *> quoteStringLiteralWithEscaping).soft <* endQuote) ::
+          Nil
+      )
+    }
 
-    private def nonEscapedCharInAposStringLiteral[_: P]: P[String] =
-      P(CharPred(_ != '\'').!) map (_.ensuring(_.length == 1))
-
-    private def escapeQuote[_: P]: P[String] =
-      P("\"".rep(exactly = 2).!) map (_.substring(0, 1).ensuring(_.length == 1))
-
-    private def nonEscapedCharInQuoteStringLiteral[_: P]: P[String] =
-      P(CharPred(_ != '"').!) map (_.ensuring(_.length == 1))
+    val stringLiteral: P[StringLiteral] =
+      P.defer(aposStringLiteral | quoteStringLiteral)
   }
 }

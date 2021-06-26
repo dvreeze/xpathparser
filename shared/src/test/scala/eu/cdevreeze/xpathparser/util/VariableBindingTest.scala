@@ -19,12 +19,12 @@ package eu.cdevreeze.xpathparser.util
 import scala.reflect.classTag
 
 import org.scalatest.funsuite.AnyFunSuite
-
 import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.ForExpr
 import eu.cdevreeze.xpathparser.ast.InlineFunctionExpr
 import eu.cdevreeze.xpathparser.ast.LetExpr
 import eu.cdevreeze.xpathparser.ast.XPathElem
+import eu.cdevreeze.xpathparser.ast.XPathExpr
 
 /**
  * XPath variable binding test case.
@@ -41,30 +41,32 @@ import eu.cdevreeze.xpathparser.ast.XPathElem
  */
 class VariableBindingTest extends AnyFunSuite {
 
-  import fastparse._
+  import cats.parse.{Parser => P}
 
   import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
+
+  private def throwNoExpr(): Nothing = sys.error(s"Could not parse expression")
 
   test("testBindingsInSlash") {
     val exprString = "/"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set())
-    assertBoundVariableNames(parseResult.get.value, Set())
+    assertFreeVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
   }
 
   test("testBindingsInSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set())
-    assertBoundVariableNames(parseResult.get.value, Set())
+    assertFreeVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
   }
 
   test("testBindingsInIfExprWithFunctionCalls") {
@@ -74,11 +76,12 @@ class VariableBindingTest extends AnyFunSuite {
       "if(xff:has-fallback-value(xs:QName('varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear'))) " +
         "then true() else not(count($varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear) ge 1)"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
-    assertFreeVariableNames(parseResult.get.value, Set(
-      EQName.QName("varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear")))
-    assertBoundVariableNames(parseResult.get.value, Set())
+    assertFreeVariableNames(
+      parseResult.getOrElse(throwNoExpr()),
+      Set(EQName.QName("varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear")))
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
   }
 
   test("testBindingsInSummation") {
@@ -88,12 +91,18 @@ class VariableBindingTest extends AnyFunSuite {
       "$varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers =  " +
         "sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember) "
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
-    assertFreeVariableNames(parseResult.get.value, Set(
-      EQName.QName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers"),
-      EQName.QName("varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember")))
-    assertBoundVariableNames(parseResult.get.value, Set())
+    assertFreeVariableNames(
+      parseResult.getOrElse(throwNoExpr()),
+      Set(
+        EQName.QName(
+          "varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers"),
+        EQName.QName(
+          "varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember")
+      )
+    )
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
   }
 
   test("testBindingsInIfExprWithFunctionCallsAndStringLiterals") {
@@ -103,13 +112,14 @@ class VariableBindingTest extends AnyFunSuite {
       "xfi:fact-has-explicit-dimension-value($varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems," +
         "xs:QName('venj-bw2-dim:FinancialStatementsTypeAxis'),xs:QName('venj-bw2-dm:SeparateMember'))"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set(
-      EQName.QName("varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems")))
-    assertBoundVariableNames(parseResult.get.value, Set())
+    assertFreeVariableNames(
+      parseResult.getOrElse(throwNoExpr()),
+      Set(EQName.QName("varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems")))
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
   }
 
   test("testLetExpr") {
@@ -119,15 +129,15 @@ class VariableBindingTest extends AnyFunSuite {
       """let $f := function($a) { starts-with($a, "E") }
         return local:filter(("Ethel", "Enid", "Gertrude"), $f)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set())
-    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("a"), EQName.QName("f")))
+    assertFreeVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set(EQName.QName("a"), EQName.QName("f")))
 
     val funcBody =
-      parseResult.get.value.findFirstElemOfType(classTag[InlineFunctionExpr]).get.body
+      parseResult.getOrElse(throwNoExpr()).findFirstElemOfType(classTag[InlineFunctionExpr]).get.body
 
     assertFreeVariableNames(funcBody, Set(EQName.QName("a")))
     assertBoundVariableNames(funcBody, Set())
@@ -135,7 +145,7 @@ class VariableBindingTest extends AnyFunSuite {
     assertFreeVariableNames(funcBody, Set(), Set(EQName.QName("a")))
     assertBoundVariableNames(funcBody, Set(EQName.QName("a")), Set(EQName.QName("a")))
 
-    val returnExpr = parseResult.get.value.findFirstElemOrSelfOfType(classTag[LetExpr]).get.returnExpr
+    val returnExpr = parseResult.getOrElse(throwNoExpr()).findFirstElemOrSelfOfType(classTag[LetExpr]).get.returnExpr
 
     assertFreeVariableNames(returnExpr, Set(EQName.QName("f")))
     assertBoundVariableNames(returnExpr, Set())
@@ -149,14 +159,14 @@ class VariableBindingTest extends AnyFunSuite {
 
     val exprString = """for $w in //text()/tokenize(., '\W+')[.!=''] return lower-case($w)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set())
-    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("w")))
+    assertFreeVariableNames(parseResult.getOrElse(throwNoExpr()), Set())
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set(EQName.QName("w")))
 
-    val returnExpr = parseResult.get.value.findFirstElemOrSelfOfType(classTag[ForExpr]).get.returnExpr
+    val returnExpr = parseResult.getOrElse(throwNoExpr()).findFirstElemOrSelfOfType(classTag[ForExpr]).get.returnExpr
 
     assertFreeVariableNames(returnExpr, Set(EQName.QName("w")))
     assertBoundVariableNames(returnExpr, Set())
@@ -172,44 +182,31 @@ class VariableBindingTest extends AnyFunSuite {
       """let $f := function($a) { starts-with($a, $b) }
         return local:filter(("Ethel", "Enid", "Gertrude", $c, $a), $f)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertFreeVariableNames(parseResult.get.value, Set(
-      EQName.QName("b"),
-      EQName.QName("c"),
-      EQName.QName("a")))
-    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("a"), EQName.QName("f")))
+    assertFreeVariableNames(
+      parseResult.getOrElse(throwNoExpr()),
+      Set(EQName.QName("b"), EQName.QName("c"), EQName.QName("a")))
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set(EQName.QName("a"), EQName.QName("f")))
 
     val funcBody =
-      parseResult.get.value.findFirstElemOfType(classTag[InlineFunctionExpr]).get.body
+      parseResult.getOrElse(throwNoExpr()).findFirstElemOfType(classTag[InlineFunctionExpr]).get.body
 
     assertFreeVariableNames(funcBody, Set(EQName.QName("a"), EQName.QName("b")))
     assertBoundVariableNames(funcBody, Set())
 
-    assertFreeVariableNames(
-      funcBody,
-      Set(EQName.QName("b")),
-      Set(EQName.QName("a")))
-    assertBoundVariableNames(
-      funcBody,
-      Set(EQName.QName("a")),
-      Set(EQName.QName("a")))
+    assertFreeVariableNames(funcBody, Set(EQName.QName("b")), Set(EQName.QName("a")))
+    assertBoundVariableNames(funcBody, Set(EQName.QName("a")), Set(EQName.QName("a")))
 
-    val returnExpr = parseResult.get.value.findFirstElemOrSelfOfType(classTag[LetExpr]).get.returnExpr
+    val returnExpr = parseResult.getOrElse(throwNoExpr()).findFirstElemOrSelfOfType(classTag[LetExpr]).get.returnExpr
 
     assertFreeVariableNames(returnExpr, Set(EQName.QName("f"), EQName.QName("c"), EQName.QName("a")))
     assertBoundVariableNames(returnExpr, Set())
 
-    assertFreeVariableNames(
-      returnExpr,
-      Set(EQName.QName("c"), EQName.QName("a")),
-      Set(EQName.QName("f")))
-    assertBoundVariableNames(
-      returnExpr,
-      Set(EQName.QName("f")),
-      Set(EQName.QName("f")))
+    assertFreeVariableNames(returnExpr, Set(EQName.QName("c"), EQName.QName("a")), Set(EQName.QName("f")))
+    assertBoundVariableNames(returnExpr, Set(EQName.QName("f")), Set(EQName.QName("f")))
   }
 
   test("testBindingsDependingOnOtherBindings") {
@@ -221,20 +218,27 @@ class VariableBindingTest extends AnyFunSuite {
                 $m in (($n+1) to (count($varArc_ELRName_PrtFactsNECovA_Set01)))
               return (($varArc_ELRName_PrtFactsNECovA_Set01[$n] = $varArc_ELRName_PrtFactsNECovA_Set01[$m]))) = true())""".trim
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     // Note that $n is never free, not even in the variable binding for $m.
 
-    assertFreeVariableNames(parseResult.get.value, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
-    assertBoundVariableNames(parseResult.get.value, Set(EQName.QName("n"), EQName.QName("m")))
+    assertFreeVariableNames(
+      parseResult.getOrElse(throwNoExpr()),
+      Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
+    assertBoundVariableNames(parseResult.getOrElse(throwNoExpr()), Set(EQName.QName("n"), EQName.QName("m")))
 
-    val forExpr = parseResult.get.value.findElemOfType(classTag[ForExpr])(_ => true).get
+    val forExpr = parseResult.getOrElse(throwNoExpr()).findElemOfType(classTag[ForExpr])(_ => true).get
     val secondBindingExpr = forExpr.variableBindings.tail.head.expr
 
-    assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("n"), EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
+    assertFreeVariableNames(
+      secondBindingExpr,
+      Set(EQName.QName("n"), EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")))
     assertBoundVariableNames(secondBindingExpr, Set())
 
-    assertFreeVariableNames(secondBindingExpr, Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")), Set(EQName.QName("n"), EQName.QName("m")))
+    assertFreeVariableNames(
+      secondBindingExpr,
+      Set(EQName.QName("varArc_ELRName_PrtFactsNECovA_Set01")),
+      Set(EQName.QName("n"), EQName.QName("m")))
     assertBoundVariableNames(secondBindingExpr, Set(EQName.QName("n")), Set(EQName.QName("n"), EQName.QName("m")))
 
     val firstVarScope = forExpr.scopeOfVariableBinding(0)
@@ -248,9 +252,9 @@ class VariableBindingTest extends AnyFunSuite {
   }
 
   private def assertFreeVariableNames(
-    elem: XPathElem,
-    expectedVarNames: Set[EQName],
-    inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
+      elem: XPathElem,
+      expectedVarNames: Set[EQName],
+      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
 
     val freeVars = VariableBindingUtil.findAllFreeVariables(elem, inheritedIntroducedVarNames)
 
@@ -260,9 +264,9 @@ class VariableBindingTest extends AnyFunSuite {
   }
 
   private def assertBoundVariableNames(
-    elem: XPathElem,
-    expectedVarNames: Set[EQName],
-    inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
+      elem: XPathElem,
+      expectedVarNames: Set[EQName],
+      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
 
     val boundVars = VariableBindingUtil.findAllBoundVariables(elem, inheritedIntroducedVarNames)
 
@@ -271,11 +275,9 @@ class VariableBindingTest extends AnyFunSuite {
     }
   }
 
-  private def assertSuccess(parseResult: Parsed[_]): Unit = {
-    assertResult(true) {
-      parseResult.fold(
-        (parser, pos, extra) => false,
-        (expr, pos) => true)
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+    assertResult(true, parseResult) {
+      parseResult.isRight
     }
   }
 }

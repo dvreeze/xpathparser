@@ -26,28 +26,30 @@ import org.scalatest.funsuite.AnyFunSuite
  */
 class EQNameUtilTest extends AnyFunSuite {
 
-  import fastparse._
+  import cats.parse.{Parser => P}
 
   import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
+
+  private def throwParseError(): Nothing = sys.error(s"Could not parse input expression")
 
   test("testPrefixesInSlash") {
     val exprString = "/"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set())
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set())
   }
 
   test("testPrefixesInSimplePathExpr") {
     val exprString = "/p:a//p:b/p:c//p:d/p:e"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("p"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p"))
   }
 
   test("testPrefixesInIfExprWithFunctionCalls") {
@@ -57,11 +59,11 @@ class EQNameUtilTest extends AnyFunSuite {
       "if(xff:has-fallback-value(xs:QName('varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear'))) " +
         "then true() else not(count($varArc_BalanceSheetVertical_MsgPrecondValueConceptAndNoExistenceConcept1_ResultForTheYear) ge 1)"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("xff", "xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xff", "xs"))
   }
 
   test("testPrefixesInSummation") {
@@ -71,11 +73,11 @@ class EQNameUtilTest extends AnyFunSuite {
       "$varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_SumOfMembers =  " +
         "sum($varArc_NotesShareCapitalStatementOfChanges_MsgSeparateSumOfMembersOnAbstract1_Abstract_ChildrenMember) "
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set())
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set())
   }
 
   test("testPrefixesInIfExprWithFunctionCallsAndStringLiterals") {
@@ -85,13 +87,15 @@ class EQNameUtilTest extends AnyFunSuite {
       "xfi:fact-has-explicit-dimension-value($varArc_DocumentInformation_MsgPrecondExistenceMemberAspect3_AllItems," +
         "xs:QName('venj-bw2-dim:FinancialStatementsTypeAxis'),xs:QName('venj-bw2-dm:SeparateMember'))"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("xfi", "xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xfi", "xs"))
 
-    assertUsedPrefixesIncludingFromXsQName(parseResult.get.value, Set("xfi", "xs", "venj-bw2-dim", "venj-bw2-dm"))
+    assertUsedPrefixesIncludingFromXsQName(
+      parseResult.getOrElse(throwParseError()),
+      Set("xfi", "xs", "venj-bw2-dim", "venj-bw2-dm"))
   }
 
   test("testPrefixesInLetExpr") {
@@ -101,11 +105,11 @@ class EQNameUtilTest extends AnyFunSuite {
       """let $f := function($a) { starts-with($a, "E") }
         return local:filter(("Ethel", "Enid", "Gertrude"), $f)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("local"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("local"))
   }
 
   test("testPrefixesInNonTrivialForExpr") {
@@ -113,11 +117,11 @@ class EQNameUtilTest extends AnyFunSuite {
 
     val exprString = """for $p:w in //fn:text()/fn:tokenize(., '\W+')[.!=''] return fn:lower-case($p:w)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("p", "fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p", "fn"))
   }
 
   test("testPrefixesInLetExprWithFreeVars") {
@@ -127,11 +131,11 @@ class EQNameUtilTest extends AnyFunSuite {
       """let $p1:f := function($p2:a) { starts-with($p2:a, $p3:b) }
         return local:filter(("Ethel", "Enid", "Gertrude", $p4:c, $Q{}d, $Q{http://www.example.org/}e, $p2:a), $p1:f)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("p1", "p2", "p3", "p4", "local"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p1", "p2", "p3", "p4", "local"))
   }
 
   test("testPrefixesInExprWithBindingsDependingOnOtherBindings") {
@@ -143,47 +147,44 @@ class EQNameUtilTest extends AnyFunSuite {
                 $m in (($n+1) to (fn:count($varArc_ELRName_PrtFactsNECovA_Set01)))
               return (($varArc_ELRName_PrtFactsNECovA_Set01[$n] = $varArc_ELRName_PrtFactsNECovA_Set01[$m]))) = fn:true())""".trim
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn"))
   }
 
   test("testPrefixesInCastExpr") {
     val exprString = "xs:NCName('entity') cast as xs:ENTITY"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xs"))
   }
 
   test("testPrefixesInNamedFunctionRef") {
     val exprString = "exists(fn:minutes-from-duration#1)"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn"))
   }
 
   test("testPrefixesInSimpleNameTest") {
     val exprString = "let $var := /works return fn:count($var/child::p:employee)"
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.get.value, Set("fn", "p"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn", "p"))
   }
 
-  private def assertUsedPrefixes(
-    expr: XPathExpr,
-    expectedPrefixes: Set[String]): Unit = {
-
+  private def assertUsedPrefixes(expr: XPathExpr, expectedPrefixes: Set[String]): Unit = {
     val prefixes = EQNameUtil.findUsedPrefixes(expr)
 
     assertResult(expectedPrefixes) {
@@ -191,10 +192,7 @@ class EQNameUtilTest extends AnyFunSuite {
     }
   }
 
-  private def assertUsedPrefixesIncludingFromXsQName(
-    expr: XPathExpr,
-    expectedPrefixes: Set[String]): Unit = {
-
+  private def assertUsedPrefixesIncludingFromXsQName(expr: XPathExpr, expectedPrefixes: Set[String]): Unit = {
     val prefixes = EQNameUtil.findUsedPrefixes(expr, EQNameUtil.eqnameProducerFromXsQName)
 
     assertResult(expectedPrefixes) {
@@ -202,11 +200,9 @@ class EQNameUtilTest extends AnyFunSuite {
     }
   }
 
-  private def assertSuccess(parseResult: Parsed[_]): Unit = {
-    assertResult(true) {
-      parseResult.fold(
-        (parser, pos, extra) => false,
-        (expr, pos) => true)
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+    assertResult(true, parseResult) {
+      parseResult.isRight
     }
   }
 }

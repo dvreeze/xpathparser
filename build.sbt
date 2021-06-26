@@ -44,6 +44,7 @@ val catsVersion = "2.6.1"
 // This is what I wanted to do, but that caused ScalaJS linker errors. Hence the repeated dependencies below.
 // ThisBuild / libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4"
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+// ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
 
 ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % Test
 
@@ -64,7 +65,9 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
 
-    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
+
+    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
 
     // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
   )
@@ -77,6 +80,8 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
 
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
+
+    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
 
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
 

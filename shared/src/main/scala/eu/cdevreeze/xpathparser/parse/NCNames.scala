@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.NCName
-import fastparse.NoWhitespace._
+import cats.parse.{Parser => P}
 
 /**
  * NCName parsing support. Note that NCNames are non-delimiting terminal symbols.
@@ -26,10 +26,10 @@ import fastparse.NoWhitespace._
  * @author Chris de Vreeze
  */
 object NCNames {
-  import fastparse._
 
-  def ncName[_: P]: P[NCName] =
-    P(CharPred(c => NCName.canBeStartOfNCName(c)).! ~ CharPred(c => NCName.canBePartOfNCName(c)).rep.!) map {
-      case (s1, s2) => NCName(s1 + s2)
-    }
+  val ncName: P[NCName] =
+    (P.charWhere(NCName.canBeStartOfNCName).string.soft ~ P.charsWhile0(NCName.canBePartOfNCName))
+      .map {
+        case (s1, s2) => NCName(s1 + s2)
+      }
 }

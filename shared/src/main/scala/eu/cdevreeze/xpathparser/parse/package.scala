@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser
 
 /**
- * FastParse parser of XPath expressions, returning AST objects from the 'ast' package if successful.
+ * A cats-parse parser of XPath expressions, returning AST objects from the 'ast' package if successful.
  *
  * @author Chris de Vreeze
  */

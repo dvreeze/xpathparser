@@ -16,7 +16,8 @@
 
 package eu.cdevreeze.xpathparser.parse
 
-import fastparse._
+import cats.parse.{Parser => P}
+import eu.cdevreeze.xpathparser.ast.XPathExpr
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
@@ -25,8 +26,6 @@ import org.scalatest.funsuite.AnyFunSuite
  * @author Chris de Vreeze
  */
 class ExtractXPathTest extends AnyFunSuite {
-
-  import fastparse.Parsed
 
   // import XPathElemParser.stringConcatExpr
   import XPathParser.xpathExpr
@@ -39,7 +38,7 @@ class ExtractXPathTest extends AnyFunSuite {
         sum($varArc_BalanceSheetVertical_MsgSeparateSumOfChildrenParentCredit1_ChildrenOfEquityCredit)
          - sum($varArc_BalanceSheetVertical_MsgSeparateSumOfChildrenParentCredit1_ChildrenOfEquityDebit)"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = XPathParser.xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
@@ -64,7 +63,7 @@ class ExtractXPathTest extends AnyFunSuite {
       """ sum($varArc_BalanceSheetVertical_MsgSeparateSumOfChildrenParentCredit1_ChildrenOfEquityCredit)
          - sum($varArc_BalanceSheetVertical_MsgSeparateSumOfChildrenParentCredit1_ChildrenOfEquityDebit) = $Equity"""
 
-    val parseResult = parse(exprString, xpathExpr(_))
+    val parseResult = XPathParser.xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
 
@@ -82,60 +81,9 @@ class ExtractXPathTest extends AnyFunSuite {
     */
   }
 
-  private def assertSuccess(parseResult: Parsed[_]): Unit = {
-    assertResult(true) {
-      parseResult.fold(
-        (parser, pos, extra) => false,
-        (expr, pos) => true)
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+    assertResult(true, parseResult) {
+      parseResult.isRight
     }
   }
-}
-
-object ExtractXPathTest {
-
-  import fastparse.NoWhitespace._
-  import XPathElemParser._
-  import fastparse._
-
-  // Extracting string concatenation expressions as XPath strings from containing XPath strings.
-  // It uses some XPathElemParser parsers as lookahead parsers, and emulates the same parsers while extracting
-  // string indices of the interesting XPath sub-expressions using the Fastparse Index parser.
-
-  // Note that hasRightHandSideStringConcatExpr and hasLeftHandSideStringConcatExpr are not mutually exclusive!
-
-  def hasRightHandSideStringConcatExpr[_: P]: P[Unit] =
-    P(varRef ~ comp ~ stringConcatExpr).map(_ => ())
-
-  def hasLeftHandSideStringConcatExpr[_: P]: P[Unit] =
-    P(stringConcatExpr ~ comp ~ varRef).map(_ => ())
-
-  def rightHandSideStringConcatExprIndices[_: P]: P[(Int, Int)] =
-    P(Start ~ &(hasRightHandSideStringConcatExpr) ~ varRef ~ comp ~ Index ~ stringConcatExpr ~ Index ~ End) map {
-      case (varRef, comp, startIdx, scExpr, endIdx) => (startIdx, endIdx)
-    }
-
-  def leftHandSideStringConcatExprIndices[_: P]: P[(Int, Int)] =
-    P(Start ~ &(hasLeftHandSideStringConcatExpr) ~ Index ~ stringConcatExpr ~ Index ~ comp ~ varRef ~ End) map {
-      case (startIdx, scExpr, endIdx, comp, varRef) => (startIdx, endIdx)
-    }
-
-  /*
-  def extractOptionalRightHandSideStringConcatExpr(inputString: String): Option[String] = {
-    parse(inputString, rightHandSideStringConcatExprIndices(_)) match {
-      case Parsed.Success(_, index) =>
-        Some(inputString.substring(0, index).trim)
-      case Parsed.Failure(_, _, _) =>
-        None
-    }
-  }
-
-  def extractOptionalLeftHandSideStringConcatExpr(inputString: String): Option[String] = {
-    parse(inputString, leftHandSideStringConcatExprIndices(_)) match {
-      case Parsed.Success(_, index) =>
-        Some(inputString.substring(0, index).trim)
-      case Parsed.Failure(_, _, _) =>
-        None
-    }
-  }
-  */
 }

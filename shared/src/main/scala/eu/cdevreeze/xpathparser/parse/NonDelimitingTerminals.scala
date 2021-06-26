@@ -22,7 +22,9 @@ import eu.cdevreeze.xpathparser.ast.EQName
 import eu.cdevreeze.xpathparser.ast.IntegerLiteral
 import eu.cdevreeze.xpathparser.ast.NCName
 import eu.cdevreeze.xpathparser.ast.NumericLiteral
-import fastparse.NoWhitespace._
+import cats.parse.Numbers
+import cats.parse.{Parser => P}
+import cats.parse.Parser0
 
 /**
  * Non-delimiting terminal symbols. No whitespace is skipped during this tokenization.
@@ -32,153 +34,169 @@ import fastparse.NoWhitespace._
  * @author Chris de Vreeze
  */
 object NonDelimitingTerminals {
-  import fastparse._
+
+  // TODO Is this a correct symbol separator, or should we look at whitespace and comments instead?
+
+  private val symbolSeparator: Parser0[Unit] =
+    (P.end | P.charWhere(c => !NCName.canBePartOfNCName(c))).void
+
+  def parseWord(s: String): P[Unit] = {
+    P.string(s).soft <* symbolSeparator.peek
+  }
 
   // Numeric literals
 
-  def numericLiteral[_: P]: P[NumericLiteral] =
-    P(integerLiteral | decimalLiteral | doubleLiteral)
+  val integerLiteral: P[IntegerLiteral] =
+    (Numbers.digits.soft <* P.charIn('e', 'E', '.').unary_!)
+      .filter(v => isIntegerLiteral(v))
+      .backtrack
+      .map { v =>
+        IntegerLiteral(BigInt(v))
+      }
 
-  def integerLiteral[_: P]: P[IntegerLiteral] =
-    P(CharsWhileIn("0123456789").! ~ !CharIn("eE", ".")) filter (v => isIntegerLiteral(v)) map { v =>
-      IntegerLiteral(BigInt(v))
-    }
+  val decimalLiteral: P[DecimalLiteral] =
+    (P.charsWhile(c => "0123456789.".contains(c)).soft <* P.charIn('e', 'E').unary_!)
+      .filter(v => isDecimalLiteral(v))
+      .backtrack
+      .map { v =>
+        DecimalLiteral(BigDecimal(v))
+      }
 
-  def decimalLiteral[_: P]: P[DecimalLiteral] =
-    P(CharsWhileIn("0123456789.").! ~ !CharIn("eE")) filter (v => isDecimalLiteral(v)) map { v =>
-      DecimalLiteral(BigDecimal(v))
-    }
+  val doubleLiteral: P[DoubleLiteral] =
+    P.charsWhile(c => "0123456789.eE+\\-".contains(c))
+      .filter(v => isDoubleLiteral(v))
+      .backtrack
+      .map { v =>
+        DoubleLiteral(v.toDouble)
+      }
 
-  def doubleLiteral[_: P]: P[DoubleLiteral] =
-    P(CharsWhileIn("0123456789.eE+\\-").!) filter (v => isDoubleLiteral(v)) map { v =>
-      DoubleLiteral(v.toDouble)
-    }
+  val numericLiteral: P[NumericLiteral] = P.oneOf(integerLiteral :: decimalLiteral :: doubleLiteral :: Nil)
 
   // NCNames and EQNames
 
-  def ncName[_: P]: P[NCName] = NCNames.ncName
+  val ncName: P[NCName] = NCNames.ncName
 
-  def eqName[_: P]: P[EQName] = EQNames.eqName
+  val eqName: P[EQName] = EQNames.eqName
 
   // "Keywords"
 
-  def ancestorWord[_: P]: P[Unit] = parseWord("ancestor")
+  val ancestorWord: P[Unit] = parseWord("ancestor")
 
-  def ancestorOrSelfWord[_: P]: P[Unit] = parseWord("ancestor-or-self")
+  val ancestorOrSelfWord: P[Unit] = parseWord("ancestor-or-self")
 
-  def andWord[_: P]: P[Unit] = parseWord("and")
+  val andWord: P[Unit] = parseWord("and")
 
-  def arrayWord[_: P]: P[Unit] = parseWord("array")
+  val arrayWord: P[Unit] = parseWord("array")
 
-  def asWord[_: P]: P[Unit] = parseWord("as")
+  val asWord: P[Unit] = parseWord("as")
 
-  def attributeWord[_: P]: P[Unit] = parseWord("attribute")
+  val attributeWord: P[Unit] = parseWord("attribute")
 
-  def castWord[_: P]: P[Unit] = parseWord("cast")
+  val castWord: P[Unit] = parseWord("cast")
 
-  def castableWord[_: P]: P[Unit] = parseWord("castable")
+  val castableWord: P[Unit] = parseWord("castable")
 
-  def childWord[_: P]: P[Unit] = parseWord("child")
+  val childWord: P[Unit] = parseWord("child")
 
-  def commentWord[_: P]: P[Unit] = parseWord("comment")
+  val commentWord: P[Unit] = parseWord("comment")
 
-  def descendantWord[_: P]: P[Unit] = parseWord("descendant")
+  val descendantWord: P[Unit] = parseWord("descendant")
 
-  def descendantOrSelfWord[_: P]: P[Unit] = parseWord("descendant-or-self")
+  val descendantOrSelfWord: P[Unit] = parseWord("descendant-or-self")
 
-  def divWord[_: P]: P[Unit] = parseWord("div")
+  val divWord: P[Unit] = parseWord("div")
 
-  def documentNodeWord[_: P]: P[Unit] = parseWord("document-node")
+  val documentNodeWord: P[Unit] = parseWord("document-node")
 
-  def elementWord[_: P]: P[Unit] = parseWord("element")
+  val elementWord: P[Unit] = parseWord("element")
 
-  def elseWord[_: P]: P[Unit] = parseWord("else")
+  val elseWord: P[Unit] = parseWord("else")
 
-  def emptySequenceWord[_: P]: P[Unit] = parseWord("empty-sequence")
+  val emptySequenceWord: P[Unit] = parseWord("empty-sequence")
 
-  def eqWord[_: P]: P[Unit] = parseWord("eq")
+  val eqWord: P[Unit] = parseWord("eq")
 
-  def everyWord[_: P]: P[Unit] = parseWord("every")
+  val everyWord: P[Unit] = parseWord("every")
 
-  def exceptWord[_: P]: P[Unit] = parseWord("except")
+  val exceptWord: P[Unit] = parseWord("except")
 
-  def followingWord[_: P]: P[Unit] = parseWord("following")
+  val followingWord: P[Unit] = parseWord("following")
 
-  def followingSiblingWord[_: P]: P[Unit] = parseWord("following-sibling")
+  val followingSiblingWord: P[Unit] = parseWord("following-sibling")
 
-  def forWord[_: P]: P[Unit] = parseWord("for")
+  val forWord: P[Unit] = parseWord("for")
 
-  def functionWord[_: P]: P[Unit] = parseWord("function")
+  val functionWord: P[Unit] = parseWord("function")
 
-  def geWord[_: P]: P[Unit] = parseWord("ge")
+  val geWord: P[Unit] = parseWord("ge")
 
-  def gtWord[_: P]: P[Unit] = parseWord("gt")
+  val gtWord: P[Unit] = parseWord("gt")
 
-  def idivWord[_: P]: P[Unit] = parseWord("idiv")
+  val idivWord: P[Unit] = parseWord("idiv")
 
-  def ifWord[_: P]: P[Unit] = parseWord("if")
+  val ifWord: P[Unit] = parseWord("if")
 
-  def inWord[_: P]: P[Unit] = parseWord("in")
+  val inWord: P[Unit] = parseWord("in")
 
-  def instanceWord[_: P]: P[Unit] = parseWord("instance")
+  val instanceWord: P[Unit] = parseWord("instance")
 
-  def intersectWord[_: P]: P[Unit] = parseWord("intersect")
+  val intersectWord: P[Unit] = parseWord("intersect")
 
-  def isWord[_: P]: P[Unit] = parseWord("is")
+  val isWord: P[Unit] = parseWord("is")
 
-  def itemWord[_: P]: P[Unit] = parseWord("item")
+  val itemWord: P[Unit] = parseWord("item")
 
-  def leWord[_: P]: P[Unit] = parseWord("le")
+  val leWord: P[Unit] = parseWord("le")
 
-  def letWord[_: P]: P[Unit] = parseWord("let")
+  val letWord: P[Unit] = parseWord("let")
 
-  def ltWord[_: P]: P[Unit] = parseWord("lt")
+  val ltWord: P[Unit] = parseWord("lt")
 
-  def mapWord[_: P]: P[Unit] = parseWord("map")
+  val mapWord: P[Unit] = parseWord("map")
 
-  def modWord[_: P]: P[Unit] = parseWord("mod")
+  val modWord: P[Unit] = parseWord("mod")
 
-  def namespaceWord[_: P]: P[Unit] = parseWord("namespace")
+  val namespaceWord: P[Unit] = parseWord("namespace")
 
-  def namespaceNodeWord[_: P]: P[Unit] = parseWord("namespace-node")
+  val namespaceNodeWord: P[Unit] = parseWord("namespace-node")
 
-  def neWord[_: P]: P[Unit] = parseWord("ne")
+  val neWord: P[Unit] = parseWord("ne")
 
-  def nodeWord[_: P]: P[Unit] = parseWord("node")
+  val nodeWord: P[Unit] = parseWord("node")
 
-  def ofWord[_: P]: P[Unit] = parseWord("of")
+  val ofWord: P[Unit] = parseWord("of")
 
-  def orWord[_: P]: P[Unit] = parseWord("or")
+  val orWord: P[Unit] = parseWord("or")
 
-  def parentWord[_: P]: P[Unit] = parseWord("parent")
+  val parentWord: P[Unit] = parseWord("parent")
 
-  def precedingWord[_: P]: P[Unit] = parseWord("preceding")
+  val precedingWord: P[Unit] = parseWord("preceding")
 
-  def precedingSiblingWord[_: P]: P[Unit] = parseWord("preceding-sibling")
+  val precedingSiblingWord: P[Unit] = parseWord("preceding-sibling")
 
-  def processingInstructionWord[_: P]: P[Unit] = parseWord("processing-instruction")
+  val processingInstructionWord: P[Unit] = parseWord("processing-instruction")
 
-  def returnWord[_: P]: P[Unit] = parseWord("return")
+  val returnWord: P[Unit] = parseWord("return")
 
-  def satisfiesWord[_: P]: P[Unit] = parseWord("satisfies")
+  val satisfiesWord: P[Unit] = parseWord("satisfies")
 
-  def schemaAttributeWord[_: P]: P[Unit] = parseWord("schema-attribute")
+  val schemaAttributeWord: P[Unit] = parseWord("schema-attribute")
 
-  def schemaElementWord[_: P]: P[Unit] = parseWord("schema-element")
+  val schemaElementWord: P[Unit] = parseWord("schema-element")
 
-  def selfWord[_: P]: P[Unit] = parseWord("self")
+  val selfWord: P[Unit] = parseWord("self")
 
-  def someWord[_: P]: P[Unit] = parseWord("some")
+  val someWord: P[Unit] = parseWord("some")
 
-  def textWord[_: P]: P[Unit] = parseWord("text")
+  val textWord: P[Unit] = parseWord("text")
 
-  def thenWord[_: P]: P[Unit] = parseWord("then")
+  val thenWord: P[Unit] = parseWord("then")
 
-  def toWord[_: P]: P[Unit] = parseWord("to")
+  val toWord: P[Unit] = parseWord("to")
 
-  def treatWord[_: P]: P[Unit] = parseWord("treat")
+  val treatWord: P[Unit] = parseWord("treat")
 
-  def unionWord[_: P]: P[Unit] = parseWord("union")
+  val unionWord: P[Unit] = parseWord("union")
 
   private def isIntegerLiteral(s: String): Boolean = {
     s.nonEmpty && s.forall(c => java.lang.Character.isDigit(c))
@@ -189,8 +207,8 @@ object NonDelimitingTerminals {
     // and context item expressions and abbreviated reverse steps on the other hand!
 
     s.nonEmpty && (s.count(_ == '.') == 1) &&
-      s.exists(c => java.lang.Character.isDigit(c)) &&
-      s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
+    s.exists(c => java.lang.Character.isDigit(c)) &&
+    s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
   }
 
   private def isDoubleLiteral(s: String): Boolean = {
@@ -203,14 +221,5 @@ object NonDelimitingTerminals {
 
       (isIntegerLiteral(base) || isDecimalLiteral(base)) && isIntegerLiteral(expWithoutSign)
     }
-  }
-
-  // TODO Is this a correct symbol separator, or should we look at whitespace and comments instead?
-
-  private def symbolSeparator[_: P]: P[Unit] =
-    P(End | CharPred(c => !NCName.canBePartOfNCName(c)))
-
-  def parseWord[_: P](s: String): P[Unit] = {
-    P(s ~ &(symbolSeparator))
   }
 }

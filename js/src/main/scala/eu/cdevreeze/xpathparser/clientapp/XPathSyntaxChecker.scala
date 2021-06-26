@@ -32,7 +32,7 @@ import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.XPathExpr
 import eu.cdevreeze.xpathparser.parse.XPathParser
 import eu.cdevreeze.xpathparser.util.VariableBindingUtil
-import fastparse._
+import cats.parse.{Parser => P}
 
 /**
  * Program that checks the syntax of an XPath expression, showing if it can be successfully parsed.
@@ -50,11 +50,11 @@ object XPathSyntaxChecker {
 
   @JSExport("checkSyntax")
   def checkSyntax(xpathString: String): Unit = {
-    val parseResult: Parsed[XPathExpr] = parse(xpathString, XPathParser.xpathExpr(_))
+    val parseResult: Either[P.Error, XPathExpr] = XPathParser.xpathExpr.parseAll(xpathString)
 
-    parseResult.fold(
-      (label, index, extra) => showFailure(parseResult.asInstanceOf[Parsed.Failure]),
-      (value, index) => showSuccess(parseResult.asInstanceOf[Parsed.Success[XPathExpr]]))
+    parseResult.fold({ case parseError @ P.Error(offset, expectations) => showFailure(parseError) }, { xpathExpr =>
+      showSuccess(xpathExpr)
+    })
   }
 
   @JSExport("clear")
@@ -78,7 +78,7 @@ object XPathSyntaxChecker {
     xpathTextArea.style.color = "black"
   }
 
-  private def showSuccess(parseResult: Parsed.Success[XPathExpr]): Unit = {
+  private def showSuccess(xpathExpr: XPathExpr): Unit = {
     xpathTextArea.style.color = "green"
 
     val freeVariablesUList = getFreeVariablesUList()
@@ -89,9 +89,9 @@ object XPathSyntaxChecker {
     boundVariablesUList.innerHTML = ""
     calledFunctionsUList.innerHTML = ""
 
-    val freeVariables = VariableBindingUtil.findAllFreeVariables(parseResult.value)
-    val boundVariables = VariableBindingUtil.findAllBoundVariables(parseResult.value)
-    val calledFunctions = parseResult.value.findAllElemsOrSelfOfType(classTag[FunctionCall])
+    val freeVariables = VariableBindingUtil.findAllFreeVariables(xpathExpr)
+    val boundVariables = VariableBindingUtil.findAllBoundVariables(xpathExpr)
+    val calledFunctions = xpathExpr.findAllElemsOrSelfOfType(classTag[FunctionCall])
 
     freeVariables.map(_.varName).distinct.foreach { freeVar =>
       addNewReadonlyListItem(freeVariablesUList, freeVar.toString, liCls)
@@ -107,13 +107,13 @@ object XPathSyntaxChecker {
 
     val codeElement = getAstPreElement().firstElementChild
 
-    val codeString: String = pprint.apply(parseResult.value, height = 2000).plainText
+    val codeString: String = pprint.apply(xpathExpr, height = 2000).plainText
 
     codeElement.innerHTML = ""
     addCodeString(codeElement, "\n" + codeString)
   }
 
-  private def showFailure(parseResult: Parsed.Failure): Unit = {
+  private def showFailure(parseError: P.Error): Unit = {
     xpathTextArea.style.color = "red"
 
     val freeVariablesUList = getFreeVariablesUList()
