@@ -537,6 +537,8 @@ class ParseXPathTest extends AnyFunSuite {
   test("testSimplePathExprWithEscapeInStringLiteral") {
     // Example from https://en.wikibooks.org/wiki/XQuery/XPath_examples, but adapted
 
+    // TODO Fix string literal parsing, where string literal has escaped apostroph at the end
+
     val exprString = "$books//book[contains(description, 'A ''fine book''')]/title/text()"
 
     val parseResult = xpathExpr.parseAll(exprString)
@@ -631,6 +633,8 @@ class ParseXPathTest extends AnyFunSuite {
     val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
+
+    // TODO Fix. Number 5 now recognized as second term in addition instead of part of the treat expression.
 
     assertResult(1) {
       parseResult.getOrElse(throwNoExpr()).findAllElemsOfType(classTag[OneOrMoreSequenceType]).size
@@ -849,6 +853,8 @@ class ParseXPathTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
+    // TODO Fix. Now the letter "Q" is considered a simple name test, and the rest is ignored.
+
     assertResult(1) {
       parseResult.getOrElse(throwNoExpr()).findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
     }
@@ -869,6 +875,8 @@ class ParseXPathTest extends AnyFunSuite {
     val parseResult = xpathExpr.parseAll(exprString)
 
     assertSuccess(parseResult)
+
+    // TODO Fix. The letter "Q" is recognized as a simple name test, and the rest cannot be parsed.
 
     assertResult(1) {
       parseResult.getOrElse(throwNoExpr()).findAllElemsOrSelfOfType(classTag[NamespaceWildcard]).size
@@ -1207,6 +1215,8 @@ class ParseXPathTest extends AnyFunSuite {
 
     val parseResult = xpathExpr.parseAll(exprString)
 
+    // TODO Fix. Again, "Q" is considered a simple name test, and parsing stops.
+
     assertSuccess(parseResult)
 
     assertResult(1) {
@@ -1230,6 +1240,8 @@ class ParseXPathTest extends AnyFunSuite {
       """(//Q{http://www.example.com/AuctionWatch}Start)[1]/namespace::Q{http://www.example.com/customnamespace}*/string()"""
 
     val parseResult = xpathExpr.parseAll(exprString)
+
+    // TODO Fix. Again parsing stops at the "simple name test" for letter "Q".
 
     assertSuccess(parseResult)
 
