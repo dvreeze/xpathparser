@@ -186,25 +186,25 @@ object XPathElemParser {
   }
 
   def instanceOfExpr: P[InstanceOfExpr] = P.defer {
-    (treatExpr.skipWS.soft ~ ((NDT.instanceWord.skipWS ~ NDT.ofWord).skipWS *> sequenceType.skipWS).?).map {
+    (treatExpr.skipWS.soft ~ ((NDT.instanceWord.skipWS.soft ~ NDT.ofWord.skipWS) *> sequenceType.skipWS).?).map {
       case (expr, tpeOption) => InstanceOfExpr(expr, tpeOption)
     }
   }
 
   def treatExpr: P[TreatExpr] = P.defer {
-    (castableExpr.skipWS.soft ~ ((NDT.treatWord.skipWS ~ NDT.asWord).skipWS *> sequenceType.skipWS).?).map {
+    (castableExpr.skipWS.soft ~ ((NDT.treatWord.skipWS.soft ~ NDT.asWord.skipWS) *> sequenceType.skipWS).?).map {
       case (expr, tpeOption) => TreatExpr(expr, tpeOption)
     }
   }
 
   def castableExpr: P[CastableExpr] = P.defer {
-    (castExpr.skipWS.soft ~ ((NDT.castableWord.skipWS ~ NDT.asWord).skipWS *> singleType.skipWS).?).map {
+    (castExpr.skipWS.soft ~ ((NDT.castableWord.skipWS.soft ~ NDT.asWord.skipWS) *> singleType.skipWS).?).map {
       case (expr, tpeOption) => CastableExpr(expr, tpeOption)
     }
   }
 
   def castExpr: P[CastExpr] = P.defer {
-    (arrowExpr.skipWS.soft ~ ((NDT.castWord.skipWS ~ NDT.asWord).skipWS *> singleType.skipWS).?).map {
+    (arrowExpr.skipWS.soft ~ ((NDT.castWord.skipWS.soft ~ NDT.asWord.skipWS) *> singleType.skipWS).?).map {
       case (expr, tpeOption) => CastExpr(expr, tpeOption)
     }
   }

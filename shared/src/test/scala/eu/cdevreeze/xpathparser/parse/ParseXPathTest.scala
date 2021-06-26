@@ -30,6 +30,7 @@ import eu.cdevreeze.xpathparser.ast.CompoundArrowExpr
 import eu.cdevreeze.xpathparser.ast.ContextItemExpr
 import eu.cdevreeze.xpathparser.ast.CurlyArrayConstructor
 import eu.cdevreeze.xpathparser.ast.EQName
+import eu.cdevreeze.xpathparser.ast.Expr
 import eu.cdevreeze.xpathparser.ast.ExprSingle
 import eu.cdevreeze.xpathparser.ast.ForExpr
 import eu.cdevreeze.xpathparser.ast.ForwardAxis
@@ -151,9 +152,9 @@ class ParseXPathTest extends AnyFunSuite {
 
     assertFailure(parseResult)
 
-    val partialParseResult = expr.parseAll(exprString)
+    val partialParseResult = expr.parse(exprString)
 
-    assertSuccess(partialParseResult)
+    assertSuccessInitialParse(partialParseResult)
   }
 
   test("testParseIfExprWithFunctionCalls") {
@@ -1278,6 +1279,12 @@ class ParseXPathTest extends AnyFunSuite {
   private def assertFailure(parseResult: Either[P.Error, XPathExpr]): Unit = {
     assertResult(true, parseResult) {
       parseResult.isLeft
+    }
+  }
+
+  private def assertSuccessInitialParse(parseResult: Either[P.Error, (String, Expr)]): Unit = {
+    assertResult(true, parseResult) {
+      parseResult.isRight
     }
   }
 }
