@@ -552,8 +552,6 @@ class ParseXPathTest extends AnyFunSuite {
   test("testSimplePathExprWithEscapeInStringLiteral") {
     // Example from https://en.wikibooks.org/wiki/XQuery/XPath_examples, but adapted
 
-    // TODO Fix string literal parsing, where string literal has escaped apostroph at the end
-
     val exprString = "$books//book[contains(description, 'A ''fine book''')]/title/text()"
 
     val parseResult = xpathExpr.parseAll(exprString)

@@ -21,6 +21,8 @@ import eu.cdevreeze.xpathparser.ast.StringLiteral
 import cats.parse.Accumulator0._
 import cats.parse.{Parser => P}
 
+import scala.util.chaining._
+
 /**
  * Delimiting terminal symbols. No whitespace is skipped during this tokenization.
  * Lookahead is applied when needed to distinguish between different terminal symbols starting with
@@ -152,49 +154,44 @@ object DelimitingTerminals {
     private val apos: P[String] = P.charWhere(isApos).string
     private val quote: P[String] = P.charWhere(isQuote).string
 
-    private val endApos: P[Unit] = P.defer {
-      (apos.soft ~ apos.unary_!).void
-    }
-
-    private val endQuote: P[Unit] = P.defer {
-      (quote.soft ~ quote.unary_!).void
-    }
-
     // Note the heavy use of backtracking here, if escaped aps/quote is found. I did not get a better alternative without backtracking working.
 
-    private val aposStringLiteralWithEscaping: P[StringLiteral] = P.defer {
-      (P.charsWhile0(isNotApos).soft.with1 ~
-        (P.charsWhile(isApos).filter(_.size % 2 == 0).backtrack.soft ~ P.charsWhile0(isNotApos)).rep).string.map { v =>
-        // Why do we still need the "unescaping" here?
-
-        StringLiteral(v.mkString.replace("''", "'"))
+    private val aposStringLiteralContent: P[String] = P.defer {
+      ((P
+        .charsWhile0(isNotApos)
+        .soft
+        .with1 ~ P.charsWhile(isApos).filter(_.size % 2 == 0).backtrack).rep0.string.soft.with1 ~
+        (P.charsWhile0(isNotApos).soft.with1 ~ P.charsWhile(isApos).filter(_.size % 2 != 0).backtrack)).map {
+        case (parts: String, (lastNonAposPart: String, endAposes: String)) =>
+          parts.concat(lastNonAposPart).concat(endAposes.ensuring(_.endsWith("'")).init).pipe { v =>
+            v.replace("''", "'")
+          }
       }
     }
 
     private val aposStringLiteral: P[StringLiteral] = P.defer {
-      P.oneOf(
-        ((apos.soft *> P.charsWhile0(isNotApos).map(StringLiteral(_))).soft <* endApos) ::
-          ((apos.soft *> aposStringLiteralWithEscaping).soft <* endApos) ::
-          Nil
-      )
+      (apos.soft *> aposStringLiteralContent).map { v =>
+        StringLiteral(v)
+      }
     }
 
-    private val quoteStringLiteralWithEscaping: P[StringLiteral] = P.defer {
-      (P.charsWhile0(isNotQuote).soft.with1 ~
-        (P.charsWhile(isQuote).filter(_.size % 2 == 0).backtrack.soft ~ P.charsWhile0(isNotQuote)).rep).string.map {
-        v =>
-          // Why do we still need the "unescaping" here?
-
-          StringLiteral(v.mkString.replace("\"\"", "\""))
+    private val quoteStringLiteralContent: P[String] = P.defer {
+      ((P
+        .charsWhile0(isNotQuote)
+        .soft
+        .with1 ~ P.charsWhile(isQuote).filter(_.size % 2 == 0).backtrack).rep0.string.soft.with1 ~
+        (P.charsWhile0(isNotQuote).soft.with1 ~ P.charsWhile(isQuote).filter(_.size % 2 != 0).backtrack)).map {
+        case (parts: String, (lastNonQuotePart: String, endQuotes: String)) =>
+          parts.concat(lastNonQuotePart).concat(endQuotes.ensuring(_.endsWith("\"")).init).pipe { v =>
+            v.replace("\"\"", "\"")
+          }
       }
     }
 
     private val quoteStringLiteral: P[StringLiteral] = P.defer {
-      P.oneOf(
-        ((quote.soft *> P.charsWhile0(isNotQuote).map(StringLiteral(_))).soft <* endQuote) ::
-          ((quote.soft *> quoteStringLiteralWithEscaping).soft <* endQuote) ::
-          Nil
-      )
+      (quote.soft *> quoteStringLiteralContent).map { v =>
+        StringLiteral(v)
+      }
     }
 
     val stringLiteral: P[StringLiteral] =
