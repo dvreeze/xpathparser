@@ -156,14 +156,18 @@ object DelimitingTerminals {
 
     // Note the heavy use of backtracking here, if escaped aps/quote is found. I did not get a better alternative without backtracking working.
 
+    private def aposStringLiteralPart(oddAposCountAtEnd: Boolean): P[String] = {
+      val p: Int => Boolean = { n =>
+        if (oddAposCountAtEnd) (n % 2 != 0) else (n % 2 == 0)
+      }
+
+      (P.charsWhile0(isNotApos).soft.with1 ~ (P.charsWhile(isApos).filter(s => p(s.size)).backtrack)).string
+    }
+
     private val aposStringLiteralContent: P[String] = P.defer {
-      ((P
-        .charsWhile0(isNotApos)
-        .soft
-        .with1 ~ P.charsWhile(isApos).filter(_.size % 2 == 0).backtrack).rep0.string.soft.with1 ~
-        (P.charsWhile0(isNotApos).soft.with1 ~ P.charsWhile(isApos).filter(_.size % 2 != 0).backtrack)).map {
-        case (parts: String, (lastNonAposPart: String, endAposes: String)) =>
-          parts.concat(lastNonAposPart).concat(endAposes.ensuring(_.endsWith("'")).init).pipe { v =>
+      (aposStringLiteralPart(false).rep0.soft.with1 ~ aposStringLiteralPart(true)).map {
+        case (initParts: Seq[String], lastPart: String) =>
+          initParts.mkString.concat(lastPart.ensuring(_.endsWith("'")).init).pipe { v =>
             v.replace("''", "'")
           }
       }
@@ -175,14 +179,18 @@ object DelimitingTerminals {
       }
     }
 
+    private def quoteStringLiteralPart(oddQuoteCountAtEnd: Boolean): P[String] = {
+      val p: Int => Boolean = { n =>
+        if (oddQuoteCountAtEnd) (n % 2 != 0) else (n % 2 == 0)
+      }
+
+      (P.charsWhile0(isNotQuote).soft.with1 ~ (P.charsWhile(isQuote).filter(s => p(s.size)).backtrack)).string
+    }
+
     private val quoteStringLiteralContent: P[String] = P.defer {
-      ((P
-        .charsWhile0(isNotQuote)
-        .soft
-        .with1 ~ P.charsWhile(isQuote).filter(_.size % 2 == 0).backtrack).rep0.string.soft.with1 ~
-        (P.charsWhile0(isNotQuote).soft.with1 ~ P.charsWhile(isQuote).filter(_.size % 2 != 0).backtrack)).map {
-        case (parts: String, (lastNonQuotePart: String, endQuotes: String)) =>
-          parts.concat(lastNonQuotePart).concat(endQuotes.ensuring(_.endsWith("\"")).init).pipe { v =>
+      (quoteStringLiteralPart(false).rep0.soft.with1 ~ quoteStringLiteralPart(true)).map {
+        case (initParts: Seq[String], lastPart: String) =>
+          initParts.mkString.concat(lastPart.ensuring(_.endsWith("\"")).init).pipe { v =>
             v.replace("\"\"", "\"")
           }
       }
