@@ -30,7 +30,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
   import eu.cdevreeze.xpathparser.parse.XPathParser.xpathExpr
 
-  private def throwParseError(): Nothing = sys.error(s"Could not parse input expression")
+  private def throwParseError(exprString: String): Nothing = sys.error(s"Could not parse input expression: $exprString")
 
   test("testPrefixesInSlash") {
     val exprString = "/"
@@ -39,7 +39,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set())
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set())
   }
 
   test("testPrefixesInSimplePathExpr") {
@@ -49,7 +49,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("p"))
   }
 
   test("testPrefixesInIfExprWithFunctionCalls") {
@@ -63,7 +63,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xff", "xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("xff", "xs"))
   }
 
   test("testPrefixesInSummation") {
@@ -77,7 +77,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set())
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set())
   }
 
   test("testPrefixesInIfExprWithFunctionCallsAndStringLiterals") {
@@ -91,10 +91,10 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xfi", "xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("xfi", "xs"))
 
     assertUsedPrefixesIncludingFromXsQName(
-      parseResult.getOrElse(throwParseError()),
+      parseResult.getOrElse(throwParseError(exprString)),
       Set("xfi", "xs", "venj-bw2-dim", "venj-bw2-dm"))
   }
 
@@ -109,7 +109,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("local"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("local"))
   }
 
   test("testPrefixesInNonTrivialForExpr") {
@@ -121,7 +121,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p", "fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("p", "fn"))
   }
 
   test("testPrefixesInLetExprWithFreeVars") {
@@ -135,7 +135,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("p1", "p2", "p3", "p4", "local"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("p1", "p2", "p3", "p4", "local"))
   }
 
   test("testPrefixesInExprWithBindingsDependingOnOtherBindings") {
@@ -151,7 +151,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("fn"))
   }
 
   test("testPrefixesInCastExpr") {
@@ -161,7 +161,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("xs"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("xs"))
   }
 
   test("testPrefixesInNamedFunctionRef") {
@@ -171,7 +171,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("fn"))
   }
 
   test("testPrefixesInSimpleNameTest") {
@@ -181,7 +181,7 @@ class EQNameUtilTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    assertUsedPrefixes(parseResult.getOrElse(throwParseError()), Set("fn", "p"))
+    assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("fn", "p"))
   }
 
   private def assertUsedPrefixes(expr: XPathExpr, expectedPrefixes: Set[String]): Unit = {
