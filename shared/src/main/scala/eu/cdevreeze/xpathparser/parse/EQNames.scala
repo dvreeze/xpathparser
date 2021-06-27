@@ -24,7 +24,7 @@ import cats.parse.{Parser => P}
  * EQName parsing support. Note that EQNames are non-delimiting terminal symbols.
  * No whitespace is skipped during parsing of an EQName.
  *
- * For re-usability without imposing any NoCut calls on using parsers, no cuts have been used.
+ * For re-usability without imposing any "NoCut" calls on using parsers, no "cuts" have been used.
  *
  * @author Chris de Vreeze
  */
@@ -33,7 +33,7 @@ object EQNames {
   private val DT = DelimitingTerminals
 
   val qName: P[EQName.QName] =
-    (NCNames.ncName.soft ~ (P.string(":").soft *> NCNames.ncName).?).map {
+    P.defer(NCNames.ncName.soft ~ (P.string(":").soft *> NCNames.ncName).?).map {
       case (s1, s2Opt) =>
         if (s2Opt.isEmpty) {
           EQName.QName.parse(s1.name)
@@ -43,12 +43,15 @@ object EQNames {
     }
 
   val uriQualifiedName: P[EQName.URIQualifiedName] =
-    (DT.bracedUriLiteral.soft ~ NCNames.ncName).map {
+    P.defer(DT.bracedUriLiteral.soft ~ NCNames.ncName).map {
       case (uriLit, localPart) =>
         EQName.URIQualifiedName(EName(uriLit.namespaceOption, localPart.name))
     }
 
-  // The order for parsing eqName matters, or else we would need a "negative lookahead" for "Q{".
+  // We could change the order of the 2 branches below, but I'd rather explicitly use a small lookahead.
+  // Moreover, this works better when distinguishing between name tests and wildcards (i.e. among node tests).
 
-  val eqName: P[EQName] = uriQualifiedName | qName
+  val eqName: P[EQName] = P.defer {
+    P.oneOf((P.string("Q{").unary_!.soft.with1 *> qName) :: uriQualifiedName :: Nil)
+  }
 }

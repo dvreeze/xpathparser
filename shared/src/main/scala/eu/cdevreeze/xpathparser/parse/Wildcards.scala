@@ -34,26 +34,26 @@ object Wildcards {
 
   private val DT = DelimitingTerminals
 
+  // Note the arbitrary order of parser value definitions below (due to deferred evaluation)
+
+  val wildcard: P[Wildcard] =
+    P.defer(P.oneOf(prefixWildcard :: localNameWildcard :: namespaceWildcard :: anyWildcard :: Nil))
+
   val prefixWildcard: P[PrefixWildcard] =
-    (NCNames.ncName.soft <* DT.colonAsterisk).map { nm =>
+    P.defer(NCNames.ncName.soft <* DT.colonAsterisk).map { nm =>
       PrefixWildcard(nm)
     }
 
   val localNameWildcard: P[LocalNameWildcard] =
-    (DT.asteriskColon.soft *> NCNames.ncName).map { nm =>
+    P.defer(DT.asteriskColon.soft *> NCNames.ncName).map { nm =>
       LocalNameWildcard(nm)
     }
 
   val namespaceWildcard: P[NamespaceWildcard] =
-    (DT.bracedUriLiteral.soft <* DT.asterisk).map { uriLit =>
+    P.defer(DT.bracedUriLiteral.soft <* DT.asterisk).map { uriLit =>
       NamespaceWildcard(uriLit)
     }
 
   val anyWildcard: P[AnyWildcard.type] =
-    DT.asterisk.as(AnyWildcard)
-
-  // Mind the order of parsing, trying to match AnyWildcard only at the end
-
-  val wildcard: P[Wildcard] =
-    P.defer(P.oneOf(prefixWildcard :: localNameWildcard :: namespaceWildcard :: anyWildcard :: Nil))
+    P.defer(DT.asterisk).as(AnyWildcard)
 }

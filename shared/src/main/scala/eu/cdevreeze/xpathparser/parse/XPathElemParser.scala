@@ -50,7 +50,9 @@ object XPathElemParser {
 
   // TODO Rethink whitespace (multi/single-line, comments etc.)
 
-  // Note that with deferred evaluation, we can define the parsers as values instead of functions.
+  // Note that with deferred evaluation, we can define the parsers as values instead of functions,
+  // without worrying about the order of these parser definitions in the source file. More importantly,
+  // deferred evaluation allows us to define recursive parsers.
 
   val expr: P[Expr] = P.defer {
     exprSingle.skipWS.repSep(min = 1, sep = DT.comma.skipWS).map { exprs =>
@@ -685,7 +687,10 @@ object XPathElemParser {
   // See xgc:reserved-function-names
 
   val namedFunctionRef: P[NamedFunctionRef] = P.defer {
-    ((eqName.skipWS.filter(nm => !ReservedFunctionNames.contains(nm)).backtrack.soft <* DT.hash.skipWS).soft ~ integerLiteral)
+    ((eqName.skipWS
+      .filter(nm => !ReservedFunctionNames.contains(nm))
+      .backtrack
+      .soft <* DT.hash.skipWS).soft ~ integerLiteral)
       .map {
         case (name, arity) => NamedFunctionRef(name, arity.value)
       }
@@ -716,10 +721,10 @@ object XPathElemParser {
     P.defer(squareArrayConstructor | curlyArrayConstructor)
 
   val squareArrayConstructor: P[SquareArrayConstructor] = P.defer {
-    ((DT.openBracket.skipWS.soft *> exprSingle.skipWS.repSep0(sep = DT.comma.skipWS)).soft <* DT.closeBracket.skipWS).map {
-      members =>
+    ((DT.openBracket.skipWS.soft *> exprSingle.skipWS.repSep0(sep = DT.comma.skipWS)).soft <* DT.closeBracket.skipWS)
+      .map { members =>
         SquareArrayConstructor(members.toIndexedSeq)
-    }
+      }
   }
 
   val curlyArrayConstructor: P[CurlyArrayConstructor] = P.defer {
@@ -739,7 +744,8 @@ object XPathElemParser {
   val sequenceType: P[SequenceType] = P.defer(emptySequenceType | nonEmptySequenceType)
 
   val emptySequenceType: P[EmptySequenceType.type] = P.defer {
-    ((NDT.emptySequenceWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft ~ DT.closeParenthesis.skipWS).as(EmptySequenceType)
+    ((NDT.emptySequenceWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft ~ DT.closeParenthesis.skipWS)
+      .as(EmptySequenceType)
   }
 
   // TODO xgc:occurrence-indicators
@@ -774,9 +780,10 @@ object XPathElemParser {
 
   val typedFunctionTest: P[TypedFunctionTest] = P.defer {
     (((NDT.functionWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> sequenceType.skipWS
-      .repSep0(sep = DT.comma.skipWS) <* DT.closeParenthesis.skipWS).soft ~ (NDT.asWord.skipWS.soft *> sequenceType.skipWS)).map {
-      case (parTpes, resultTpe) => TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
-    }
+      .repSep0(sep = DT.comma.skipWS) <* DT.closeParenthesis.skipWS).soft ~ (NDT.asWord.skipWS.soft *> sequenceType.skipWS))
+      .map {
+        case (parTpes, resultTpe) => TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
+      }
   }
 
   val atomicOrUnionType: P[AtomicOrUnionType] =
