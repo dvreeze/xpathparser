@@ -64,9 +64,9 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
 
-    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
+    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
 
-    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.1")
   )
   .jsSettings(
     // Do we need this jsEnv?
@@ -90,9 +90,9 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
 
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6"
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6",
 
-    // mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.1")
   )
 
 lazy val xpathparserJVM = xpathparser.jvm

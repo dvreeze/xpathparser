@@ -8,17 +8,15 @@
 // It creates an output property file with test XPath expressions that must be successfully parsed (at
 // least). The keys are the test case names.
 
-// Taking yaidom version 1.10.1
+// Taking yaidom version 1.13.0
 
-import $ivy.`eu.cdevreeze.yaidom::yaidom:1.10.1`
+import $ivy.`eu.cdevreeze.yaidom::yaidom:1.13.0`
 
 // Imports that (must) remain available after this initialization script
 
 import java.net.URI
 import java.io._
 import java.util.Properties
-
-import scala.collection.immutable
 
 import eu.cdevreeze.yaidom.core._
 import eu.cdevreeze.yaidom._

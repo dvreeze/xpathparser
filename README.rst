@@ -9,8 +9,12 @@ early stage.
 At this point only the AST that results from parsing can be queried. This AST has no knowledge other than the
 structure of the parsed XPath expression.
 
-This XPath parser makes use of the excellent `FastParse`_ library for the generation of the XPath parser.
+This XPath parser makes use of the excellent `cats-parse`_ library for the generation of the XPath parser.
+
+Older versions of this project (before 0.7.0) used the also excellent `FastParse`_ library. Support for Scala 3 was the reason
+to move to cats-parse. Increased type safety and opt-in backtracking were other reasons for this move.
 
 XPath 3.1 is the supported XPath version.
 
+.. _`cats-parse`: https://github.com/typelevel/cats-parse
 .. _`FastParse`: http://www.lihaoyi.com/fastparse/
