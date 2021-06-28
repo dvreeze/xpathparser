@@ -750,14 +750,20 @@ object XPathElemParser {
 
   // TODO xgc:occurrence-indicators
 
-  val nonEmptySequenceType: P[SequenceType] =
-    P.defer(itemType.skipWS.soft ~ (DT.questionMark | DT.asterisk | DT.plus).skipWS.string.?).map {
-      case (tpe, None)      => ExactlyOneSequenceType(tpe)
-      case (tpe, Some("?")) => ZeroOrOneSequenceType(tpe)
-      case (tpe, Some("*")) => ZeroOrMoreSequenceType(tpe)
-      case (tpe, Some("+")) => OneOrMoreSequenceType(tpe)
-      case _                => EmptySequenceType
-    }
+  // At first I tried to work with: P.defer(itemType.skipWS.soft ~ (DT.questionMark | DT.asterisk | DT.plus).skipWS.string.?)
+  // This turned out to not bind the optional occurrence indicator aggressively enough. As a consequence, in expression
+  // "4 treat as item() + - 5", the parser discarded the plus sign as occurrence indicator. Hence this use of P.oneOf,
+  // where the alternative without occurrence indicator is mentioned last.
+
+  val nonEmptySequenceType: P[SequenceType] = P.defer {
+    P.oneOf(
+      (itemType.skipWS.soft <* DT.questionMark.skipWS).map(tpe => ZeroOrOneSequenceType(tpe)) ::
+        (itemType.skipWS.soft <* DT.asterisk.skipWS).map(tpe => ZeroOrMoreSequenceType(tpe)) ::
+        (itemType.skipWS.soft <* DT.plus.skipWS).map(tpe => OneOrMoreSequenceType(tpe)) ::
+        itemType.skipWS.map(tpe => ExactlyOneSequenceType(tpe)) ::
+        Nil
+    )
+  }
 
   val itemType: P[ItemType] = P.defer {
     P.oneOf(

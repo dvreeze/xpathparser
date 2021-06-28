@@ -657,8 +657,6 @@ class ParseXPathTest extends AnyFunSuite {
 
     assertSuccess(parseResult)
 
-    // TODO Fix. Number 5 now recognized as second term in addition instead of part of the treat expression.
-
     assertResult(1) {
       parseResult.getOrElse(throwParseError(exprString)).findAllElemsOfType(classTag[OneOrMoreSequenceType]).size
     }
