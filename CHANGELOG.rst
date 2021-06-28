@@ -3,6 +3,22 @@ CHANGELOG
 =========
 
 
+0.7.0
+=====
+
+This release drops support for Scala 2.12, does cross-compile to Scala 3 and 2.13.6, and uses cats-parse
+instead of FastParse. Note that FastParse uses macros and does not support Scala 3 (at the moment?).
+Also, cats-parse offers more type-safety, and uses opt-in instead of opt-out backtracking.
+
+With the use of cats-parse, cats-core is also a dependency. That came in handy, in order to use its
+non-empty collections in the AST classes, thus making them more type-safe.
+
+Due to the move from FastParse to cats-parse, there are too many breaking changes to mention.
+In other words, this release is not at all backwards compatible with previous releases.
+Having said that, most compilation errors when using release 0.7.0 instead of 0.6.1 should be
+relatively easy and quick to fix.
+
+
 0.6.1
 =====
 

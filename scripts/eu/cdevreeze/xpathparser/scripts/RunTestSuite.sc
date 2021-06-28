@@ -7,7 +7,7 @@
 
 // Taking xpathparser version 0.7.0
 
-import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.7.0-SNAPSHOT`
+import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.7.0`
 
 // Imports that (must) remain available after this initialization script
 
