@@ -17,4 +17,4 @@ to move to cats-parse. Increased type safety and opt-in backtracking were other 
 XPath 3.1 is the supported XPath version.
 
 .. _`cats-parse`: https://github.com/typelevel/cats-parse
-.. _`FastParse`: http://www.lihaoyi.com/fastparse/
+.. _`FastParse`: https://github.com/com-lihaoyi/fastparse
