@@ -13,7 +13,7 @@ val crossScalaVer = Seq(scalaVer, "2.13.6")
 
 ThisBuild / description  := "XPath parser and XPath AST API"
 ThisBuild / organization := "eu.cdevreeze.xpathparser"
-ThisBuild / version      := "0.7.0"
+ThisBuild / version      := "0.8.0-SNAPSHOT"
 
 ThisBuild / scalaVersion       := scalaVer
 ThisBuild / crossScalaVersions := crossScalaVer
