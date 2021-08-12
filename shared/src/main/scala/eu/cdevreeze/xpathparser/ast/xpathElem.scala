@@ -287,11 +287,11 @@ sealed trait SimpleAdditiveExpr extends AdditiveExpr
 
 final case class CompoundAdditiveExpr(
     firstMultiplicativeExpr: MultiplicativeExpr,
-    op: AdditionOp,
-    remainder: AdditiveExpr)
+    remainingAdditiveOpExprPairs: NonEmptyVector[(AdditionOp, AdditiveExpr)])
     extends AdditiveExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstMultiplicativeExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] =
+    firstMultiplicativeExpr +: remainingAdditiveOpExprPairs.toVector.flatMap { case (op, expr) => Seq(op, expr) }
 }
 
 object AdditiveExpr {
@@ -300,13 +300,9 @@ object AdditiveExpr {
       firstExpr: MultiplicativeExpr,
       operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr = {
 
-    if (operatorExprPairs.isEmpty) {
-      firstExpr
-    } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
-      // Recursive call
-      CompoundAdditiveExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
-    }
+    NonEmptyVector
+      .fromVector(operatorExprPairs.toVector)
+      .fold(firstExpr)(pairs => CompoundAdditiveExpr(firstExpr, pairs))
   }
 }
 
@@ -316,23 +312,19 @@ sealed trait SimpleMultiplicativeExpr extends MultiplicativeExpr
 
 final case class CompoundMultiplicativeExpr(
     firstUnionExpr: UnionExpr,
-    op: MultiplicativeOp,
-    remainder: MultiplicativeExpr)
+    remainingMultiplicativeOpExprPairs: NonEmptyVector[(MultiplicativeOp, MultiplicativeExpr)])
     extends MultiplicativeExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstUnionExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] =
+    firstUnionExpr +: remainingMultiplicativeOpExprPairs.toVector.flatMap { case (op, expr) => Seq(op, expr) }
 }
 
 object MultiplicativeExpr {
 
   def apply(firstExpr: UnionExpr, operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr = {
-    if (operatorExprPairs.isEmpty) {
-      firstExpr
-    } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
-      // Recursive call
-      CompoundMultiplicativeExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
-    }
+    NonEmptyVector
+      .fromVector(operatorExprPairs.toVector)
+      .fold(firstExpr)(pairs => CompoundMultiplicativeExpr(firstExpr, pairs))
   }
 }
 
