@@ -5,9 +5,9 @@
 // This script expects an input property file with test XPaths, like src/test/resources/testXPaths.
 // It then runs the tests, and shows which ones fail.
 
-// Taking xpathparser version 0.7.0
+// Taking xpathparser version 0.8.0
 
-import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.7.0`
+import $ivy.`eu.cdevreeze.xpathparser::xpathparser:0.8.0`
 
 // Imports that (must) remain available after this initialization script
 

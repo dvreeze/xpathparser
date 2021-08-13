@@ -13,9 +13,9 @@ install:
 matrix:
   include:
   - jdk: oraclejdk9
-    scala: 3.0.0
+    scala: 3.0.1
   - jdk: openjdk13
-    scala: 3.0.0
+    scala: 3.0.1
   - jdk: openjdk13
     scala: 2.13.6
 

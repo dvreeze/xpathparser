@@ -8,7 +8,7 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "3.0.0"
+val scalaVer = "3.0.1"
 val crossScalaVer = Seq(scalaVer, "2.13.6")
 
 ThisBuild / description  := "XPath parser and XPath AST API"
@@ -20,7 +20,7 @@ ThisBuild / crossScalaVersions := crossScalaVer
 
 ThisBuild / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
   case (Some((3, _))) =>
-    Seq("-unchecked", "-source:3.0-migration")
+    Seq("-unchecked", "-source:3.0-migration") // TODO -Xfatal-warnings, after migration
   case _ =>
     Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w", "-Ytasty-reader", "-Xsource:3")
 })
@@ -66,7 +66,7 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
 
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.1")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.7.0")
   )
   .jsSettings(
     // Do we need this jsEnv?
@@ -92,7 +92,7 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6",
 
-    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.1")
+    mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.7.0")
   )
 
 lazy val xpathparserJVM = xpathparser.jvm
