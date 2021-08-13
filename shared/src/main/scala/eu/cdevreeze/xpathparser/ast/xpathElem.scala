@@ -28,7 +28,7 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * <li>It is not annotated with more semantic information, like type information that is not included in the XPath expression</li>
  * <li>It does not know anything about the context in which it runs, like bound namespaces etc.</li>
  * <li>It is rich enough to be able to serialize the AST back to XPath, knowing exactly where to place parentheses, braces, etc.</li>
- * <li>It is rich enough to contain operator precedence in the AST itself</li>
+ * <li>It should help evaluation, so it should model operator associativity and precedence correctly, where feasible</li>
  * <li>It must be readable in that object composition trees are not unnecessarily deep and therefore hard to comprehend</li>
  * <li>Serialization of the AST to XPath may lead to differences in whitespace (and operator aliases), but other than that the result must be the same</li>
  * <li>The AST class hierarchy does not have to use the exact same names as the XPath grammar</li>
@@ -41,6 +41,11 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * has been used a lot (IS-A instead of HAS-A), and unnecessarily deep object trees are prevented in this way.
  *
  * Having such an AST of a successfully parsed XPath expression, it must be easy to reliably find used namespace prefixes, for example.
+ *
+ * The AST, as well as the parser, were developed using the XPath 3.1 specification as input. In particular, see
+ * https://www.w3.org/TR/xpath-31/#id-grammar and https://www.w3.org/TR/xpath-31/#id-precedence-order. Note that the grammar
+ * in isolation does not clearly convey left or right associativity of operators, so the extra information about operator
+ * precedence and associativity is essential for understanding the "structure" of compound expressions.
  *
  * TODO Improve several class names.
  *
@@ -109,6 +114,7 @@ final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
 
 /**
  * Expression, which is a sequence of 1 or more ExprSingle objects, separated by commas.
+ * The "comma" operator is associative, so the AST could have been left-associative or right-associative.
  */
 sealed trait Expr extends XPathExpr
 
@@ -176,6 +182,9 @@ final case class IfExpr(condition: Expr, thenExpr: ExprSingle, elseExpr: ExprSin
   def children: IndexedSeq[XPathElem] = IndexedSeq(condition, thenExpr, elseExpr)
 }
 
+/**
+ * Or-expression. The "or" operator is associative, so the AST could have been left-associative or right-associative.
+ */
 sealed trait OrExpr extends ExprSingle
 
 sealed trait SimpleOrExpr extends OrExpr
@@ -199,6 +208,9 @@ object OrExpr {
   }
 }
 
+/**
+ * And-expression. The "and" operator is associative, so the AST could have been left-associative or right-associative.
+ */
 sealed trait AndExpr extends SimpleOrExpr
 
 sealed trait SimpleAndExpr extends AndExpr
@@ -244,6 +256,7 @@ final case class CompoundComparisonExpr(
 
 /**
  * String concatenation expression, where the optional string concatenation uses the "||" operator.
+ * String concatenation is left-associative.
  */
 sealed trait StringConcatExpr extends SimpleComparisonExpr
 
@@ -281,17 +294,17 @@ final case class CompoundRangeExpr(additiveExpr1: AdditiveExpr, additiveExpr2: A
   def children: IndexedSeq[XPathElem] = IndexedSeq(additiveExpr1, additiveExpr2)
 }
 
+/**
+ * Additive expression. Addition/subtraction is left-associative.
+ */
 sealed trait AdditiveExpr extends SimpleRangeExpr
 
 sealed trait SimpleAdditiveExpr extends AdditiveExpr
 
-final case class CompoundAdditiveExpr(
-    firstMultiplicativeExpr: MultiplicativeExpr,
-    op: AdditionOp,
-    remainder: AdditiveExpr)
+final case class CompoundAdditiveExpr(init: AdditiveExpr, op: AdditionOp, lastMultiplicativeExpr: MultiplicativeExpr)
     extends AdditiveExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstMultiplicativeExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastMultiplicativeExpr)
 }
 
 object AdditiveExpr {
@@ -303,24 +316,24 @@ object AdditiveExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
+      val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
-      CompoundAdditiveExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
+      CompoundAdditiveExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
     }
   }
 }
 
+/**
+ * Multiplicative expression. The corresponding multiplication/division operators are left-associative.
+ */
 sealed trait MultiplicativeExpr extends SimpleAdditiveExpr
 
 sealed trait SimpleMultiplicativeExpr extends MultiplicativeExpr
 
-final case class CompoundMultiplicativeExpr(
-    firstUnionExpr: UnionExpr,
-    op: MultiplicativeOp,
-    remainder: MultiplicativeExpr)
+final case class CompoundMultiplicativeExpr(init: MultiplicativeExpr, op: MultiplicativeOp, lastUnionExpr: UnionExpr)
     extends MultiplicativeExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstUnionExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastUnionExpr)
 }
 
 object MultiplicativeExpr {
@@ -329,15 +342,16 @@ object MultiplicativeExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
+      val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
-      CompoundMultiplicativeExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
+      CompoundMultiplicativeExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
     }
   }
 }
 
 /**
  * Union expression, where the optional union uses operator "union" or "|".
+ * The union operator is associative, so the AST could have been left-associative or right-associative.
  */
 sealed trait UnionExpr extends SimpleMultiplicativeExpr
 
@@ -367,19 +381,19 @@ object UnionExpr {
 }
 
 /**
- * Intersect or except expression, optionally using the "intersect" or "except" operator.
+ * Intersect or except expression, optionally using the "intersect" or "except" operator. These operators are left-associative.
  */
 sealed trait IntersectExceptExpr extends SimpleUnionExpr
 
 sealed trait SimpleIntersectExceptExpr extends IntersectExceptExpr
 
 final case class CompoundIntersectExceptExpr(
-    firstInstanceOfExpr: InstanceOfExpr,
+    init: IntersectExceptExpr,
     op: IntersectExceptOp,
-    remainder: IntersectExceptExpr)
+    lastInstanceOfExpr: InstanceOfExpr)
     extends IntersectExceptExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstInstanceOfExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastInstanceOfExpr)
 }
 
 object IntersectExceptExpr {
@@ -391,9 +405,9 @@ object IntersectExceptExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
+      val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
-      CompoundIntersectExceptExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
+      CompoundIntersectExceptExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
     }
   }
 }
@@ -462,6 +476,9 @@ object CastExpr {
   }
 }
 
+/**
+ * Arrow expression. The arrow operator is left-associative.
+ */
 sealed trait ArrowExpr extends SimpleCastExpr
 
 sealed trait SimpleArrowExpr extends ArrowExpr
@@ -506,6 +523,9 @@ final case class ParenthesizedExprAsArrowFunctionSpecifier(parenthesizedExpr: Pa
   def children: IndexedSeq[XPathElem] = IndexedSeq(parenthesizedExpr)
 }
 
+/**
+ * Unary expression. The corresponding unary operators are right-associative.
+ */
 sealed trait UnaryExpr extends SimpleArrowExpr
 
 sealed trait SimpleUnaryExpr extends UnaryExpr
@@ -529,7 +549,7 @@ object UnaryExpr {
 sealed trait ValueExpr extends SimpleUnaryExpr
 
 /**
- * Simple map expression, using the optional map operator ("!").
+ * Simple map expression, using the optional map operator ("!"). This operator is left-associative.
  */
 sealed trait SimpleMapExpr extends ValueExpr
 
@@ -577,15 +597,16 @@ final case class PathExprStartingWithDoubleSlash(relativePathExpr: RelativePathE
 
 /**
  * Relative path expression, consisting of a number of step expressions separated by step operators ("/" and "//").
+ * These step operators are left-associative.
  */
 sealed trait RelativePathExpr extends PathExpr
 
 sealed trait SimpleRelativePathExpr extends RelativePathExpr
 
-final case class CompoundRelativePathExpr(firstStepExpr: StepExpr, op: StepOp, remainder: RelativePathExpr)
+final case class CompoundRelativePathExpr(init: RelativePathExpr, op: StepOp, lastStepExpr: StepExpr)
     extends RelativePathExpr {
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(firstStepExpr, op, remainder)
+  def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastStepExpr)
 }
 
 object RelativePathExpr {
@@ -594,9 +615,9 @@ object RelativePathExpr {
     if (operatorExprPairs.isEmpty) {
       firstExpr
     } else {
-      val (op, nextFirstExpr) = operatorExprPairs.head
+      val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
-      CompoundRelativePathExpr(firstExpr, op, apply(nextFirstExpr, operatorExprPairs.tail))
+      CompoundRelativePathExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
     }
   }
 }
@@ -609,7 +630,7 @@ sealed trait StepExpr extends SimpleRelativePathExpr
 
 /**
  * Postfix expression, which is a primary expression succeeded by 0 or more predicates, arguments lists
- * and/or lookups.
+ * and/or lookups. Note that lookup (the "?" operator) is left-associative.
  */
 sealed trait PostfixExpr extends StepExpr
 
@@ -632,7 +653,7 @@ object PostfixExpr {
 }
 
 /**
- * Axis step. For example: "child::book[@pageCount > 800]".
+ * Axis step. For example: "child::book[@pageCount > 800]". The "[]" operator for adding predicates is left-associative.
  */
 sealed trait AxisStep extends StepExpr {
 
