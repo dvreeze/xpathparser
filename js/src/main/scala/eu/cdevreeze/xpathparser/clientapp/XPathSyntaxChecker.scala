@@ -23,10 +23,10 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 import org.scalajs.dom.document
 import org.scalajs.dom.Node
-import org.scalajs.dom.raw.HTMLPreElement
-import org.scalajs.dom.raw.HTMLLIElement
-import org.scalajs.dom.raw.HTMLTextAreaElement
-import org.scalajs.dom.raw.HTMLUListElement
+import org.scalajs.dom.HTMLPreElement
+import org.scalajs.dom.HTMLLIElement
+import org.scalajs.dom.HTMLTextAreaElement
+import org.scalajs.dom.HTMLUListElement
 
 import eu.cdevreeze.xpathparser.ast.FunctionCall
 import eu.cdevreeze.xpathparser.ast.XPathExpr

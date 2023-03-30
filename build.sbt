@@ -8,8 +8,8 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "3.0.1"
-val crossScalaVer = Seq(scalaVer, "2.13.6")
+val scalaVer = "3.2.2"
+val crossScalaVer = Seq(scalaVer, "2.13.10")
 
 ThisBuild / description  := "XPath parser and XPath AST API"
 ThisBuild / organization := "eu.cdevreeze.xpathparser"
@@ -20,7 +20,7 @@ ThisBuild / crossScalaVersions := crossScalaVer
 
 ThisBuild / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
   case (Some((3, _))) =>
-    Seq("-unchecked", "-source:3.0-migration") // TODO -Xfatal-warnings, after migration
+    Seq("-unchecked", "-deprecation", "-source:3.0-migration") // TODO -Xfatal-warnings, after migration
   case _ =>
     Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w", "-Ytasty-reader", "-Xsource:3")
 })
@@ -39,11 +39,11 @@ ThisBuild / publishTo := {
 ThisBuild / pomExtra := pomData
 ThisBuild / pomIncludeRepository := { _ => false }
 
-val catsVersion = "2.6.1"
+val catsVersion = "2.9.0"
 
 // This is what I wanted to do, but that caused ScalaJS linker errors. Hence the repeated dependencies below.
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
-// ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4"
+// ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.9"
 
 ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % Test
 
@@ -64,7 +64,7 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
 
-    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
+    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.9",
 
     mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.7.0")
   )
@@ -74,23 +74,13 @@ lazy val xpathparser = crossProject(JSPlatform, JVMPlatform)
 
     scalaJSUseMainModuleInitializer := false,
 
-    libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case (Some((3, _))) =>
-        Seq(
-          // Hopefully for3Use2_13 soon not needed anymore
-          "org.scala-js" % "scalajs-dom_sjs1_2.13" % "1.1.0",
-        )
-      case _ =>
-        Seq(
-          "org.scala-js" % "scalajs-dom_sjs1_2.13" % "1.1.0",
-        )
-    }),
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.4.0",
 
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
 
-    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.4",
+    libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.9",
 
-    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.6.6",
+    libraryDependencies += "com.lihaoyi" %%% "pprint" % "0.8.1",
 
     mimaPreviousArtifacts := Set("eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.7.0")
   )
