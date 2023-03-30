@@ -9,7 +9,7 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 val scalaVer = "3.2.2"
-val crossScalaVer = Seq(scalaVer, "2.13.10")
+val crossScalaVer = Seq(scalaVer) // Used to add version 2.13.10 as cross-version
 
 ThisBuild / description  := "XPath parser and XPath AST API"
 ThisBuild / organization := "eu.cdevreeze.xpathparser"
