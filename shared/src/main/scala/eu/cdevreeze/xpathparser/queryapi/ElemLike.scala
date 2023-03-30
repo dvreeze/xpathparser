@@ -21,7 +21,8 @@ import scala.reflect.ClassTag
 /**
  * Partial implementation of the ElemApi query API trait.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
 
@@ -43,15 +44,14 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElems {
       case e: A if p(e) => true
       case e            => false
-    } collect {
-      case e: A => e
+    }.collect { case e: A =>
+      e
     }
 
   // Finding topmost descendant-or-self elements (of a certain type, obeying some predicate)
 
   final def findTopmostElemsOrSelf(p: E => Boolean): IndexedSeq[E] =
-    if p(self) then
-      IndexedSeq(self)
+    if p(self) then IndexedSeq(self)
     else
       // Recursive calls
       children.flatMap(_.findTopmostElemsOrSelf(p))
@@ -65,8 +65,8 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElemsOrSelf {
       case e: A if p(e) => true
       case e            => false
-    } collect {
-      case e: A => e
+    }.collect { case e: A =>
+      e
     }
 
   // Filtering descendant elements (of a certain type, obeying some predicate)
@@ -86,8 +86,8 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     filterElems {
       case e: A if p(e) => true
       case e            => false
-    } collect {
-      case e: A => e
+    }.collect { case e: A =>
+      e
     }
 
   // Filtering descendant-or-self elements (of a certain type, obeying some predicate)
@@ -108,8 +108,8 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     filterElemsOrSelf {
       case e: A if p(e) => true
       case e            => false
-    } collect {
-      case e: A => e
+    }.collect { case e: A =>
+      e
     }
 
   // Finding an optional element (of a certain type, obeying some predicate)
@@ -128,8 +128,8 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findElem {
       case e: A if p(e) => true
       case e            => false
-    } collectFirst {
-      case e: A => e
+    }.collectFirst { case e: A =>
+      e
     }
 
   // Finding an optional element-or-self (of a certain type, obeying some predicate)
@@ -148,7 +148,7 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findElemOrSelf {
       case e: A if p(e) => true
       case e            => false
-    } collectFirst {
-      case e: A => e
+    }.collectFirst { case e: A =>
+      e
     }
 }

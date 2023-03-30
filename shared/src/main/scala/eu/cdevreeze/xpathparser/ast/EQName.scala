@@ -21,7 +21,8 @@ import eu.cdevreeze.xpathparser.common
 /**
  * EQName, so either a URIQualifiedName or a QName.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 sealed trait EQName
 
@@ -60,8 +61,7 @@ object EQName:
       require(s.contains("}"), s"String '$s' is not a URIQualifiedName, because it does not contain '}'")
       require(!s.endsWith("}"), s"String '$s' is not a URIQualifiedName, because it ends with '}'")
 
-      if s.startsWith("Q{}") then
-        URIQualifiedName(common.EName.parse(s.drop(3)))
+      if s.startsWith("Q{}") then URIQualifiedName(common.EName.parse(s.drop(3)))
       else
         // Dropping the character "Q", we have James Clark notation to parse
         URIQualifiedName(common.EName.parse(s.drop(1)))

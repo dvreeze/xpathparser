@@ -19,15 +19,16 @@ package eu.cdevreeze.xpathparser.ast
 /**
  * Names, as per the XML specification. See for example https://www.w3.org/TR/REC-xml/#NT-Name.
  *
- * Only characters in the Unicode BMP (max. \uFFFF) are considered. So the range from #x10000 to #xEFFFF
- * is not recognized as valid name characters in this implementation.
+ * Only characters in the Unicode BMP (max. \uFFFF) are considered. So the range from #x10000 to #xEFFFF is not
+ * recognized as valid name characters in this implementation.
  *
- * The functions of this class must be fast, because they are typically called very many times during
- * parsing of XPath expressions.
+ * The functions of this class must be fast, because they are typically called very many times during parsing of XPath
+ * expressions.
  *
  * Classes like NCName lean on this object. An NCName is an XML name without colon.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object Names:
 
@@ -36,26 +37,24 @@ object Names:
   // See for example https://en.wikibooks.org/wiki/Unicode/Character_reference/0000-0FFF
 
   /**
-   * Returns true if the given string can start valid XML names. This is the same as
-   * saying that the string is a valid XML name, so `canBeName(s)` is returned.
+   * Returns true if the given string can start valid XML names. This is the same as saying that the string is a valid
+   * XML name, so `canBeName(s)` is returned.
    */
   def canBeStartOfName(s: String): Boolean =
     canBeName(s)
 
   /**
-   * Returns true if the given string is a valid XML name. Names starting with "xml" are
-   * not excluded, and names containing non-BMP characters are not included.
+   * Returns true if the given string is a valid XML name. Names starting with "xml" are not excluded, and names
+   * containing non-BMP characters are not included.
    */
   def canBeName(s: String): Boolean =
     s.nonEmpty && canBeStartOfName(s.charAt(0)) && s.drop(1).forall(c => canBePartOfName(c))
 
   /**
-   * Returns true if the character can be a start of an XML name.
-   * Only 2-byte characters in the BMP are considered.
+   * Returns true if the character can be a start of an XML name. Only 2-byte characters in the BMP are considered.
    *
-   * It returns the same as method canBePartOfName, except that some
-   * characters are excluded, such as digits, dash, dot and combining
-   * diacritical marks.
+   * It returns the same as method canBePartOfName, except that some characters are excluded, such as digits, dash, dot
+   * and combining diacritical marks.
    */
   def canBeStartOfName(c: Char): Boolean =
     charEquals(c, ':') ||
@@ -75,18 +74,15 @@ object Names:
       charIsInRange(c, '\uFDF0', '\uFFFD')
 
   /**
-   * Returns true if the character can be a part of an XML name.
-   * Only 2-byte characters in the BMP are considered.
+   * Returns true if the character can be a part of an XML name. Only 2-byte characters in the BMP are considered.
    *
-   * Some excluded characters are: multiplication sign ('\u00D7'), (other) plus sign ('\u00F7'),
-   * at-symbol, dollar sign, percentage sign, ampersand, slash, plus sign ('\u002B'),
-   * comma, semicolon, open parenthesis, close parenthesis, open bracket, close bracket,
-   * open brace, close brace, smaller-than symbol, greater-than symbol, equals sign,
-   * single quote ('\u0060'), double quote ('\u0022'), asterisk, exclamation mark, question mark,
-   * and '#'.
+   * Some excluded characters are: multiplication sign ('\u00D7'), (other) plus sign ('\u00F7'), at-symbol, dollar sign,
+   * percentage sign, ampersand, slash, plus sign ('\u002B'), comma, semicolon, open parenthesis, close parenthesis,
+   * open bracket, close bracket, open brace, close brace, smaller-than symbol, greater-than symbol, equals sign, single
+   * quote ('\u0060'), double quote ('\u0022'), asterisk, exclamation mark, question mark, and '#'.
    *
-   * Note that these excluded characters are important to distinguish names from XPath language
-   * elements such as operators and (string and numeric) literals.
+   * Note that these excluded characters are important to distinguish names from XPath language elements such as
+   * operators and (string and numeric) literals.
    */
   def canBePartOfName(c: Char): Boolean =
     canBeStartOfName(c) ||
@@ -98,7 +94,7 @@ object Names:
       charIsInRange(c, '\u203F', '\u2040')
 
   private def charEquals(c: Char, otherChar: Char): Boolean =
-    (c == otherChar)
+    c == otherChar
 
   private def charIsInRange(c: Char, low: Char, high: Char): Boolean =
     (c >= low) && (c <= high)

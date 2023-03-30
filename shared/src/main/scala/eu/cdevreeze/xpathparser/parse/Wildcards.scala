@@ -28,7 +28,8 @@ import cats.parse.{Parser => P}
  *
  * For re-usability without imposing any NoCut calls on using parsers, no cuts have been used.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object Wildcards:
 

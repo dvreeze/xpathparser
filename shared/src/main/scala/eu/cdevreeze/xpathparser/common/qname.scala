@@ -19,7 +19,8 @@ package eu.cdevreeze.xpathparser.common
 /**
  * Lexical qualified name. See the QName type in the yaidom project.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 sealed trait QName extends Serializable:
 
@@ -60,8 +61,8 @@ object QName:
   def apply(s: String): QName = parse(s)
 
   /**
-   * Parses a `String` into a `QName`. The `String` (after trimming) must conform to the `toString` format of
-   * a `PrefixedName` or `UnprefixedName`.
+   * Parses a `String` into a `QName`. The `String` (after trimming) must conform to the `toString` format of a
+   * `PrefixedName` or `UnprefixedName`.
    */
   def parse(s: String): QName =
     val st = s.trim

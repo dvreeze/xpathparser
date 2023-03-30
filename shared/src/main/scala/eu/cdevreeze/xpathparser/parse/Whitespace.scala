@@ -22,7 +22,8 @@ import cats.parse.Parser0
 /**
  * Support for ignorable whitespace during parsing.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object Whitespace:
 

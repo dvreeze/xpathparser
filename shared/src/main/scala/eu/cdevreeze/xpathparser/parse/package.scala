@@ -19,6 +19,7 @@ package eu.cdevreeze.xpathparser
 /**
  * A cats-parse parser of XPath expressions, returning AST objects from the 'ast' package if successful.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 package object parse

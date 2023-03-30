@@ -27,11 +27,11 @@ import cats.parse.{Parser => P}
 import cats.parse.Parser0
 
 /**
- * Non-delimiting terminal symbols. No whitespace is skipped during this tokenization.
- * Lookahead is applied when needed to distinguish between different terminal symbols starting with
- * the same characters.
+ * Non-delimiting terminal symbols. No whitespace is skipped during this tokenization. Lookahead is applied when needed
+ * to distinguish between different terminal symbols starting with the same characters.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object NonDelimitingTerminals:
 
@@ -205,8 +205,8 @@ object NonDelimitingTerminals:
     // and context item expressions and abbreviated reverse steps on the other hand!
 
     s.nonEmpty && (s.count(_ == '.') == 1) &&
-    s.exists(c => java.lang.Character.isDigit(c)) &&
-    s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
+      s.exists(c => java.lang.Character.isDigit(c)) &&
+      s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
 
   private def isDoubleLiteral(s: String): Boolean =
     val idx = s.indexWhere(c => (c == 'e') || (c == 'E'))

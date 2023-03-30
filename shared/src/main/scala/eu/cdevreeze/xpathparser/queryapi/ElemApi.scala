@@ -23,7 +23,8 @@ import scala.reflect.ClassTag
  *
  * It has been heavily inspired by the yaidom project for XML querying.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 trait ElemApi[E <: ElemApi[E]]:
 
@@ -52,8 +53,8 @@ trait ElemApi[E <: ElemApi[E]]:
   // Finding topmost descendant-or-self elements (of a certain type, obeying some predicate)
 
   /**
-   * Finds all topmost elements-or-self obeying the given predicate. This is a core method in that
-   * several methods are implemented directly or indirectly in terms of this one.
+   * Finds all topmost elements-or-self obeying the given predicate. This is a core method in that several methods are
+   * implemented directly or indirectly in terms of this one.
    */
   def findTopmostElemsOrSelf(p: E => Boolean): IndexedSeq[E]
 
@@ -92,8 +93,8 @@ trait ElemApi[E <: ElemApi[E]]:
   // Filtering descendant-or-self elements (of a certain type, obeying some predicate)
 
   /**
-   * Finds all descendant-or-self elements obeying the given predicate. This is a core method in that
-   * several methods are implemented directly or indirectly in terms of this one.
+   * Finds all descendant-or-self elements obeying the given predicate. This is a core method in that several methods
+   * are implemented directly or indirectly in terms of this one.
    */
   def filterElemsOrSelf(p: E => Boolean): IndexedSeq[E]
 
@@ -125,8 +126,8 @@ trait ElemApi[E <: ElemApi[E]]:
   def findFirstElemOfType[A <: E](cls: ClassTag[A]): Option[A]
 
   /**
-   * Finds the first descendant element of the given element type obeying the given predicate, if any,
-   * returning an optional result.
+   * Finds the first descendant element of the given element type obeying the given predicate, if any, returning an
+   * optional result.
    */
   def findElemOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): Option[A]
 
@@ -143,8 +144,8 @@ trait ElemApi[E <: ElemApi[E]]:
   def findFirstElemOrSelfOfType[A <: E](cls: ClassTag[A]): Option[A]
 
   /**
-   * Finds the first descendant-or-self element of the given element type obeying the given predicate, if any,
-   * returning an optional result.
+   * Finds the first descendant-or-self element of the given element type obeying the given predicate, if any, returning
+   * an optional result.
    */
   def findElemOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): Option[A]
 

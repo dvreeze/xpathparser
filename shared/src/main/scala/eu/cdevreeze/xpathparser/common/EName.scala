@@ -19,7 +19,8 @@ package eu.cdevreeze.xpathparser.common
 /**
  * Expanded name, containing a local part and optional namespace name. See the EName type in the yaidom project.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 final case class EName(namespaceUriOption: Option[String], localPart: String):
   require(namespaceUriOption ne null) // scalastyle:off null
@@ -28,12 +29,14 @@ final case class EName(namespaceUriOption: Option[String], localPart: String):
   /** Given an optional prefix, creates a `QName` from this `EName` */
   def toQName(prefixOption: Option[String]): QName =
     require(
-      namespaceUriOption.isDefined || prefixOption.isEmpty, s"Prefix only allowed if namespace non-empty in EName '${this}'")
+      namespaceUriOption.isDefined || prefixOption.isEmpty,
+      s"Prefix only allowed if namespace non-empty in EName '${this}'"
+    )
     QName(prefixOption, localPart)
 
   /** The `String` representation, in the format of the `javax.xml.namespace.QName.toString` method */
   override def toString: String = namespaceUriOption match
-    case None => localPart
+    case None        => localPart
     case Some(nsUri) => "{" + nsUri + "}" + localPart
 
 object EName:
@@ -45,7 +48,8 @@ object EName:
   def apply(s: String): EName = parse(s)
 
   /**
-   * Parses a `String` into an `EName`. The `String` (after trimming) must conform to the `toString` format of an `EName`.
+   * Parses a `String` into an `EName`. The `String` (after trimming) must conform to the `toString` format of an
+   * `EName`.
    */
   def parse(s: String): EName =
     val st = s.trim

@@ -27,18 +27,19 @@ import cats.parse.{Parser => P}
  * XPathParser.xpathExpr.parse(xpathString)
  * }}}
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object XPathParser:
 
   import Whitespace._
 
   /**
-   * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. Comments are not supported,
-   * so will lead to parsing failures.
+   * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. Comments are not supported, so will lead to
+   * parsing failures.
    *
-   * The parser consumes the entire input string or else parsing cannot be successful. Leading or trailing
-   * whitespace is silently ignored.
+   * The parser consumes the entire input string or else parsing cannot be successful. Leading or trailing whitespace is
+   * silently ignored.
    */
   val xpathExpr: P[XPathExpr] = P.defer {
     (P.start.soft.with1 *> XPathElemParser.expr).soft <* (whitespaces0.soft ~ P.end)

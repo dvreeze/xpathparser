@@ -19,12 +19,12 @@ package eu.cdevreeze.xpathparser
 /**
  * Query API, as offered by the AST classes. It is inspired by the yaidom project.
  *
- * The query API methods may be somewhat verbose, but that is intentional. First of all, there are
- * multiple different "axes" that can be used in queries, such as child elements, descendant elements
- * or descendant-or-self elements (if we consider only forward axes). Second, when querying for
- * elements of specific types, there is something to be said for having normal parameters for those
- * types, instead of (more hidden) type parameters.
+ * The query API methods may be somewhat verbose, but that is intentional. First of all, there are multiple different
+ * "axes" that can be used in queries, such as child elements, descendant elements or descendant-or-self elements (if we
+ * consider only forward axes). Second, when querying for elements of specific types, there is something to be said for
+ * having normal parameters for those types, instead of (more hidden) type parameters.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 package object queryapi

@@ -19,7 +19,8 @@ package eu.cdevreeze.xpathparser.ast
 /**
  * Braced URI literal.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 final case class BracedUriLiteral(namespaceOption: Option[String]):
 

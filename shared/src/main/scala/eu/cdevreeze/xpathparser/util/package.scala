@@ -19,6 +19,7 @@ package eu.cdevreeze.xpathparser
 /**
  * Utilities on top of the xpathparser API.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 package object util

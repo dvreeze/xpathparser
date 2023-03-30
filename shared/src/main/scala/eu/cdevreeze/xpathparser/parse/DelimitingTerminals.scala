@@ -24,16 +24,16 @@ import cats.parse.{Parser => P}
 import scala.util.chaining._
 
 /**
- * Delimiting terminal symbols. No whitespace is skipped during this tokenization.
- * Lookahead is applied when needed to distinguish between different terminal symbols starting with
- * the same character.
+ * Delimiting terminal symbols. No whitespace is skipped during this tokenization. Lookahead is applied when needed to
+ * distinguish between different terminal symbols starting with the same character.
  *
- * When using this object, make sure that a "-" symbol requires a symbol separator (whitespace or comments)
- * if it follows a QName or NCName. The same holds for a "." symbol. Also, if a "." follows or precedes a
- * numeric literal, it requires a symbol separator. (Other than that, symbol separators are only needed
- * for non-delimiting terminal symbols.)
+ * When using this object, make sure that a "-" symbol requires a symbol separator (whitespace or comments) if it
+ * follows a QName or NCName. The same holds for a "." symbol. Also, if a "." follows or precedes a numeric literal, it
+ * requires a symbol separator. (Other than that, symbol separators are only needed for non-delimiting terminal
+ * symbols.)
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object DelimitingTerminals:
 
@@ -157,7 +157,7 @@ object DelimitingTerminals:
 
     private def aposStringLiteralPart(oddAposCountAtEnd: Boolean): P[String] =
       val p: Int => Boolean = { n =>
-        if oddAposCountAtEnd then (n % 2 != 0) else (n % 2 == 0)
+        if oddAposCountAtEnd then n % 2 != 0 else n % 2 == 0
       }
 
       (P.charsWhile0(isNotApos).soft.with1 ~ (P.charsWhile(isApos).filter(s => p(s.size)).backtrack)).string
@@ -179,7 +179,7 @@ object DelimitingTerminals:
 
     private def quoteStringLiteralPart(oddQuoteCountAtEnd: Boolean): P[String] =
       val p: Int => Boolean = { n =>
-        if oddQuoteCountAtEnd then (n % 2 != 0) else (n % 2 == 0)
+        if oddQuoteCountAtEnd then n % 2 != 0 else n % 2 == 0
       }
 
       (P.charsWhile0(isNotQuote).soft.with1 ~ (P.charsWhile(isQuote).filter(s => p(s.size)).backtrack)).string

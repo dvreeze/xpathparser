@@ -39,7 +39,8 @@ import cats.parse.{Parser => P}
  *
  * It is tightly integrated with the corresponding HTML page.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 @JSExportTopLevel("XPathSyntaxChecker")
 object XPathSyntaxChecker:
@@ -52,9 +53,12 @@ object XPathSyntaxChecker:
   def checkSyntax(xpathString: String): Unit =
     val parseResult: Either[P.Error, XPathExpr] = XPathParser.xpathExpr.parseAll(xpathString)
 
-    parseResult.fold({ case parseError @ P.Error(offset, expectations) => showFailure(parseError) }, { xpathExpr =>
-      showSuccess(xpathExpr)
-    })
+    parseResult.fold(
+      { case parseError @ P.Error(offset, expectations) => showFailure(parseError) },
+      { xpathExpr =>
+        showSuccess(xpathExpr)
+      }
+    )
 
   @JSExport("clear")
   def clear(): Unit =

@@ -19,6 +19,7 @@ package eu.cdevreeze.xpathparser
 /**
  * Abstract syntax tree of XPath expressions, as produced by the parsers specified in the 'parse' package.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 package object ast

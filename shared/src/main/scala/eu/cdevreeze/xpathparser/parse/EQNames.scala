@@ -21,30 +21,27 @@ import eu.cdevreeze.xpathparser.common.EName
 import cats.parse.{Parser => P}
 
 /**
- * EQName parsing support. Note that EQNames are non-delimiting terminal symbols.
- * No whitespace is skipped during parsing of an EQName.
+ * EQName parsing support. Note that EQNames are non-delimiting terminal symbols. No whitespace is skipped during
+ * parsing of an EQName.
  *
  * For re-usability without imposing any "NoCut" calls on using parsers, no "cuts" have been used.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object EQNames:
 
   private val DT = DelimitingTerminals
 
   val qName: P[EQName.QName] =
-    P.defer(NCNames.ncName.soft ~ (P.string(":").soft *> NCNames.ncName).?).map {
-      case (s1, s2Opt) =>
-        if s2Opt.isEmpty then
-          EQName.QName.parse(s1.name)
-        else
-          EQName.QName.parse(s1.name + ":" + s2Opt.get.name)
+    P.defer(NCNames.ncName.soft ~ (P.string(":").soft *> NCNames.ncName).?).map { case (s1, s2Opt) =>
+      if s2Opt.isEmpty then EQName.QName.parse(s1.name)
+      else EQName.QName.parse(s1.name + ":" + s2Opt.get.name)
     }
 
   val uriQualifiedName: P[EQName.URIQualifiedName] =
-    P.defer(DT.bracedUriLiteral.soft ~ NCNames.ncName).map {
-      case (uriLit, localPart) =>
-        EQName.URIQualifiedName(EName(uriLit.namespaceOption, localPart.name))
+    P.defer(DT.bracedUriLiteral.soft ~ NCNames.ncName).map { case (uriLit, localPart) =>
+      EQName.URIQualifiedName(EName(uriLit.namespaceOption, localPart.name))
     }
 
   // We could change the order of the 2 branches below, but I'd rather explicitly use a small lookahead.

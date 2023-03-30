@@ -49,15 +49,17 @@ import eu.cdevreeze.xpathparser.common.QName
 /**
  * Utility to query for used EQNames (and namespace prefixes in those EQNames that are QNames).
  *
- * This utility can be handy when searching for all namespace prefixes used in an XML document, if the document
- * can have XPath expressions in attribute values or element text according to the schema.
+ * This utility can be handy when searching for all namespace prefixes used in an XML document, if the document can have
+ * XPath expressions in attribute values or element text according to the schema.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object EQNameUtil:
 
   /**
-   * Finds the namespace prefixes used in QNames in the given XPath expression, taking the extra EQName producer into account.
+   * Finds the namespace prefixes used in QNames in the given XPath expression, taking the extra EQName producer into
+   * account.
    *
    * Note that this function does not look for namespace prefixes in (prefix) wildcards.
    *
@@ -189,8 +191,7 @@ object EQNameUtil:
       .union(eqnamesInSchemaAttributeTests)
 
   /**
-   * Returns the optional prefix of the given EQName, if it is a QName,
-   * and returns None otherwise.
+   * Returns the optional prefix of the given EQName, if it is a QName, and returns None otherwise.
    */
   def findPrefix(eqname: EQName): Option[String] =
     eqname match
@@ -202,8 +203,9 @@ object EQNameUtil:
    */
   val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] =
     case FunctionCall(
-        EQName.QName(PrefixedName("xs", "QName")),
-        ArgumentList(IndexedSeq(ExprSingleArgument(StringLiteral(s))))) =>
+          EQName.QName(PrefixedName("xs", "QName")),
+          ArgumentList(IndexedSeq(ExprSingleArgument(StringLiteral(s))))
+        ) =>
       val qn = QName.parse(s)
       Some(Set(EQName.QName(qn)))
     case _: XPathElem =>

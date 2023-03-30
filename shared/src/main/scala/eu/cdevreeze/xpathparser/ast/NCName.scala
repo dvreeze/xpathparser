@@ -19,7 +19,8 @@ package eu.cdevreeze.xpathparser.ast
 /**
  * NCName, that is, a non-colon name.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 final case class NCName(name: String):
   require(!name.contains(':'), s"Not an NCName: '$name'")
@@ -27,8 +28,8 @@ final case class NCName(name: String):
 object NCName:
 
   /**
-   * Returns true if the given string can start valid non-colon names. This is the same as
-   * saying that the string is a valid non-colon name, so `canBeNCName(s)` is returned.
+   * Returns true if the given string can start valid non-colon names. This is the same as saying that the string is a
+   * valid non-colon name, so `canBeNCName(s)` is returned.
    */
   def canBeStartOfNCName(s: String): Boolean =
     canBeNCName(s)
@@ -36,8 +37,7 @@ object NCName:
   /**
    * Returns true if the given string is a valid non-colon name.
    *
-   * Disclaimer: Names starting with "xml" are not excluded, and names containing non-BMP characters are
-   * not included.
+   * Disclaimer: Names starting with "xml" are not excluded, and names containing non-BMP characters are not included.
    */
   def canBeNCName(s: String): Boolean =
     s.nonEmpty && canBeStartOfNCName(s.charAt(0)) && s.drop(1).forall(c => canBePartOfNCName(c))

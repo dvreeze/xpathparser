@@ -23,8 +23,8 @@ import cats.parse.{Parser => P}
 /**
  * XPath 3.1 AST element parsing support, using cats-parse.
  *
- * There are parsers for many kinds of XPath AST elements. These parsers typically
- * expect no leading whitespace, and they typically consume only part of the input string.
+ * There are parsers for many kinds of XPath AST elements. These parsers typically expect no leading whitespace, and
+ * they typically consume only part of the input string.
  *
  * Example of usage:
  * {{{
@@ -36,7 +36,8 @@ import cats.parse.{Parser => P}
  * XPathParser.xpathExpr parser. On the other hand, exposing parsers for specific AST elements makes it easier to
  * "decorate" specific parsers.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object XPathElemParser:
 
@@ -81,8 +82,8 @@ object XPathElemParser:
   }
 
   val simpleForBinding: P[SimpleForBinding] = P.defer {
-    ((DT.dollar.skipWS *> eqName.skipWS <* NDT.inWord.skipWS) ~ exprSingle.skipWS).map {
-      case (eqn, exp) => SimpleForBinding(eqn, exp)
+    ((DT.dollar.skipWS *> eqName.skipWS <* NDT.inWord.skipWS) ~ exprSingle.skipWS).map { case (eqn, exp) =>
+      SimpleForBinding(eqn, exp)
     }
   }
 
@@ -94,17 +95,16 @@ object XPathElemParser:
   }
 
   val simpleLetBinding: P[SimpleLetBinding] = P.defer {
-    ((DT.dollar.skipWS *> eqName.skipWS <* DT.assignmentSymbol.skipWS) ~ exprSingle.skipWS).map {
-      case (eqn, exp) => SimpleLetBinding(eqn, exp)
+    ((DT.dollar.skipWS *> eqName.skipWS <* DT.assignmentSymbol.skipWS) ~ exprSingle.skipWS).map { case (eqn, exp) =>
+      SimpleLetBinding(eqn, exp)
     }
   }
 
   val quantifiedExpr: P[QuantifiedExpr] = P.defer {
     (quantifier.skipWS ~ simpleBindingInQuantifiedExpr.skipWS
       .repSep(min = 1, sep = DT.comma.skipWS) ~ NDT.satisfiesWord.skipWS ~ exprSingle.skipWS)
-      .map {
-        case (((quant, bindings), _), satisfiesExp) =>
-          QuantifiedExpr(quant, NonEmptyVector.fromVectorUnsafe(bindings.toList.toVector), satisfiesExp)
+      .map { case (((quant, bindings), _), satisfiesExp) =>
+        QuantifiedExpr(quant, NonEmptyVector.fromVectorUnsafe(bindings.toList.toVector), satisfiesExp)
       }
   }
 
@@ -112,22 +112,21 @@ object XPathElemParser:
     P.defer(NDT.someWord.skipWS | NDT.everyWord.skipWS).string.map(s => Quantifier.parse(s))
 
   val simpleBindingInQuantifiedExpr: P[SimpleBindingInQuantifiedExpr] = P.defer {
-    ((DT.dollar.skipWS *> eqName.skipWS <* NDT.inWord.skipWS) ~ exprSingle.skipWS).map {
-      case (eqn, exp) => SimpleBindingInQuantifiedExpr(eqn, exp)
+    ((DT.dollar.skipWS *> eqName.skipWS <* NDT.inWord.skipWS) ~ exprSingle.skipWS).map { case (eqn, exp) =>
+      SimpleBindingInQuantifiedExpr(eqn, exp)
     }
   }
 
   val ifExpr: P[IfExpr] = P.defer {
     (((NDT.ifWord.skipWS ~ DT.openParenthesis.skipWS) *> expr.skipWS <* DT.closeParenthesis.skipWS) ~ (NDT.thenWord.skipWS *> exprSingle.skipWS <* NDT.elseWord.skipWS) ~ exprSingle.skipWS)
-      .map {
-        case ((e1, e2), e3) => IfExpr(e1, e2, e3)
+      .map { case ((e1, e2), e3) =>
+        IfExpr(e1, e2, e3)
       }
   }
 
   val orExpr: P[OrExpr] = P.defer {
-    (andExpr.skipWS.soft ~ (NDT.orWord.skipWS *> andExpr.skipWS).rep0).map {
-      case (firstExpr, remainingExps) =>
-        OrExpr(NonEmptyVector.fromVectorUnsafe(remainingExps.toVector.prepended(firstExpr)))
+    (andExpr.skipWS.soft ~ (NDT.orWord.skipWS *> andExpr.skipWS).rep0).map { case (firstExpr, remainingExps) =>
+      OrExpr(NonEmptyVector.fromVectorUnsafe(remainingExps.toVector.prepended(firstExpr)))
     }
   }
 
@@ -168,24 +167,22 @@ object XPathElemParser:
 
   val multiplicativeExpr: P[MultiplicativeExpr] = P.defer {
     (unionExpr.skipWS.soft ~ ((DT.asterisk | (NDT.divWord | NDT.idivWord | NDT.modWord)).skipWS.string ~ unionExpr.skipWS).rep0)
-      .map {
-        case (firstExp, opExpPairs) =>
-          MultiplicativeExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => MultiplicativeOp.parse(kv._1) -> kv._2))
+      .map { case (firstExp, opExpPairs) =>
+        MultiplicativeExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => MultiplicativeOp.parse(kv._1) -> kv._2))
       }
   }
 
   val unionExpr: P[UnionExpr] = P.defer {
     (intersectExceptExpr.skipWS.soft ~ ((NDT.unionWord | DT.verticalBar).skipWS *> intersectExceptExpr.skipWS).rep0)
-      .map {
-        case (expr, exprSeq) => UnionExpr(NonEmptyVector.fromVectorUnsafe(exprSeq.toVector.prepended(expr)))
+      .map { case (expr, exprSeq) =>
+        UnionExpr(NonEmptyVector.fromVectorUnsafe(exprSeq.toVector.prepended(expr)))
       }
   }
 
   val intersectExceptExpr: P[IntersectExceptExpr] = P.defer {
     (instanceOfExpr.skipWS.soft ~ ((NDT.intersectWord | NDT.exceptWord).skipWS.string ~ instanceOfExpr.skipWS).rep0)
-      .map {
-        case (firstExp, opExpPairs) =>
-          IntersectExceptExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => IntersectExceptOp.parse(kv._1) -> kv._2))
+      .map { case (firstExp, opExpPairs) =>
+        IntersectExceptExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => IntersectExceptOp.parse(kv._1) -> kv._2))
       }
   }
 
@@ -214,14 +211,14 @@ object XPathElemParser:
   }
 
   val arrowExpr: P[ArrowExpr] = P.defer {
-    (unaryExpr.skipWS.soft ~ arrowFunctionCall.skipWS.rep0).map {
-      case (exp, funCalls) => ArrowExpr(exp, funCalls.toIndexedSeq)
+    (unaryExpr.skipWS.soft ~ arrowFunctionCall.skipWS.rep0).map { case (exp, funCalls) =>
+      ArrowExpr(exp, funCalls.toIndexedSeq)
     }
   }
 
   val arrowFunctionCall: P[ArrowFunctionCall] = P.defer {
-    (DT.doubleArrow.skipWS *> arrowFunctionSpecifier.skipWS ~ argumentList.skipWS).map {
-      case (funcSpec, args) => ArrowFunctionCall(funcSpec, args)
+    (DT.doubleArrow.skipWS *> arrowFunctionSpecifier.skipWS ~ argumentList.skipWS).map { case (funcSpec, args) =>
+      ArrowFunctionCall(funcSpec, args)
     }
   }
 
@@ -234,8 +231,8 @@ object XPathElemParser:
   }
 
   val unaryExpr: P[UnaryExpr] = P.defer {
-    ((DT.minus | DT.plus).skipWS.string.rep0.soft.with1 ~ valueExpr.skipWS).map {
-      case (ops, expr) => UnaryExpr(ops.toIndexedSeq.map(op => UnaryOp.parse(op)), expr)
+    ((DT.minus | DT.plus).skipWS.string.rep0.soft.with1 ~ valueExpr.skipWS).map { case (ops, expr) =>
+      UnaryExpr(ops.toIndexedSeq.map(op => UnaryOp.parse(op)), expr)
     }
   }
 
@@ -254,7 +251,8 @@ object XPathElemParser:
 
   val pathExpr: P[PathExpr] = P.defer {
     P.oneOf(
-      slashOnlyPathExpr :: pathExprStartingWithSingleSlash :: pathExprStartingWithDoubleSlash :: relativePathExpr :: Nil)
+      slashOnlyPathExpr :: pathExprStartingWithSingleSlash :: pathExprStartingWithDoubleSlash :: relativePathExpr :: Nil
+    )
   }
 
   // Lookahead parsers, to determine if the next token can start a relative path expression.
@@ -274,9 +272,10 @@ object XPathElemParser:
   // an open bracket, or a question mark. (Note that, like context items, decimal and double literals may start with dots.)
 
   private val canStartPostfixExpr: P[Unit] = P.defer {
-    P.oneOf(literal :: varRef :: DT.openParenthesis.skipWS :: contextItemExpr :: eqName ::
-        NDT.functionWord.skipWS :: NDT.mapWord.skipWS :: NDT.arrayWord.skipWS :: DT.openBracket.skipWS :: DT.questionMark.skipWS :: Nil)
-      .void
+    P.oneOf(
+      literal :: varRef :: DT.openParenthesis.skipWS :: contextItemExpr :: eqName ::
+        NDT.functionWord.skipWS :: NDT.mapWord.skipWS :: NDT.arrayWord.skipWS :: DT.openBracket.skipWS :: DT.questionMark.skipWS :: Nil
+    ).void
   }
 
   // Looking ahead to distinguish a single slash from a double slash, and to recognize the start of a relativePathExpr.
@@ -330,14 +329,14 @@ object XPathElemParser:
   val axisStep: P[AxisStep] = P.defer(reverseAxisStep | forwardAxisStep)
 
   val forwardAxisStep: P[ForwardAxisStep] = P.defer {
-    (forwardStep.skipWS.soft ~ predicate.skipWS.rep0).map {
-      case (forwardStep, predicates) => ForwardAxisStep(forwardStep, predicates.toIndexedSeq)
+    (forwardStep.skipWS.soft ~ predicate.skipWS.rep0).map { case (forwardStep, predicates) =>
+      ForwardAxisStep(forwardStep, predicates.toIndexedSeq)
     }
   }
 
   val reverseAxisStep: P[ReverseAxisStep] = P.defer {
-    (reverseStep.skipWS.soft ~ predicate.skipWS.rep0).map {
-      case (reverseStep, predicates) => ReverseAxisStep(reverseStep, predicates.toIndexedSeq)
+    (reverseStep.skipWS.soft ~ predicate.skipWS.rep0).map { case (reverseStep, predicates) =>
+      ReverseAxisStep(reverseStep, predicates.toIndexedSeq)
     }
   }
 
@@ -358,8 +357,8 @@ object XPathElemParser:
   }
 
   val nonAbbrevForwardStep: P[NonAbbrevForwardStep] = P.defer {
-    (forwardAxis.skipWS ~ nodeTest.skipWS).map {
-      case (axis, nodeTest) => NonAbbrevForwardStep(axis, nodeTest)
+    (forwardAxis.skipWS ~ nodeTest.skipWS).map { case (axis, nodeTest) =>
+      NonAbbrevForwardStep(axis, nodeTest)
     }
   }
 
@@ -385,8 +384,8 @@ object XPathElemParser:
     P.defer(DT.doubleDot.skipWS.as(AbbrevReverseStep))
 
   val nonAbbrevReverseStep: P[NonAbbrevReverseStep] = P.defer {
-    (reverseAxis.skipWS ~ nodeTest.skipWS).map {
-      case (axis, nodeTest) => NonAbbrevReverseStep(axis, nodeTest)
+    (reverseAxis.skipWS ~ nodeTest.skipWS).map { case (axis, nodeTest) =>
+      NonAbbrevReverseStep(axis, nodeTest)
     }
   }
 
@@ -436,7 +435,8 @@ object XPathElemParser:
 
   val simpleDocumentTest: P[SimpleDocumentTest.type] = P.defer {
     ((NDT.documentNodeWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft ~ DT.closeParenthesis.skipWS).map(_ =>
-      SimpleDocumentTest)
+      SimpleDocumentTest
+    )
   }
 
   val documentTestContainingElementTest: P[DocumentTestContainingElementTest] = P.defer {
@@ -454,7 +454,7 @@ object XPathElemParser:
   }
 
   val elementTest: P[ElementTest] = P.defer {
-    (anyElementTest | elementNameTest | elementNameAndTypeTest | nillableElementNameAndTypeTest | elementTypeTest | nillableElementTypeTest)
+    anyElementTest | elementNameTest | elementNameAndTypeTest | nillableElementNameAndTypeTest | elementTypeTest | nillableElementTypeTest
   }
 
   // Losing some efficiency on parsing of element tests
@@ -473,15 +473,15 @@ object XPathElemParser:
 
   val elementNameAndTypeTest: P[ElementNameAndTypeTest] = P.defer {
     (((((NDT.elementWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> eqName.skipWS).soft <* DT.comma.skipWS) ~ eqName.skipWS).soft <* DT.closeParenthesis.skipWS)
-      .map {
-        case (name, tpe) => ElementNameAndTypeTest(name, tpe)
+      .map { case (name, tpe) =>
+        ElementNameAndTypeTest(name, tpe)
       }
   }
 
   val nillableElementNameAndTypeTest: P[NillableElementNameAndTypeTest] = P.defer {
-    ((((((NDT.elementWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> eqName.skipWS).soft <* DT.comma.skipWS)).soft ~ eqName.skipWS).soft <* (DT.questionMark.skipWS.soft ~ DT.closeParenthesis.skipWS))
-      .map {
-        case (name, tpe) => NillableElementNameAndTypeTest(name, tpe)
+    (((((NDT.elementWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> eqName.skipWS).soft <* DT.comma.skipWS).soft ~ eqName.skipWS).soft <* (DT.questionMark.skipWS.soft ~ DT.closeParenthesis.skipWS))
+      .map { case (name, tpe) =>
+        NillableElementNameAndTypeTest(name, tpe)
       }
   }
 
@@ -518,8 +518,8 @@ object XPathElemParser:
 
   val attributeNameAndTypeTest: P[AttributeNameAndTypeTest] = P.defer {
     (((((NDT.attributeWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> eqName.skipWS).soft <* DT.comma.skipWS) ~ eqName.skipWS).soft <* DT.closeParenthesis.skipWS)
-      .map {
-        case (name, tpe) => AttributeNameAndTypeTest(name, tpe)
+      .map { case (name, tpe) =>
+        AttributeNameAndTypeTest(name, tpe)
       }
   }
 
@@ -580,13 +580,14 @@ object XPathElemParser:
   // Postfix expressions
 
   val postfixExpr: P[PostfixExpr] = P.defer {
-    (primaryExpr.skipWS.soft ~ (predicate | argumentList | lookup).skipWS.rep0).map {
-      case (primaryExp, postfixes) => PostfixExpr(primaryExp, postfixes.toIndexedSeq)
+    (primaryExpr.skipWS.soft ~ (predicate | argumentList | lookup).skipWS.rep0).map { case (primaryExp, postfixes) =>
+      PostfixExpr(primaryExp, postfixes.toIndexedSeq)
     }
   }
 
   val argumentList: P[ArgumentList] = P.defer {
-    ((DT.openParenthesis.skipWS.soft *> argument.skipWS.repSep0(sep = DT.comma.skipWS)).soft <* DT.closeParenthesis.skipWS)
+    ((DT.openParenthesis.skipWS.soft *> argument.skipWS
+      .repSep0(sep = DT.comma.skipWS)).soft <* DT.closeParenthesis.skipWS)
       .map { args =>
         ArgumentList(args.toIndexedSeq)
       }
@@ -691,16 +692,15 @@ object XPathElemParser:
       .filter(nm => !ReservedFunctionNames.contains(nm))
       .backtrack
       .soft <* DT.hash.skipWS).soft ~ integerLiteral)
-      .map {
-        case (name, arity) => NamedFunctionRef(name, arity.value)
+      .map { case (name, arity) =>
+        NamedFunctionRef(name, arity.value)
       }
   }
 
   val inlineFunctionExpr: P[InlineFunctionExpr] = P.defer {
     ((((NDT.functionWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> paramList.skipWS.?).soft <* DT.closeParenthesis.skipWS).soft ~ (NDT.asWord.skipWS.soft *> sequenceType.skipWS).? ~ enclosedExpr.skipWS)
-      .map {
-        case ((parListOption, resultTpeOption), body) =>
-          InlineFunctionExpr(parListOption, resultTpeOption, body)
+      .map { case ((parListOption, resultTpeOption), body) =>
+        InlineFunctionExpr(parListOption, resultTpeOption, body)
       }
   }
 
@@ -712,8 +712,8 @@ object XPathElemParser:
   }
 
   val mapConstructorEntry: P[MapConstructorEntry] = P.defer {
-    ((exprSingle.skipWS <* DT.colon.skipWS) ~ exprSingle.skipWS).map {
-      case (k, v) => MapConstructorEntry(k, v)
+    ((exprSingle.skipWS <* DT.colon.skipWS) ~ exprSingle.skipWS).map { case (k, v) =>
+      MapConstructorEntry(k, v)
     }
   }
 
@@ -767,7 +767,8 @@ object XPathElemParser:
 
   val itemType: P[ItemType] = P.defer {
     P.oneOf(
-      kindTestItemType :: anyItemType :: anyFunctionTest :: typedFunctionTest :: atomicOrUnionType :: parenthesizedItemType :: mapTest :: arrayTest :: Nil)
+      kindTestItemType :: anyItemType :: anyFunctionTest :: typedFunctionTest :: atomicOrUnionType :: parenthesizedItemType :: mapTest :: arrayTest :: Nil
+    )
   }
 
   val kindTestItemType: P[KindTestItemType] =
@@ -786,9 +787,11 @@ object XPathElemParser:
 
   val typedFunctionTest: P[TypedFunctionTest] = P.defer {
     (((NDT.functionWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> sequenceType.skipWS
-      .repSep0(sep = DT.comma.skipWS) <* DT.closeParenthesis.skipWS).soft ~ (NDT.asWord.skipWS.soft *> sequenceType.skipWS))
-      .map {
-        case (parTpes, resultTpe) => TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
+      .repSep0(sep =
+        DT.comma.skipWS
+      ) <* DT.closeParenthesis.skipWS).soft ~ (NDT.asWord.skipWS.soft *> sequenceType.skipWS))
+      .map { case (parTpes, resultTpe) =>
+        TypedFunctionTest(parTpes.toIndexedSeq, resultTpe)
       }
   }
 
@@ -812,8 +815,8 @@ object XPathElemParser:
 
   val typedMapTest: P[TypedMapTest] = P.defer {
     (((((NDT.mapWord.skipWS.soft ~ DT.openParenthesis.skipWS).soft *> atomicOrUnionType.skipWS).soft <* DT.comma.skipWS).soft ~ sequenceType.skipWS).soft <* DT.closeParenthesis.skipWS)
-      .map {
-        case (kt, vt) => TypedMapTest(kt, vt)
+      .map { case (kt, vt) =>
+        TypedMapTest(kt, vt)
       }
   }
 

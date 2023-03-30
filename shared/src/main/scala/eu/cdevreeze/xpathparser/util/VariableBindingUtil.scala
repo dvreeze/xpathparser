@@ -30,14 +30,16 @@ import eu.cdevreeze.xpathparser.ast.XPathElem
  * function names, type names, and any kind of name in node tests (kind tests and name tests). This utility only cares
  * about variables (including function parameters).
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 object VariableBindingUtil:
 
   /**
-   * Returns all VarRef elements that are bound, given the passed inherited "introduced" variables and the variable bindings
-   * of and in the given element itself. Note that function parameters (in inline functions) must also be treated as "introduced" variables.
-   * All bound VarRefs that are descendant-or-self elements of the parameter element are returned.
+   * Returns all VarRef elements that are bound, given the passed inherited "introduced" variables and the variable
+   * bindings of and in the given element itself. Note that function parameters (in inline functions) must also be
+   * treated as "introduced" variables. All bound VarRefs that are descendant-or-self elements of the parameter element
+   * are returned.
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
@@ -52,7 +54,8 @@ object VariableBindingUtil:
               val variableBinding = e.variableBindings(variableBindingIndex)
               val prevVariableBindings = e.variableBindings.take(variableBindingIndex)
 
-              val prevIntroducedVariables = inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
+              val prevIntroducedVariables =
+                inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
 
               findAllBoundVariables(variableBinding.expr, prevIntroducedVariables)
             }
@@ -63,7 +66,8 @@ object VariableBindingUtil:
 
         rawLoopGeneratorResult.distinct ++ returnExprResult
       case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
-        val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
+        val introducedVariables =
+          inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
 
         findAllBoundVariables(body, introducedVariables)
       case e: VariableBinding =>
@@ -74,9 +78,10 @@ object VariableBindingUtil:
         e.children.flatMap(che => findAllBoundVariables(che, inheritedIntroducedVariables))
 
   /**
-   * Returns all VarRef elements that are free despite the passed inherited "introduced" variables and the variable bindings
-   * of and in the given element itself. Note that function parameters (in inline functions) must also be treated as "introduced" variables.
-   * All free VarRefs that are descendant-or-self elements of the parameter element are returned.
+   * Returns all VarRef elements that are free despite the passed inherited "introduced" variables and the variable
+   * bindings of and in the given element itself. Note that function parameters (in inline functions) must also be
+   * treated as "introduced" variables. All free VarRefs that are descendant-or-self elements of the parameter element
+   * are returned.
    *
    * The "introduced" variables are those in variable bindings as well as function parameters.
    */
@@ -91,7 +96,8 @@ object VariableBindingUtil:
               val variableBinding = e.variableBindings(variableBindingIndex)
               val prevVariableBindings = e.variableBindings.take(variableBindingIndex)
 
-              val prevIntroducedVariables = inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
+              val prevIntroducedVariables =
+                inheritedIntroducedVariables.union(prevVariableBindings.map(_.varName).toSet)
 
               findAllFreeVariables(variableBinding.expr, prevIntroducedVariables)
             }
@@ -102,7 +108,8 @@ object VariableBindingUtil:
 
         rawLoopGeneratorResult.distinct ++ returnExprResult
       case e @ InlineFunctionExpr(paramListOption, resultTypeOption, body) =>
-        val introducedVariables = inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
+        val introducedVariables =
+          inheritedIntroducedVariables.union(paramListOption.toSeq.flatMap(_.params).map(_.paramName).toSet)
 
         findAllFreeVariables(body, introducedVariables)
       case e: VariableBinding =>

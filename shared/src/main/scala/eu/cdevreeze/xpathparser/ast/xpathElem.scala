@@ -22,34 +22,34 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
 /**
  * XPath 3.1 AST. The root of the type hierarchy is XPathElem. It offers the ElemApi query API.
  *
- * The requirements on this AST are as follows:
- * <ul>
- * <li>It must represent the syntax tree of a successfully parsed XPath expression</li>
- * <li>It is not annotated with more semantic information, like type information that is not included in the XPath expression</li>
- * <li>It does not know anything about the context in which it runs, like bound namespaces etc.</li>
- * <li>It is rich enough to be able to serialize the AST back to XPath, knowing exactly where to place parentheses, braces, etc.</li>
- * <li>It should help evaluation, so it should model operator associativity and precedence correctly, where feasible</li>
- * <li>It must be readable in that object composition trees are not unnecessarily deep and therefore hard to comprehend</li>
- * <li>Serialization of the AST to XPath may lead to differences in whitespace (and operator aliases), but other than that the result must be the same</li>
- * <li>The AST class hierarchy does not have to use the exact same names as the XPath grammar</li>
- * <li>Instances of the AST classes are easy to create in an ad-hoc manner, so they contain no parsing state</li>
- * <li>The AST classes are case classes, with value equality and good support for pattern matching</li>
- * </ul>
+ * The requirements on this AST are as follows: <ul> <li>It must represent the syntax tree of a successfully parsed
+ * XPath expression</li> <li>It is not annotated with more semantic information, like type information that is not
+ * included in the XPath expression</li> <li>It does not know anything about the context in which it runs, like bound
+ * namespaces etc.</li> <li>It is rich enough to be able to serialize the AST back to XPath, knowing exactly where to
+ * place parentheses, braces, etc.</li> <li>It should help evaluation, so it should model operator associativity and
+ * precedence correctly, where feasible</li> <li>It must be readable in that object composition trees are not
+ * unnecessarily deep and therefore hard to comprehend</li> <li>Serialization of the AST to XPath may lead to
+ * differences in whitespace (and operator aliases), but other than that the result must be the same</li> <li>The AST
+ * class hierarchy does not have to use the exact same names as the XPath grammar</li> <li>Instances of the AST classes
+ * are easy to create in an ad-hoc manner, so they contain no parsing state</li> <li>The AST classes are case classes,
+ * with value equality and good support for pattern matching</li> </ul>
  *
- * It would be natural for the AST types to have IS-A relationships modeled as type inheritance, and HAS-A
- * relationships modeled as composition. Where feasible, this approach has been followed. Consequently, sealed trait inheritance
- * has been used a lot (IS-A instead of HAS-A), and unnecessarily deep object trees are prevented in this way.
+ * It would be natural for the AST types to have IS-A relationships modeled as type inheritance, and HAS-A relationships
+ * modeled as composition. Where feasible, this approach has been followed. Consequently, sealed trait inheritance has
+ * been used a lot (IS-A instead of HAS-A), and unnecessarily deep object trees are prevented in this way.
  *
- * Having such an AST of a successfully parsed XPath expression, it must be easy to reliably find used namespace prefixes, for example.
+ * Having such an AST of a successfully parsed XPath expression, it must be easy to reliably find used namespace
+ * prefixes, for example.
  *
  * The AST, as well as the parser, were developed using the XPath 3.1 specification as input. In particular, see
- * https://www.w3.org/TR/xpath-31/#id-grammar and https://www.w3.org/TR/xpath-31/#id-precedence-order. Note that the grammar
- * in isolation does not clearly convey left or right associativity of operators, so the extra information about operator
- * precedence and associativity is essential for understanding the "structure" of compound expressions.
+ * https://www.w3.org/TR/xpath-31/#id-grammar and https://www.w3.org/TR/xpath-31/#id-precedence-order. Note that the
+ * grammar in isolation does not clearly convey left or right associativity of operators, so the extra information about
+ * operator precedence and associativity is essential for understanding the "structure" of compound expressions.
  *
  * TODO Improve several class names.
  *
- * @author Chris de Vreeze
+ * @author
+ *   Chris de Vreeze
  */
 sealed trait XPathElem extends ElemLike[XPathElem]:
 
@@ -81,13 +81,14 @@ sealed trait VariableIntroducingExpr extends XPathElem:
   def returnExpr: XPathElem
 
   /**
-   * Returns the scope of the variable binding whose index is given as parameter.
-   * The scope determines where variables can be bound by that variable binding.
+   * Returns the scope of the variable binding whose index is given as parameter. The scope determines where variables
+   * can be bound by that variable binding.
    */
   final def scopeOfVariableBinding(variableBindingIndex: Int): IndexedSeq[XPathElem] =
     require(
       0 <= variableBindingIndex && variableBindingIndex < variableBindings.size,
-      s"Wrong variable binding index: $variableBindingIndex")
+      s"Wrong variable binding index: $variableBindingIndex"
+    )
 
     variableBindings.drop(variableBindingIndex + 1).map(_.expr).appended(returnExpr)
 
@@ -108,8 +109,8 @@ final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem:
 // Expressions
 
 /**
- * Expression, which is a sequence of 1 or more ExprSingle objects, separated by commas.
- * The "comma" operator is associative, so the AST could have been left-associative or right-associative.
+ * Expression, which is a sequence of 1 or more ExprSingle objects, separated by commas. The "comma" operator is
+ * associative, so the AST could have been left-associative or right-associative.
  */
 sealed trait Expr extends XPathExpr
 
@@ -125,14 +126,14 @@ final case class CompoundExpr(firstExprSingle: ExprSingle, remainingExprSingleSe
 object Expr:
 
   def apply(exprSingleSeq: NonEmptyVector[ExprSingle]): Expr =
-    if exprSingleSeq.toVector.sizeIs == 1 then
-      exprSingleSeq.head
+    if exprSingleSeq.toVector.sizeIs == 1 then exprSingleSeq.head
     else
       assert(exprSingleSeq.toVector.sizeIs >= 2)
       CompoundExpr(exprSingleSeq.head, NonEmptyVector.fromVectorUnsafe(exprSingleSeq.tail))
 
 /**
- * Expression-single, that is, an expression without any top-level commas. Most XPath expressions are expression-singles.
+ * Expression-single, that is, an expression without any top-level commas. Most XPath expressions are
+ * expression-singles.
  */
 sealed trait ExprSingle extends SimpleExpr
 
@@ -155,8 +156,8 @@ final case class LetExpr(simpleLetBindings: NonEmptyVector[SimpleLetBinding], re
 final case class QuantifiedExpr(
     quantifier: Quantifier,
     simpleBindings: NonEmptyVector[SimpleBindingInQuantifiedExpr],
-    satisfiesExpr: ExprSingle)
-    extends ExprSingle
+    satisfiesExpr: ExprSingle
+) extends ExprSingle
     with VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleBindings.toVector.prepended(quantifier).appended(satisfiesExpr)
@@ -185,8 +186,7 @@ final case class CompoundOrExpr(firstAndExpr: AndExpr, remainingAndExprs: NonEmp
 object OrExpr:
 
   def apply(andExprs: NonEmptyVector[AndExpr]): OrExpr =
-    if andExprs.toVector.sizeIs == 1 then
-      andExprs.head
+    if andExprs.toVector.sizeIs == 1 then andExprs.head
     else
       assert(andExprs.toVector.sizeIs >= 2)
       CompoundOrExpr(andExprs.head, NonEmptyVector.fromVectorUnsafe(andExprs.tail))
@@ -200,8 +200,8 @@ sealed trait SimpleAndExpr extends AndExpr
 
 final case class CompoundAndExpr(
     firstComparisonExpr: ComparisonExpr,
-    remainingComparisonExprs: NonEmptyVector[ComparisonExpr])
-    extends AndExpr:
+    remainingComparisonExprs: NonEmptyVector[ComparisonExpr]
+) extends AndExpr:
 
   def comparisonExprs: IndexedSeq[ComparisonExpr] = remainingComparisonExprs.toVector.prepended(firstComparisonExpr)
 
@@ -210,15 +210,14 @@ final case class CompoundAndExpr(
 object AndExpr:
 
   def apply(comparisonExprs: NonEmptyVector[ComparisonExpr]): AndExpr =
-    if comparisonExprs.toVector.sizeIs == 1 then
-      comparisonExprs.head
+    if comparisonExprs.toVector.sizeIs == 1 then comparisonExprs.head
     else
       assert(comparisonExprs.toVector.sizeIs >= 2)
       CompoundAndExpr(comparisonExprs.head, NonEmptyVector.fromVectorUnsafe(comparisonExprs.tail))
 
 /**
- * Comparison expression, where the optional comparison operator is a value comparison operator,
- * general comparison operator or node comparison operator.
+ * Comparison expression, where the optional comparison operator is a value comparison operator, general comparison
+ * operator or node comparison operator.
  */
 sealed trait ComparisonExpr extends SimpleAndExpr
 
@@ -227,14 +226,14 @@ sealed trait SimpleComparisonExpr extends ComparisonExpr
 final case class CompoundComparisonExpr(
     stringConcatExpr1: StringConcatExpr,
     comp: Comp,
-    stringConcatExpr2: StringConcatExpr)
-    extends ComparisonExpr:
+    stringConcatExpr2: StringConcatExpr
+) extends ComparisonExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(stringConcatExpr1, comp, stringConcatExpr2)
 
 /**
- * String concatenation expression, where the optional string concatenation uses the "||" operator.
- * String concatenation is left-associative.
+ * String concatenation expression, where the optional string concatenation uses the "||" operator. String concatenation
+ * is left-associative.
  */
 sealed trait StringConcatExpr extends SimpleComparisonExpr
 
@@ -250,8 +249,7 @@ final case class CompoundStringConcatExpr(firstRangeExpr: RangeExpr, remainingRa
 object StringConcatExpr:
 
   def apply(rangeExprs: NonEmptyVector[RangeExpr]): StringConcatExpr =
-    if rangeExprs.toVector.sizeIs == 1 then
-      rangeExprs.head
+    if rangeExprs.toVector.sizeIs == 1 then rangeExprs.head
     else
       assert(rangeExprs.toVector.sizeIs >= 2)
       CompoundStringConcatExpr(rangeExprs.head, NonEmptyVector.fromVectorUnsafe(rangeExprs.tail))
@@ -283,10 +281,9 @@ object AdditiveExpr:
 
   def apply(
       firstExpr: MultiplicativeExpr,
-      operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr =
-
-    if operatorExprPairs.isEmpty then
-      firstExpr
+      operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]
+  ): AdditiveExpr =
+    if operatorExprPairs.isEmpty then firstExpr
     else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
@@ -307,16 +304,15 @@ final case class CompoundMultiplicativeExpr(init: MultiplicativeExpr, op: Multip
 object MultiplicativeExpr:
 
   def apply(firstExpr: UnionExpr, operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr =
-    if operatorExprPairs.isEmpty then
-      firstExpr
+    if operatorExprPairs.isEmpty then firstExpr
     else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundMultiplicativeExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
 
 /**
- * Union expression, where the optional union uses operator "union" or "|".
- * The union operator is associative, so the AST could have been left-associative or right-associative.
+ * Union expression, where the optional union uses operator "union" or "|". The union operator is associative, so the
+ * AST could have been left-associative or right-associative.
  */
 sealed trait UnionExpr extends SimpleMultiplicativeExpr
 
@@ -324,8 +320,8 @@ sealed trait SimpleUnionExpr extends UnionExpr
 
 final case class CompoundUnionExpr(
     firstIntersectExceptExpr: IntersectExceptExpr,
-    remainingIntersectExceptExprs: NonEmptyVector[IntersectExceptExpr])
-    extends UnionExpr:
+    remainingIntersectExceptExprs: NonEmptyVector[IntersectExceptExpr]
+) extends UnionExpr:
 
   def intersectExceptExprs: IndexedSeq[IntersectExceptExpr] =
     remainingIntersectExceptExprs.toVector.prepended(firstIntersectExceptExpr)
@@ -335,14 +331,14 @@ final case class CompoundUnionExpr(
 object UnionExpr:
 
   def apply(intersectExceptExprs: NonEmptyVector[IntersectExceptExpr]): UnionExpr =
-    if intersectExceptExprs.toVector.sizeIs == 1 then
-      intersectExceptExprs.head
+    if intersectExceptExprs.toVector.sizeIs == 1 then intersectExceptExprs.head
     else
       assert(intersectExceptExprs.toVector.sizeIs >= 2)
       CompoundUnionExpr(intersectExceptExprs.head, NonEmptyVector.fromVectorUnsafe(intersectExceptExprs.tail))
 
 /**
- * Intersect or except expression, optionally using the "intersect" or "except" operator. These operators are left-associative.
+ * Intersect or except expression, optionally using the "intersect" or "except" operator. These operators are
+ * left-associative.
  */
 sealed trait IntersectExceptExpr extends SimpleUnionExpr
 
@@ -351,8 +347,8 @@ sealed trait SimpleIntersectExceptExpr extends IntersectExceptExpr
 final case class CompoundIntersectExceptExpr(
     init: IntersectExceptExpr,
     op: IntersectExceptOp,
-    lastInstanceOfExpr: InstanceOfExpr)
-    extends IntersectExceptExpr:
+    lastInstanceOfExpr: InstanceOfExpr
+) extends IntersectExceptExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastInstanceOfExpr)
 
@@ -360,10 +356,9 @@ object IntersectExceptExpr:
 
   def apply(
       firstExpr: InstanceOfExpr,
-      operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]): IntersectExceptExpr =
-
-    if operatorExprPairs.isEmpty then
-      firstExpr
+      operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]
+  ): IntersectExceptExpr =
+    if operatorExprPairs.isEmpty then firstExpr
     else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
@@ -436,10 +431,8 @@ final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: Non
 object ArrowExpr:
 
   def apply(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall]): ArrowExpr =
-    if arrowFunctionCalls.isEmpty then
-      unaryExpr
-    else
-      CompoundArrowExpr(unaryExpr, NonEmptyVector.fromVectorUnsafe(arrowFunctionCalls.toVector))
+    if arrowFunctionCalls.isEmpty then unaryExpr
+    else CompoundArrowExpr(unaryExpr, NonEmptyVector.fromVectorUnsafe(arrowFunctionCalls.toVector))
 
 final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifier, argumentList: ArgumentList)
     extends XPathElem:
@@ -475,10 +468,8 @@ final case class CompoundUnaryExpr(ops: NonEmptyVector[UnaryOp], valueExpr: Valu
 object UnaryExpr:
 
   def apply(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr): UnaryExpr =
-    if ops.isEmpty then
-      valueExpr
-    else
-      CompoundUnaryExpr(NonEmptyVector.fromVectorUnsafe(ops.toVector), valueExpr)
+    if ops.isEmpty then valueExpr
+    else CompoundUnaryExpr(NonEmptyVector.fromVectorUnsafe(ops.toVector), valueExpr)
 
 sealed trait ValueExpr extends SimpleUnaryExpr
 
@@ -499,8 +490,7 @@ final case class CompoundSimpleMapExpr(firstPathExpr: PathExpr, remainingPathExp
 object SimpleMapExpr:
 
   def apply(pathExprs: NonEmptyVector[PathExpr]): SimpleMapExpr =
-    if pathExprs.toVector.sizeIs == 1 then
-      pathExprs.head
+    if pathExprs.toVector.sizeIs == 1 then pathExprs.head
     else
       assert(pathExprs.toVector.sizeIs >= 2)
       CompoundSimpleMapExpr(pathExprs.head, NonEmptyVector.fromVectorUnsafe(pathExprs.tail))
@@ -508,8 +498,8 @@ object SimpleMapExpr:
 // Path and step expressions
 
 /**
- * Path expression, so a relative path expression possibly preceded by "/" or "//" (or the expression "/" itself).
- * Path expressions are used to locate nodes within trees.
+ * Path expression, so a relative path expression possibly preceded by "/" or "//" (or the expression "/" itself). Path
+ * expressions are used to locate nodes within trees.
  */
 sealed trait PathExpr extends SimpleSimpleMapExpr
 
@@ -539,22 +529,21 @@ final case class CompoundRelativePathExpr(init: RelativePathExpr, op: StepOp, la
 object RelativePathExpr:
 
   def apply(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr =
-    if operatorExprPairs.isEmpty then
-      firstExpr
+    if operatorExprPairs.isEmpty then firstExpr
     else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundRelativePathExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
 
 /**
- * Single step in an absolute or relative path expression. Note that step expressions are either
- * postfix expressions or axis steps.
+ * Single step in an absolute or relative path expression. Note that step expressions are either postfix expressions or
+ * axis steps.
  */
 sealed trait StepExpr extends SimpleRelativePathExpr
 
 /**
- * Postfix expression, which is a primary expression succeeded by 0 or more predicates, arguments lists
- * and/or lookups. Note that lookup (the "?" operator) is left-associative.
+ * Postfix expression, which is a primary expression succeeded by 0 or more predicates, arguments lists and/or lookups.
+ * Note that lookup (the "?" operator) is left-associative.
  */
 sealed trait PostfixExpr extends StepExpr
 
@@ -567,10 +556,8 @@ final case class CompoundPostfixExpr(primaryExpr: PrimaryExpr, postfixes: NonEmp
 object PostfixExpr:
 
   def apply(primaryExpr: PrimaryExpr, postfixes: IndexedSeq[Postfix]): PostfixExpr =
-    if postfixes.isEmpty then
-      primaryExpr
-    else
-      CompoundPostfixExpr(primaryExpr, NonEmptyVector.fromVectorUnsafe(postfixes.toVector))
+    if postfixes.isEmpty then primaryExpr
+    else CompoundPostfixExpr(primaryExpr, NonEmptyVector.fromVectorUnsafe(postfixes.toVector))
 
 /**
  * Axis step. For example: "child::book[@pageCount > 800]". The "[]" operator for adding predicates is left-associative.
@@ -696,10 +683,9 @@ case object AnyKindTest extends KindTest with LeafElem
 // Primary expressions
 
 /**
- * Primary expression, which are the basic primitives of the language. Examples are literals,
- * variable references, function calls etc. Note that primary expressions can be rather simple but they
- * do not have to be simple. For example, function calls can have arguments that are themselves quite
- * complex expressions.
+ * Primary expression, which are the basic primitives of the language. Examples are literals, variable references,
+ * function calls etc. Note that primary expressions can be rather simple but they do not have to be simple. For
+ * example, function calls can have arguments that are themselves quite complex expressions.
  */
 sealed trait PrimaryExpr extends SimplePostfixExpr
 
@@ -734,8 +720,8 @@ final case class NamedFunctionRef(functionName: EQName, arity: BigInt) extends F
 final case class InlineFunctionExpr(
     paramListOption: Option[ParamList],
     resultTypeOption: Option[SequenceType],
-    body: EnclosedExpr)
-    extends FunctionItemExpr:
+    body: EnclosedExpr
+) extends FunctionItemExpr:
 
   def children: IndexedSeq[XPathElem] =
     paramListOption.toIndexedSeq.appendedAll(resultTypeOption.toIndexedSeq).appended(body)
