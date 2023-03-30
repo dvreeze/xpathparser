@@ -51,26 +51,24 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  *
  * @author Chris de Vreeze
  */
-sealed trait XPathElem extends ElemLike[XPathElem] {
+sealed trait XPathElem extends ElemLike[XPathElem]:
 
   /**
    * Returns the (immediate) child elements of this element.
    */
   def children: IndexedSeq[XPathElem]
-}
 
 /**
  * Any leaf element in the AST of an XPath expression.
  */
-sealed trait LeafElem extends XPathElem {
+sealed trait LeafElem extends XPathElem:
 
   final def children: IndexedSeq[XPathElem] = IndexedSeq()
-}
 
 /**
  * XPathElem that can introduce one or more variable bindings.
  */
-sealed trait VariableIntroducingExpr extends XPathElem {
+sealed trait VariableIntroducingExpr extends XPathElem:
 
   /**
    * Returns the variable bindings introduced by this element.
@@ -86,14 +84,12 @@ sealed trait VariableIntroducingExpr extends XPathElem {
    * Returns the scope of the variable binding whose index is given as parameter.
    * The scope determines where variables can be bound by that variable binding.
    */
-  final def scopeOfVariableBinding(variableBindingIndex: Int): IndexedSeq[XPathElem] = {
+  final def scopeOfVariableBinding(variableBindingIndex: Int): IndexedSeq[XPathElem] =
     require(
       0 <= variableBindingIndex && variableBindingIndex < variableBindings.size,
       s"Wrong variable binding index: $variableBindingIndex")
 
     variableBindings.drop(variableBindingIndex + 1).map(_.expr).appended(returnExpr)
-  }
-}
 
 /**
  * XPath expression.
@@ -105,10 +101,9 @@ sealed trait XPathExpr extends XPathElem
 /**
  * Optional expression enclosed in braces.
  */
-final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem {
+final case class EnclosedExpr(exprOption: Option[Expr]) extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = exprOption.toIndexedSeq
-}
 
 // Expressions
 
@@ -121,24 +116,20 @@ sealed trait Expr extends XPathExpr
 sealed trait SimpleExpr extends Expr
 
 final case class CompoundExpr(firstExprSingle: ExprSingle, remainingExprSingleSeq: NonEmptyVector[ExprSingle])
-    extends Expr {
+    extends Expr:
 
   def exprSingleSeq: IndexedSeq[ExprSingle] = remainingExprSingleSeq.toVector.prepended(firstExprSingle)
 
   def children: IndexedSeq[XPathElem] = exprSingleSeq
-}
 
-object Expr {
+object Expr:
 
-  def apply(exprSingleSeq: NonEmptyVector[ExprSingle]): Expr = {
-    if (exprSingleSeq.toVector.sizeIs == 1) {
+  def apply(exprSingleSeq: NonEmptyVector[ExprSingle]): Expr =
+    if exprSingleSeq.toVector.sizeIs == 1 then
       exprSingleSeq.head
-    } else {
+    else
       assert(exprSingleSeq.toVector.sizeIs >= 2)
       CompoundExpr(exprSingleSeq.head, NonEmptyVector.fromVectorUnsafe(exprSingleSeq.tail))
-    }
-  }
-}
 
 /**
  * Expression-single, that is, an expression without any top-level commas. Most XPath expressions are expression-singles.
@@ -147,40 +138,36 @@ sealed trait ExprSingle extends SimpleExpr
 
 final case class ForExpr(simpleForBindings: NonEmptyVector[SimpleForBinding], returnExpr: ExprSingle)
     extends ExprSingle
-    with VariableIntroducingExpr {
+    with VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleForBindings.toVector.appended(returnExpr)
 
   def variableBindings: IndexedSeq[VariableBinding] = simpleForBindings.toVector
-}
 
 final case class LetExpr(simpleLetBindings: NonEmptyVector[SimpleLetBinding], returnExpr: ExprSingle)
     extends ExprSingle
-    with VariableIntroducingExpr {
+    with VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleLetBindings.toVector.appended(returnExpr)
 
   def variableBindings: IndexedSeq[VariableBinding] = simpleLetBindings.toVector
-}
 
 final case class QuantifiedExpr(
     quantifier: Quantifier,
     simpleBindings: NonEmptyVector[SimpleBindingInQuantifiedExpr],
     satisfiesExpr: ExprSingle)
     extends ExprSingle
-    with VariableIntroducingExpr {
+    with VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleBindings.toVector.prepended(quantifier).appended(satisfiesExpr)
 
   def variableBindings: IndexedSeq[VariableBinding] = simpleBindings.toVector
 
   def returnExpr: XPathElem = satisfiesExpr
-}
 
-final case class IfExpr(condition: Expr, thenExpr: ExprSingle, elseExpr: ExprSingle) extends ExprSingle {
+final case class IfExpr(condition: Expr, thenExpr: ExprSingle, elseExpr: ExprSingle) extends ExprSingle:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(condition, thenExpr, elseExpr)
-}
 
 /**
  * Or-expression. The "or" operator is associative, so the AST could have been left-associative or right-associative.
@@ -189,24 +176,20 @@ sealed trait OrExpr extends ExprSingle
 
 sealed trait SimpleOrExpr extends OrExpr
 
-final case class CompoundOrExpr(firstAndExpr: AndExpr, remainingAndExprs: NonEmptyVector[AndExpr]) extends OrExpr {
+final case class CompoundOrExpr(firstAndExpr: AndExpr, remainingAndExprs: NonEmptyVector[AndExpr]) extends OrExpr:
 
   def andExprs: IndexedSeq[AndExpr] = remainingAndExprs.toVector.prepended(firstAndExpr)
 
   def children: IndexedSeq[XPathElem] = andExprs
-}
 
-object OrExpr {
+object OrExpr:
 
-  def apply(andExprs: NonEmptyVector[AndExpr]): OrExpr = {
-    if (andExprs.toVector.sizeIs == 1) {
+  def apply(andExprs: NonEmptyVector[AndExpr]): OrExpr =
+    if andExprs.toVector.sizeIs == 1 then
       andExprs.head
-    } else {
+    else
       assert(andExprs.toVector.sizeIs >= 2)
       CompoundOrExpr(andExprs.head, NonEmptyVector.fromVectorUnsafe(andExprs.tail))
-    }
-  }
-}
 
 /**
  * And-expression. The "and" operator is associative, so the AST could have been left-associative or right-associative.
@@ -218,24 +201,20 @@ sealed trait SimpleAndExpr extends AndExpr
 final case class CompoundAndExpr(
     firstComparisonExpr: ComparisonExpr,
     remainingComparisonExprs: NonEmptyVector[ComparisonExpr])
-    extends AndExpr {
+    extends AndExpr:
 
   def comparisonExprs: IndexedSeq[ComparisonExpr] = remainingComparisonExprs.toVector.prepended(firstComparisonExpr)
 
   def children: IndexedSeq[XPathElem] = comparisonExprs
-}
 
-object AndExpr {
+object AndExpr:
 
-  def apply(comparisonExprs: NonEmptyVector[ComparisonExpr]): AndExpr = {
-    if (comparisonExprs.toVector.sizeIs == 1) {
+  def apply(comparisonExprs: NonEmptyVector[ComparisonExpr]): AndExpr =
+    if comparisonExprs.toVector.sizeIs == 1 then
       comparisonExprs.head
-    } else {
+    else
       assert(comparisonExprs.toVector.sizeIs >= 2)
       CompoundAndExpr(comparisonExprs.head, NonEmptyVector.fromVectorUnsafe(comparisonExprs.tail))
-    }
-  }
-}
 
 /**
  * Comparison expression, where the optional comparison operator is a value comparison operator,
@@ -249,10 +228,9 @@ final case class CompoundComparisonExpr(
     stringConcatExpr1: StringConcatExpr,
     comp: Comp,
     stringConcatExpr2: StringConcatExpr)
-    extends ComparisonExpr {
+    extends ComparisonExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(stringConcatExpr1, comp, stringConcatExpr2)
-}
 
 /**
  * String concatenation expression, where the optional string concatenation uses the "||" operator.
@@ -263,24 +241,20 @@ sealed trait StringConcatExpr extends SimpleComparisonExpr
 sealed trait SimpleStringConcatExpr extends StringConcatExpr
 
 final case class CompoundStringConcatExpr(firstRangeExpr: RangeExpr, remainingRangeExprs: NonEmptyVector[RangeExpr])
-    extends StringConcatExpr {
+    extends StringConcatExpr:
 
   def rangeExprs: IndexedSeq[RangeExpr] = remainingRangeExprs.toVector.prepended(firstRangeExpr)
 
   def children: IndexedSeq[XPathElem] = rangeExprs
-}
 
-object StringConcatExpr {
+object StringConcatExpr:
 
-  def apply(rangeExprs: NonEmptyVector[RangeExpr]): StringConcatExpr = {
-    if (rangeExprs.toVector.sizeIs == 1) {
+  def apply(rangeExprs: NonEmptyVector[RangeExpr]): StringConcatExpr =
+    if rangeExprs.toVector.sizeIs == 1 then
       rangeExprs.head
-    } else {
+    else
       assert(rangeExprs.toVector.sizeIs >= 2)
       CompoundStringConcatExpr(rangeExprs.head, NonEmptyVector.fromVectorUnsafe(rangeExprs.tail))
-    }
-  }
-}
 
 /**
  * Range expression, where the optional range uses keyword "to" as operator.
@@ -289,10 +263,9 @@ sealed trait RangeExpr extends SimpleStringConcatExpr
 
 sealed trait SimpleRangeExpr extends RangeExpr
 
-final case class CompoundRangeExpr(additiveExpr1: AdditiveExpr, additiveExpr2: AdditiveExpr) extends RangeExpr {
+final case class CompoundRangeExpr(additiveExpr1: AdditiveExpr, additiveExpr2: AdditiveExpr) extends RangeExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(additiveExpr1, additiveExpr2)
-}
 
 /**
  * Additive expression. Addition/subtraction is left-associative.
@@ -302,26 +275,22 @@ sealed trait AdditiveExpr extends SimpleRangeExpr
 sealed trait SimpleAdditiveExpr extends AdditiveExpr
 
 final case class CompoundAdditiveExpr(init: AdditiveExpr, op: AdditionOp, lastMultiplicativeExpr: MultiplicativeExpr)
-    extends AdditiveExpr {
+    extends AdditiveExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastMultiplicativeExpr)
-}
 
-object AdditiveExpr {
+object AdditiveExpr:
 
   def apply(
       firstExpr: MultiplicativeExpr,
-      operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr = {
+      operatorExprPairs: IndexedSeq[(AdditionOp, MultiplicativeExpr)]): AdditiveExpr =
 
-    if (operatorExprPairs.isEmpty) {
+    if operatorExprPairs.isEmpty then
       firstExpr
-    } else {
+    else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundAdditiveExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
-    }
-  }
-}
 
 /**
  * Multiplicative expression. The corresponding multiplication/division operators are left-associative.
@@ -331,23 +300,19 @@ sealed trait MultiplicativeExpr extends SimpleAdditiveExpr
 sealed trait SimpleMultiplicativeExpr extends MultiplicativeExpr
 
 final case class CompoundMultiplicativeExpr(init: MultiplicativeExpr, op: MultiplicativeOp, lastUnionExpr: UnionExpr)
-    extends MultiplicativeExpr {
+    extends MultiplicativeExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastUnionExpr)
-}
 
-object MultiplicativeExpr {
+object MultiplicativeExpr:
 
-  def apply(firstExpr: UnionExpr, operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr = {
-    if (operatorExprPairs.isEmpty) {
+  def apply(firstExpr: UnionExpr, operatorExprPairs: IndexedSeq[(MultiplicativeOp, UnionExpr)]): MultiplicativeExpr =
+    if operatorExprPairs.isEmpty then
       firstExpr
-    } else {
+    else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundMultiplicativeExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
-    }
-  }
-}
 
 /**
  * Union expression, where the optional union uses operator "union" or "|".
@@ -360,25 +325,21 @@ sealed trait SimpleUnionExpr extends UnionExpr
 final case class CompoundUnionExpr(
     firstIntersectExceptExpr: IntersectExceptExpr,
     remainingIntersectExceptExprs: NonEmptyVector[IntersectExceptExpr])
-    extends UnionExpr {
+    extends UnionExpr:
 
   def intersectExceptExprs: IndexedSeq[IntersectExceptExpr] =
     remainingIntersectExceptExprs.toVector.prepended(firstIntersectExceptExpr)
 
   def children: IndexedSeq[XPathElem] = intersectExceptExprs
-}
 
-object UnionExpr {
+object UnionExpr:
 
-  def apply(intersectExceptExprs: NonEmptyVector[IntersectExceptExpr]): UnionExpr = {
-    if (intersectExceptExprs.toVector.sizeIs == 1) {
+  def apply(intersectExceptExprs: NonEmptyVector[IntersectExceptExpr]): UnionExpr =
+    if intersectExceptExprs.toVector.sizeIs == 1 then
       intersectExceptExprs.head
-    } else {
+    else
       assert(intersectExceptExprs.toVector.sizeIs >= 2)
       CompoundUnionExpr(intersectExceptExprs.head, NonEmptyVector.fromVectorUnsafe(intersectExceptExprs.tail))
-    }
-  }
-}
 
 /**
  * Intersect or except expression, optionally using the "intersect" or "except" operator. These operators are left-associative.
@@ -391,90 +352,74 @@ final case class CompoundIntersectExceptExpr(
     init: IntersectExceptExpr,
     op: IntersectExceptOp,
     lastInstanceOfExpr: InstanceOfExpr)
-    extends IntersectExceptExpr {
+    extends IntersectExceptExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastInstanceOfExpr)
-}
 
-object IntersectExceptExpr {
+object IntersectExceptExpr:
 
   def apply(
       firstExpr: InstanceOfExpr,
-      operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]): IntersectExceptExpr = {
+      operatorExprPairs: IndexedSeq[(IntersectExceptOp, InstanceOfExpr)]): IntersectExceptExpr =
 
-    if (operatorExprPairs.isEmpty) {
+    if operatorExprPairs.isEmpty then
       firstExpr
-    } else {
+    else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundIntersectExceptExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
-    }
-  }
-}
 
 sealed trait InstanceOfExpr extends SimpleIntersectExceptExpr
 
 sealed trait SimpleInstanceOfExpr extends InstanceOfExpr
 
-final case class CompoundInstanceOfExpr(treatExpr: TreatExpr, sequenceType: SequenceType) extends InstanceOfExpr {
+final case class CompoundInstanceOfExpr(treatExpr: TreatExpr, sequenceType: SequenceType) extends InstanceOfExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(treatExpr, sequenceType)
-}
 
-object InstanceOfExpr {
+object InstanceOfExpr:
 
-  def apply(treatExpr: TreatExpr, sequenceTypeOption: Option[SequenceType]): InstanceOfExpr = {
+  def apply(treatExpr: TreatExpr, sequenceTypeOption: Option[SequenceType]): InstanceOfExpr =
     sequenceTypeOption.map(seqType => CompoundInstanceOfExpr(treatExpr, seqType)).getOrElse(treatExpr)
-  }
-}
 
 sealed trait TreatExpr extends SimpleInstanceOfExpr
 
 sealed trait SimpleTreatExpr extends TreatExpr
 
-final case class CompoundTreatExpr(castableExpr: CastableExpr, sequenceType: SequenceType) extends TreatExpr {
+final case class CompoundTreatExpr(castableExpr: CastableExpr, sequenceType: SequenceType) extends TreatExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(castableExpr, sequenceType)
-}
 
-object TreatExpr {
+object TreatExpr:
 
-  def apply(castableExpr: CastableExpr, sequenceTypeOption: Option[SequenceType]): TreatExpr = {
+  def apply(castableExpr: CastableExpr, sequenceTypeOption: Option[SequenceType]): TreatExpr =
     sequenceTypeOption.map(seqType => CompoundTreatExpr(castableExpr, seqType)).getOrElse(castableExpr)
-  }
-}
 
 sealed trait CastableExpr extends SimpleTreatExpr
 
 sealed trait SimpleCastableExpr extends CastableExpr
 
-final case class CompoundCastableExpr(castExpr: CastExpr, singleType: SingleType) extends CastableExpr {
+final case class CompoundCastableExpr(castExpr: CastExpr, singleType: SingleType) extends CastableExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(castExpr, singleType)
-}
 
-object CastableExpr {
+object CastableExpr:
 
-  def apply(castExpr: CastExpr, singleTypeOption: Option[SingleType]): CastableExpr = {
+  def apply(castExpr: CastExpr, singleTypeOption: Option[SingleType]): CastableExpr =
     singleTypeOption.map(singleType => CompoundCastableExpr(castExpr, singleType)).getOrElse(castExpr)
-  }
-}
 
 sealed trait CastExpr extends SimpleCastableExpr
 
 sealed trait SimpleCastExpr extends CastExpr
 
-final case class CompoundCastExpr(arrowExpr: ArrowExpr, singleType: SingleType) extends CastExpr {
+final case class CompoundCastExpr(arrowExpr: ArrowExpr, singleType: SingleType) extends CastExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(arrowExpr, singleType)
-}
 
-object CastExpr {
+object CastExpr:
 
-  def apply(arrowExpr: ArrowExpr, singleTypeOption: Option[SingleType]): CastExpr = {
+  def apply(arrowExpr: ArrowExpr, singleTypeOption: Option[SingleType]): CastExpr =
     singleTypeOption.map(singleType => CompoundCastExpr(arrowExpr, singleType)).getOrElse(arrowExpr)
-  }
-}
 
 /**
  * Arrow expression. The arrow operator is left-associative.
@@ -484,27 +429,22 @@ sealed trait ArrowExpr extends SimpleCastExpr
 sealed trait SimpleArrowExpr extends ArrowExpr
 
 final case class CompoundArrowExpr(unaryExpr: UnaryExpr, arrowFunctionCalls: NonEmptyVector[ArrowFunctionCall])
-    extends ArrowExpr {
+    extends ArrowExpr:
 
   def children: IndexedSeq[XPathElem] = arrowFunctionCalls.toVector.prepended(unaryExpr)
-}
 
-object ArrowExpr {
+object ArrowExpr:
 
-  def apply(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall]): ArrowExpr = {
-    if (arrowFunctionCalls.isEmpty) {
+  def apply(unaryExpr: UnaryExpr, arrowFunctionCalls: IndexedSeq[ArrowFunctionCall]): ArrowExpr =
+    if arrowFunctionCalls.isEmpty then
       unaryExpr
-    } else {
+    else
       CompoundArrowExpr(unaryExpr, NonEmptyVector.fromVectorUnsafe(arrowFunctionCalls.toVector))
-    }
-  }
-}
 
 final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifier, argumentList: ArgumentList)
-    extends XPathElem {
+    extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(arrowFunctionSpecifier, argumentList)
-}
 
 // Note that an arrow function specifier should extend Expr indirectly, but then an EQName must be an expression too
 
@@ -512,16 +452,14 @@ sealed trait ArrowFunctionSpecifier extends XPathElem
 
 final case class EQNameAsArrowFunctionSpecifier(eqName: EQName) extends ArrowFunctionSpecifier with LeafElem
 
-final case class VarRefAsArrowFunctionSpecifier(varRef: VarRef) extends ArrowFunctionSpecifier {
+final case class VarRefAsArrowFunctionSpecifier(varRef: VarRef) extends ArrowFunctionSpecifier:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(varRef)
-}
 
 final case class ParenthesizedExprAsArrowFunctionSpecifier(parenthesizedExpr: ParenthesizedExpr)
-    extends ArrowFunctionSpecifier {
+    extends ArrowFunctionSpecifier:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(parenthesizedExpr)
-}
 
 /**
  * Unary expression. The corresponding unary operators are right-associative.
@@ -530,21 +468,17 @@ sealed trait UnaryExpr extends SimpleArrowExpr
 
 sealed trait SimpleUnaryExpr extends UnaryExpr
 
-final case class CompoundUnaryExpr(ops: NonEmptyVector[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr {
+final case class CompoundUnaryExpr(ops: NonEmptyVector[UnaryOp], valueExpr: ValueExpr) extends UnaryExpr:
 
   def children: IndexedSeq[XPathElem] = ops.toVector.appended(valueExpr)
-}
 
-object UnaryExpr {
+object UnaryExpr:
 
-  def apply(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr): UnaryExpr = {
-    if (ops.isEmpty) {
+  def apply(ops: IndexedSeq[UnaryOp], valueExpr: ValueExpr): UnaryExpr =
+    if ops.isEmpty then
       valueExpr
-    } else {
+    else
       CompoundUnaryExpr(NonEmptyVector.fromVectorUnsafe(ops.toVector), valueExpr)
-    }
-  }
-}
 
 sealed trait ValueExpr extends SimpleUnaryExpr
 
@@ -556,24 +490,20 @@ sealed trait SimpleMapExpr extends ValueExpr
 sealed trait SimpleSimpleMapExpr extends SimpleMapExpr
 
 final case class CompoundSimpleMapExpr(firstPathExpr: PathExpr, remainingPathExprs: NonEmptyVector[PathExpr])
-    extends SimpleMapExpr {
+    extends SimpleMapExpr:
 
   def pathExprs: IndexedSeq[PathExpr] = remainingPathExprs.toVector.prepended(firstPathExpr)
 
   def children: IndexedSeq[XPathElem] = pathExprs
-}
 
-object SimpleMapExpr {
+object SimpleMapExpr:
 
-  def apply(pathExprs: NonEmptyVector[PathExpr]): SimpleMapExpr = {
-    if (pathExprs.toVector.sizeIs == 1) {
+  def apply(pathExprs: NonEmptyVector[PathExpr]): SimpleMapExpr =
+    if pathExprs.toVector.sizeIs == 1 then
       pathExprs.head
-    } else {
+    else
       assert(pathExprs.toVector.sizeIs >= 2)
       CompoundSimpleMapExpr(pathExprs.head, NonEmptyVector.fromVectorUnsafe(pathExprs.tail))
-    }
-  }
-}
 
 // Path and step expressions
 
@@ -585,15 +515,13 @@ sealed trait PathExpr extends SimpleSimpleMapExpr
 
 case object SlashOnlyPathExpr extends PathExpr with LeafElem
 
-final case class PathExprStartingWithSingleSlash(relativePathExpr: RelativePathExpr) extends PathExpr {
+final case class PathExprStartingWithSingleSlash(relativePathExpr: RelativePathExpr) extends PathExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(relativePathExpr)
-}
 
-final case class PathExprStartingWithDoubleSlash(relativePathExpr: RelativePathExpr) extends PathExpr {
+final case class PathExprStartingWithDoubleSlash(relativePathExpr: RelativePathExpr) extends PathExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(relativePathExpr)
-}
 
 /**
  * Relative path expression, consisting of a number of step expressions separated by step operators ("/" and "//").
@@ -604,23 +532,19 @@ sealed trait RelativePathExpr extends PathExpr
 sealed trait SimpleRelativePathExpr extends RelativePathExpr
 
 final case class CompoundRelativePathExpr(init: RelativePathExpr, op: StepOp, lastStepExpr: StepExpr)
-    extends RelativePathExpr {
+    extends RelativePathExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastStepExpr)
-}
 
-object RelativePathExpr {
+object RelativePathExpr:
 
-  def apply(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr = {
-    if (operatorExprPairs.isEmpty) {
+  def apply(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr =
+    if operatorExprPairs.isEmpty then
       firstExpr
-    } else {
+    else
       val (lastOp, lastExpr) = operatorExprPairs.last
       // Recursive call
       CompoundRelativePathExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
-    }
-  }
-}
 
 /**
  * Single step in an absolute or relative path expression. Note that step expressions are either
@@ -636,73 +560,60 @@ sealed trait PostfixExpr extends StepExpr
 
 sealed trait SimplePostfixExpr extends PostfixExpr
 
-final case class CompoundPostfixExpr(primaryExpr: PrimaryExpr, postfixes: NonEmptyVector[Postfix]) extends PostfixExpr {
+final case class CompoundPostfixExpr(primaryExpr: PrimaryExpr, postfixes: NonEmptyVector[Postfix]) extends PostfixExpr:
 
   def children: IndexedSeq[XPathElem] = postfixes.toVector.prepended(primaryExpr)
-}
 
-object PostfixExpr {
+object PostfixExpr:
 
-  def apply(primaryExpr: PrimaryExpr, postfixes: IndexedSeq[Postfix]): PostfixExpr = {
-    if (postfixes.isEmpty) {
+  def apply(primaryExpr: PrimaryExpr, postfixes: IndexedSeq[Postfix]): PostfixExpr =
+    if postfixes.isEmpty then
       primaryExpr
-    } else {
+    else
       CompoundPostfixExpr(primaryExpr, NonEmptyVector.fromVectorUnsafe(postfixes.toVector))
-    }
-  }
-}
 
 /**
  * Axis step. For example: "child::book[@pageCount > 800]". The "[]" operator for adding predicates is left-associative.
  */
-sealed trait AxisStep extends StepExpr {
+sealed trait AxisStep extends StepExpr:
 
   def predicateList: IndexedSeq[Predicate]
-}
 
-final case class ForwardAxisStep(step: ForwardStep, predicateList: IndexedSeq[Predicate]) extends AxisStep {
-
-  def children: IndexedSeq[XPathElem] = predicateList.prepended(step)
-}
-
-final case class ReverseAxisStep(step: ReverseStep, predicateList: IndexedSeq[Predicate]) extends AxisStep {
+final case class ForwardAxisStep(step: ForwardStep, predicateList: IndexedSeq[Predicate]) extends AxisStep:
 
   def children: IndexedSeq[XPathElem] = predicateList.prepended(step)
-}
 
-sealed trait ForwardStep extends XPathElem {
+final case class ReverseAxisStep(step: ReverseStep, predicateList: IndexedSeq[Predicate]) extends AxisStep:
+
+  def children: IndexedSeq[XPathElem] = predicateList.prepended(step)
+
+sealed trait ForwardStep extends XPathElem:
 
   def nodeTest: NodeTest
-}
 
-final case class NonAbbrevForwardStep(forwardAxis: ForwardAxis, nodeTest: NodeTest) extends ForwardStep {
+final case class NonAbbrevForwardStep(forwardAxis: ForwardAxis, nodeTest: NodeTest) extends ForwardStep:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(forwardAxis, nodeTest)
-}
 
 sealed trait AbbrevForwardStep extends ForwardStep
 
-final case class SimpleAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep {
+final case class SimpleAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(nodeTest)
-}
 
-final case class AttributeAxisAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep {
+final case class AttributeAxisAbbrevForwardStep(nodeTest: NodeTest) extends AbbrevForwardStep:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(nodeTest)
-}
 
 sealed trait ReverseStep extends XPathElem
 
-final case class NonAbbrevReverseStep(reverseAxis: ReverseAxis, nodeTest: NodeTest) extends ReverseStep {
+final case class NonAbbrevReverseStep(reverseAxis: ReverseAxis, nodeTest: NodeTest) extends ReverseStep:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(reverseAxis, nodeTest)
-}
 
-case object AbbrevReverseStep extends ReverseStep {
+case object AbbrevReverseStep extends ReverseStep:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq()
-}
 
 sealed trait NodeTest extends XPathElem
 
@@ -726,15 +637,13 @@ sealed trait DocumentTest extends KindTest
 
 case object SimpleDocumentTest extends DocumentTest with LeafElem
 
-final case class DocumentTestContainingElementTest(elementTest: ElementTest) extends DocumentTest {
+final case class DocumentTestContainingElementTest(elementTest: ElementTest) extends DocumentTest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(elementTest)
-}
 
-final case class DocumentTestContainingSchemaElementTest(schemaElementTest: SchemaElementTest) extends DocumentTest {
+final case class DocumentTestContainingSchemaElementTest(schemaElementTest: SchemaElementTest) extends DocumentTest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(schemaElementTest)
-}
 
 sealed trait ElementTest extends KindTest
 
@@ -772,10 +681,9 @@ case object SimplePITest extends PITest with LeafElem
 final case class TargetPITest(target: NCName) extends PITest with LeafElem
 
 // TODO Is this correct?
-final case class DataPITest(data: StringLiteral) extends PITest {
+final case class DataPITest(data: StringLiteral) extends PITest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(data)
-}
 
 case object CommentTest extends KindTest with LeafElem
 
@@ -809,17 +717,15 @@ final case class DoubleLiteral(value: Double) extends NumericLiteral with LeafEl
 
 final case class VarRef(varName: EQName) extends PrimaryExpr with LeafElem
 
-final case class ParenthesizedExpr(exprOption: Option[Expr]) extends PrimaryExpr {
+final case class ParenthesizedExpr(exprOption: Option[Expr]) extends PrimaryExpr:
 
   def children: IndexedSeq[XPathElem] = exprOption.toIndexedSeq
-}
 
 case object ContextItemExpr extends PrimaryExpr with LeafElem
 
-final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) extends PrimaryExpr {
+final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) extends PrimaryExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(argumentList)
-}
 
 sealed trait FunctionItemExpr extends PrimaryExpr
 
@@ -829,88 +735,74 @@ final case class InlineFunctionExpr(
     paramListOption: Option[ParamList],
     resultTypeOption: Option[SequenceType],
     body: EnclosedExpr)
-    extends FunctionItemExpr {
+    extends FunctionItemExpr:
 
   def children: IndexedSeq[XPathElem] =
     paramListOption.toIndexedSeq.appendedAll(resultTypeOption.toIndexedSeq).appended(body)
-}
 
-final case class MapConstructor(entries: IndexedSeq[MapConstructorEntry]) extends PrimaryExpr {
+final case class MapConstructor(entries: IndexedSeq[MapConstructorEntry]) extends PrimaryExpr:
 
   def children: IndexedSeq[XPathElem] = entries
-}
 
 sealed trait ArrayConstructor extends PrimaryExpr
 
-final case class UnaryLookup(keySpecifier: KeySpecifier) extends PrimaryExpr {
+final case class UnaryLookup(keySpecifier: KeySpecifier) extends PrimaryExpr:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(keySpecifier)
-}
 
-final case class SquareArrayConstructor(members: IndexedSeq[ExprSingle]) extends ArrayConstructor {
+final case class SquareArrayConstructor(members: IndexedSeq[ExprSingle]) extends ArrayConstructor:
 
   def children: IndexedSeq[XPathElem] = members
-}
 
-final case class CurlyArrayConstructor(expr: EnclosedExpr) extends ArrayConstructor {
+final case class CurlyArrayConstructor(expr: EnclosedExpr) extends ArrayConstructor:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
-}
 
-final case class MapConstructorEntry(keyExpr: ExprSingle, valueExpr: ExprSingle) extends XPathElem {
+final case class MapConstructorEntry(keyExpr: ExprSingle, valueExpr: ExprSingle) extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(keyExpr, valueExpr)
-}
 
 sealed trait Postfix extends XPathElem
 
-final case class Predicate(expr: Expr) extends Postfix {
+final case class Predicate(expr: Expr) extends Postfix:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
-}
 
-final case class ArgumentList(arguments: IndexedSeq[Argument]) extends Postfix {
+final case class ArgumentList(arguments: IndexedSeq[Argument]) extends Postfix:
 
   def children: IndexedSeq[XPathElem] = arguments
-}
 
-final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix {
+final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(keySpecifier)
-}
 
 sealed trait KeySpecifier extends XPathElem
 
 final case class NamedKeySpecifier(ncName: NCName) extends KeySpecifier with LeafElem
 
-final case class PositionalKeySpecifier(integerLiteral: IntegerLiteral) extends KeySpecifier {
+final case class PositionalKeySpecifier(integerLiteral: IntegerLiteral) extends KeySpecifier:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(integerLiteral)
-}
 
 case object WildcardKeySpecifier extends KeySpecifier with LeafElem
 
-final case class ParenthesizedExprKeySpecifier(parenthesizedExpr: ParenthesizedExpr) extends KeySpecifier {
+final case class ParenthesizedExprKeySpecifier(parenthesizedExpr: ParenthesizedExpr) extends KeySpecifier:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(parenthesizedExpr)
-}
 
-final case class ParamList(params: IndexedSeq[Param]) extends XPathElem {
+final case class ParamList(params: IndexedSeq[Param]) extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = params
-}
 
-final case class Param(paramName: EQName, typeDeclarationOption: Option[TypeDeclaration]) extends XPathElem {
+final case class Param(paramName: EQName, typeDeclarationOption: Option[TypeDeclaration]) extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = typeDeclarationOption.toIndexedSeq
-}
 
 sealed trait Argument extends XPathElem
 
-final case class ExprSingleArgument(exprSingle: ExprSingle) extends Argument {
+final case class ExprSingleArgument(exprSingle: ExprSingle) extends Argument:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(exprSingle)
-}
 
 case object ArgumentPlaceholder extends Argument with LeafElem
 
@@ -919,27 +811,23 @@ case object ArgumentPlaceholder extends Argument with LeafElem
 /**
  * Binding of a variable name to an expression.
  */
-sealed trait VariableBinding extends XPathElem {
+sealed trait VariableBinding extends XPathElem:
 
   def varName: EQName
 
   def expr: ExprSingle
-}
 
-final case class SimpleForBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
-
-  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
-}
-
-final case class SimpleLetBinding(varName: EQName, expr: ExprSingle) extends VariableBinding {
+final case class SimpleForBinding(varName: EQName, expr: ExprSingle) extends VariableBinding:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
-}
 
-final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle) extends VariableBinding {
+final case class SimpleLetBinding(varName: EQName, expr: ExprSingle) extends VariableBinding:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
-}
+
+final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle) extends VariableBinding:
+
+  def children: IndexedSeq[XPathElem] = IndexedSeq(expr)
 
 // Types
 
@@ -947,25 +835,21 @@ sealed trait SequenceType extends XPathElem
 
 case object EmptySequenceType extends SequenceType with LeafElem
 
-final case class ExactlyOneSequenceType(itemType: ItemType) extends SequenceType {
+final case class ExactlyOneSequenceType(itemType: ItemType) extends SequenceType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
-}
 
-final case class ZeroOrOneSequenceType(itemType: ItemType) extends SequenceType {
-
-  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
-}
-
-final case class ZeroOrMoreSequenceType(itemType: ItemType) extends SequenceType {
+final case class ZeroOrOneSequenceType(itemType: ItemType) extends SequenceType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
-}
 
-final case class OneOrMoreSequenceType(itemType: ItemType) extends SequenceType {
+final case class ZeroOrMoreSequenceType(itemType: ItemType) extends SequenceType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
-}
+
+final case class OneOrMoreSequenceType(itemType: ItemType) extends SequenceType:
+
+  def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
 
 sealed trait SingleType extends XPathElem
 
@@ -975,10 +859,9 @@ final case class PotentiallyEmptySingleType(name: EQName) extends SingleType wit
 
 sealed trait ItemType extends XPathElem
 
-final case class KindTestItemType(kindTest: KindTest) extends ItemType {
+final case class KindTestItemType(kindTest: KindTest) extends ItemType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(kindTest)
-}
 
 case object AnyItemType extends ItemType with LeafElem
 
@@ -987,80 +870,67 @@ sealed trait FunctionTest extends ItemType
 case object AnyFunctionTest extends FunctionTest with LeafElem
 
 final case class TypedFunctionTest(argumentTypes: IndexedSeq[SequenceType], resultType: SequenceType)
-    extends FunctionTest {
+    extends FunctionTest:
 
   def children: IndexedSeq[XPathElem] = argumentTypes.appended(resultType)
-}
 
 final case class AtomicOrUnionType(tpe: EQName) extends ItemType with LeafElem
 
-final case class ParenthesizedItemType(itemType: ItemType) extends ItemType {
+final case class ParenthesizedItemType(itemType: ItemType) extends ItemType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(itemType)
-}
 
 sealed trait MapTest extends ItemType
 
 case object AnyMapTest extends MapTest with LeafElem
 
-final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceType) extends MapTest {
+final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceType) extends MapTest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(keyType, valueType)
-}
 
 sealed trait ArrayTest extends ItemType
 
 case object AnyArrayTest extends ArrayTest with LeafElem
 
-final case class TypedArrayTest(elementType: SequenceType) extends ArrayTest {
+final case class TypedArrayTest(elementType: SequenceType) extends ArrayTest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(elementType)
-}
 
-final case class TypeDeclaration(tpe: SequenceType) extends XPathElem {
+final case class TypeDeclaration(tpe: SequenceType) extends XPathElem:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(tpe)
-}
 
 // Axes
 
 sealed trait ForwardAxis extends XPathElem with LeafElem
 
-object ForwardAxis {
+object ForwardAxis:
 
-  case object Child extends ForwardAxis {
+  case object Child extends ForwardAxis:
     override def toString: String = "child"
-  }
 
-  case object Descendant extends ForwardAxis {
+  case object Descendant extends ForwardAxis:
     override def toString: String = "descendant"
-  }
 
-  case object Attribute extends ForwardAxis {
+  case object Attribute extends ForwardAxis:
     override def toString: String = "attribute"
-  }
 
-  case object Self extends ForwardAxis {
+  case object Self extends ForwardAxis:
     override def toString: String = "self"
-  }
 
-  case object DescendantOrSelf extends ForwardAxis {
+  case object DescendantOrSelf extends ForwardAxis:
     override def toString: String = "descendant-or-self"
-  }
 
-  case object FollowingSibling extends ForwardAxis {
+  case object FollowingSibling extends ForwardAxis:
     override def toString: String = "following-sibling"
-  }
 
-  case object Following extends ForwardAxis {
+  case object Following extends ForwardAxis:
     override def toString: String = "following"
-  }
 
-  case object Namespace extends ForwardAxis {
+  case object Namespace extends ForwardAxis:
     override def toString: String = "namespace"
-  }
 
-  def parse(s: String): ForwardAxis = s.trim match {
+  def parse(s: String): ForwardAxis = s.trim match
     case "child"              => Child
     case "descendant"         => Descendant
     case "attribute"          => Attribute
@@ -1069,41 +939,32 @@ object ForwardAxis {
     case "following-sibling"  => FollowingSibling
     case "following"          => Following
     case "namespace"          => Namespace
-  }
-}
 
 sealed trait ReverseAxis extends XPathElem with LeafElem
 
-object ReverseAxis {
+object ReverseAxis:
 
-  case object Parent extends ReverseAxis {
+  case object Parent extends ReverseAxis:
     override def toString: String = "parent"
-  }
 
-  case object Ancestor extends ReverseAxis {
+  case object Ancestor extends ReverseAxis:
     override def toString: String = "ancestor"
-  }
 
-  case object PrecedingSibling extends ReverseAxis {
+  case object PrecedingSibling extends ReverseAxis:
     override def toString: String = "preceding-sibling"
-  }
 
-  case object Preceding extends ReverseAxis {
+  case object Preceding extends ReverseAxis:
     override def toString: String = "preceding"
-  }
 
-  case object AncestorOrSelf extends ReverseAxis {
+  case object AncestorOrSelf extends ReverseAxis:
     override def toString: String = "ancestor-or-self"
-  }
 
-  def parse(s: String): ReverseAxis = s.trim match {
+  def parse(s: String): ReverseAxis = s.trim match
     case "parent"            => Parent
     case "ancestor"          => Ancestor
     case "preceding-sibling" => PrecedingSibling
     case "preceding"         => Preceding
     case "ancestor-or-self"  => AncestorOrSelf
-  }
-}
 
 // Operators
 
@@ -1115,215 +976,168 @@ sealed trait GeneralComp extends Comp
 
 sealed trait NodeComp extends Comp
 
-object ValueComp {
+object ValueComp:
 
-  case object Eq extends ValueComp {
+  case object Eq extends ValueComp:
     override def toString: String = "eq"
-  }
 
-  case object Ne extends ValueComp {
+  case object Ne extends ValueComp:
     override def toString: String = "ne"
-  }
 
-  case object Lt extends ValueComp {
+  case object Lt extends ValueComp:
     override def toString: String = "lt"
-  }
 
-  case object Le extends ValueComp {
+  case object Le extends ValueComp:
     override def toString: String = "le"
-  }
 
-  case object Gt extends ValueComp {
+  case object Gt extends ValueComp:
     override def toString: String = "gt"
-  }
 
-  case object Ge extends ValueComp {
+  case object Ge extends ValueComp:
     override def toString: String = "ge"
-  }
 
-  def parse(s: String): ValueComp = s.trim match {
+  def parse(s: String): ValueComp = s.trim match
     case "eq" => Eq
     case "ne" => Ne
     case "lt" => Lt
     case "le" => Le
     case "gt" => Gt
     case "ge" => Ge
-  }
-}
 
-object GeneralComp {
+object GeneralComp:
 
-  case object Eq extends GeneralComp {
+  case object Eq extends GeneralComp:
     override def toString: String = "="
-  }
 
-  case object Ne extends GeneralComp {
+  case object Ne extends GeneralComp:
     override def toString: String = "!="
-  }
 
-  case object Lt extends GeneralComp {
+  case object Lt extends GeneralComp:
     override def toString: String = "<"
-  }
 
-  case object Le extends GeneralComp {
+  case object Le extends GeneralComp:
     override def toString: String = "<="
-  }
 
-  case object Gt extends GeneralComp {
+  case object Gt extends GeneralComp:
     override def toString: String = ">"
-  }
 
-  case object Ge extends GeneralComp {
+  case object Ge extends GeneralComp:
     override def toString: String = ">="
-  }
 
-  def parse(s: String): GeneralComp = s.trim match {
+  def parse(s: String): GeneralComp = s.trim match
     case "="  => Eq
     case "!=" => Ne
     case "<"  => Lt
     case "<=" => Le
     case ">"  => Gt
     case ">=" => Ge
-  }
-}
 
-object NodeComp {
+object NodeComp:
 
-  case object Is extends NodeComp {
+  case object Is extends NodeComp:
     override def toString: String = "is"
-  }
 
-  case object Precedes extends NodeComp {
+  case object Precedes extends NodeComp:
     override def toString: String = "<<"
-  }
 
-  case object Follows extends NodeComp {
+  case object Follows extends NodeComp:
     override def toString: String = ">>"
-  }
 
-  def parse(s: String): NodeComp = s.trim match {
+  def parse(s: String): NodeComp = s.trim match
     case "is" => Is
     case "<<" => Precedes
     case ">>" => Follows
-  }
-}
 
 sealed trait AdditionOp extends XPathElem with LeafElem
 
-object AdditionOp {
+object AdditionOp:
 
-  case object Plus extends AdditionOp {
+  case object Plus extends AdditionOp:
     override def toString: String = "+"
-  }
 
-  case object Minus extends AdditionOp {
+  case object Minus extends AdditionOp:
     override def toString: String = "-"
-  }
 
-  def parse(s: String): AdditionOp = s.trim match {
+  def parse(s: String): AdditionOp = s.trim match
     case "+" => Plus
     case "-" => Minus
-  }
-}
 
 sealed trait MultiplicativeOp extends XPathElem with LeafElem
 
-object MultiplicativeOp {
+object MultiplicativeOp:
 
-  case object Times extends MultiplicativeOp {
+  case object Times extends MultiplicativeOp:
     override def toString: String = "*"
-  }
 
-  case object Div extends MultiplicativeOp {
+  case object Div extends MultiplicativeOp:
     override def toString: String = "div"
-  }
 
-  case object IDiv extends MultiplicativeOp {
+  case object IDiv extends MultiplicativeOp:
     override def toString: String = "idiv"
-  }
 
-  case object Mod extends MultiplicativeOp {
+  case object Mod extends MultiplicativeOp:
     override def toString: String = "mod"
-  }
 
-  def parse(s: String): MultiplicativeOp = s.trim match {
+  def parse(s: String): MultiplicativeOp = s.trim match
     case "*"    => Times
     case "div"  => Div
     case "idiv" => IDiv
     case "mod"  => Mod
-  }
-}
 
 sealed trait IntersectExceptOp extends XPathElem with LeafElem
 
-object IntersectExceptOp {
+object IntersectExceptOp:
 
-  case object Intersect extends IntersectExceptOp {
+  case object Intersect extends IntersectExceptOp:
     override def toString: String = "intersect"
-  }
 
-  case object Except extends IntersectExceptOp {
+  case object Except extends IntersectExceptOp:
     override def toString: String = "except"
-  }
 
-  def parse(s: String): IntersectExceptOp = s.trim match {
+  def parse(s: String): IntersectExceptOp = s.trim match
     case "intersect" => Intersect
     case "except"    => Except
-  }
-}
 
 sealed trait UnaryOp extends XPathElem with LeafElem
 
-object UnaryOp {
+object UnaryOp:
 
-  case object Plus extends UnaryOp {
+  case object Plus extends UnaryOp:
     override def toString: String = "+"
-  }
 
-  case object Minus extends UnaryOp {
+  case object Minus extends UnaryOp:
     override def toString: String = "-"
-  }
 
-  def parse(s: String): UnaryOp = s.trim match {
+  def parse(s: String): UnaryOp = s.trim match
     case "+" => Plus
     case "-" => Minus
-  }
-}
 
 sealed trait StepOp extends XPathElem with LeafElem
 
-object StepOp {
+object StepOp:
 
-  case object SingleSlash extends StepOp {
+  case object SingleSlash extends StepOp:
     override def toString: String = "/"
-  }
 
-  case object DoubleSlash extends StepOp {
+  case object DoubleSlash extends StepOp:
     override def toString: String = "//"
-  }
 
-  def parse(s: String): StepOp = s.trim match {
+  def parse(s: String): StepOp = s.trim match
     case "/"  => SingleSlash
     case "//" => DoubleSlash
-  }
-}
 
 // "Keywords" etc.
 
 sealed trait Quantifier extends XPathElem with LeafElem
 
-object Quantifier {
+object Quantifier:
 
-  case object SomeQuantifier extends Quantifier {
+  case object SomeQuantifier extends Quantifier:
     override def toString: String = "some"
-  }
 
-  case object EveryQuantifier extends Quantifier {
+  case object EveryQuantifier extends Quantifier:
     override def toString: String = "every"
-  }
 
-  def parse(s: String): Quantifier = s.trim match {
+  def parse(s: String): Quantifier = s.trim match
     case "some"  => SomeQuantifier
     case "every" => EveryQuantifier
-  }
-}

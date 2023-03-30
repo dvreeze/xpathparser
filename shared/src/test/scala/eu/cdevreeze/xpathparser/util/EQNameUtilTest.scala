@@ -24,7 +24,7 @@ import org.scalatest.funsuite.AnyFunSuite
  *
  * @author Chris de Vreeze
  */
-class EQNameUtilTest extends AnyFunSuite {
+class EQNameUtilTest extends AnyFunSuite:
 
   import cats.parse.{Parser => P}
 
@@ -184,25 +184,21 @@ class EQNameUtilTest extends AnyFunSuite {
     assertUsedPrefixes(parseResult.getOrElse(throwParseError(exprString)), Set("fn", "p"))
   }
 
-  private def assertUsedPrefixes(expr: XPathExpr, expectedPrefixes: Set[String]): Unit = {
+  private def assertUsedPrefixes(expr: XPathExpr, expectedPrefixes: Set[String]): Unit =
     val prefixes = EQNameUtil.findUsedPrefixes(expr)
 
     assertResult(expectedPrefixes) {
       prefixes
     }
-  }
 
-  private def assertUsedPrefixesIncludingFromXsQName(expr: XPathExpr, expectedPrefixes: Set[String]): Unit = {
+  private def assertUsedPrefixesIncludingFromXsQName(expr: XPathExpr, expectedPrefixes: Set[String]): Unit =
     val prefixes = EQNameUtil.findUsedPrefixes(expr, EQNameUtil.eqnameProducerFromXsQName)
 
     assertResult(expectedPrefixes) {
       prefixes
     }
-  }
 
-  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
-}

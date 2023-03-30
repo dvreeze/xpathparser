@@ -20,7 +20,7 @@ ThisBuild / crossScalaVersions := crossScalaVer
 
 ThisBuild / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
   case (Some((3, _))) =>
-    Seq("-unchecked", "-deprecation", "-source:3.0-migration") // TODO -Xfatal-warnings, after migration
+    Seq("-unchecked", "-deprecation", "-new-syntax", "-indent") // TODO -Xfatal-warnings, after migration
   case _ =>
     Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w", "-Ytasty-reader", "-Xsource:3")
 })
@@ -45,7 +45,7 @@ val catsVersion = "2.9.0"
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
 // ThisBuild / libraryDependencies += "org.typelevel" %%% "cats-parse" % "0.3.9"
 
-ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % Test
+ThisBuild / libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.11" % Test
 
 lazy val root = project.in(file("."))
   .aggregate(xpathparserJVM, xpathparserJS)

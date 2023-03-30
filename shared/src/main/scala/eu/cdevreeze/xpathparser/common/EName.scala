@@ -21,25 +21,22 @@ package eu.cdevreeze.xpathparser.common
  *
  * @author Chris de Vreeze
  */
-final case class EName(namespaceUriOption: Option[String], localPart: String) {
+final case class EName(namespaceUriOption: Option[String], localPart: String):
   require(namespaceUriOption ne null) // scalastyle:off null
   require(localPart ne null) // scalastyle:off null
 
   /** Given an optional prefix, creates a `QName` from this `EName` */
-  def toQName(prefixOption: Option[String]): QName = {
+  def toQName(prefixOption: Option[String]): QName =
     require(
       namespaceUriOption.isDefined || prefixOption.isEmpty, s"Prefix only allowed if namespace non-empty in EName '${this}'")
     QName(prefixOption, localPart)
-  }
 
   /** The `String` representation, in the format of the `javax.xml.namespace.QName.toString` method */
-  override def toString: String = namespaceUriOption match {
+  override def toString: String = namespaceUriOption match
     case None => localPart
     case Some(nsUri) => "{" + nsUri + "}" + localPart
-  }
-}
 
-object EName {
+object EName:
 
   /** Creates an `EName` from a namespaceUri and a localPart */
   def apply(namespaceUri: String, localPart: String): EName = EName(Some(namespaceUri), localPart)
@@ -50,19 +47,16 @@ object EName {
   /**
    * Parses a `String` into an `EName`. The `String` (after trimming) must conform to the `toString` format of an `EName`.
    */
-  def parse(s: String): EName = {
+  def parse(s: String): EName =
     val st = s.trim
 
-    if (st.startsWith("{")) {
+    if st.startsWith("{") then
       val idx = st.indexOf('}')
       require(idx >= 2 && idx < st.length - 1, s"Opening brace not closed or at incorrect location in EName '${st}'")
       val ns = st.substring(1, idx)
       val localPart = st.substring(idx + 1)
       EName(Some(ns), localPart)
-    } else {
+    else
       require(st.indexOf("{") < 0, s"No opening brace allowed unless at the beginning in EName '${st}'")
       require(st.indexOf("}") < 0, s"Closing brace without matching opening brace not allowed in EName '${st}'")
       EName(None, st)
-    }
-  }
-}

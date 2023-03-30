@@ -28,18 +28,17 @@ import cats.parse.{Parser => P}
  *
  * @author Chris de Vreeze
  */
-object EQNames {
+object EQNames:
 
   private val DT = DelimitingTerminals
 
   val qName: P[EQName.QName] =
     P.defer(NCNames.ncName.soft ~ (P.string(":").soft *> NCNames.ncName).?).map {
       case (s1, s2Opt) =>
-        if (s2Opt.isEmpty) {
+        if s2Opt.isEmpty then
           EQName.QName.parse(s1.name)
-        } else {
+        else
           EQName.QName.parse(s1.name + ":" + s2Opt.get.name)
-        }
     }
 
   val uriQualifiedName: P[EQName.URIQualifiedName] =
@@ -54,4 +53,3 @@ object EQNames {
   val eqName: P[EQName] = P.defer {
     P.oneOf((P.string("Q{").unary_!.soft.with1 *> qName) :: uriQualifiedName :: Nil)
   }
-}

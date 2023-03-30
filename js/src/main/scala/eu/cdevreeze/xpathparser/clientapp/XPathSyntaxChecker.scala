@@ -42,23 +42,22 @@ import cats.parse.{Parser => P}
  * @author Chris de Vreeze
  */
 @JSExportTopLevel("XPathSyntaxChecker")
-object XPathSyntaxChecker {
+object XPathSyntaxChecker:
 
   private lazy val xpathTextArea = getXPathTextArea()
 
   private val liCls = "list-group-item"
 
   @JSExport("checkSyntax")
-  def checkSyntax(xpathString: String): Unit = {
+  def checkSyntax(xpathString: String): Unit =
     val parseResult: Either[P.Error, XPathExpr] = XPathParser.xpathExpr.parseAll(xpathString)
 
     parseResult.fold({ case parseError @ P.Error(offset, expectations) => showFailure(parseError) }, { xpathExpr =>
       showSuccess(xpathExpr)
     })
-  }
 
   @JSExport("clear")
-  def clear(): Unit = {
+  def clear(): Unit =
     xpathTextArea.style.color = "black"
     xpathTextArea.value = ""
 
@@ -71,14 +70,12 @@ object XPathSyntaxChecker {
     calledFunctionsUList.innerHTML = ""
 
     getAstPreElement().firstElementChild.innerHTML = ""
-  }
 
   @JSExport("clearColor")
-  def clearColor(): Unit = {
+  def clearColor(): Unit =
     xpathTextArea.style.color = "black"
-  }
 
-  private def showSuccess(xpathExpr: XPathExpr): Unit = {
+  private def showSuccess(xpathExpr: XPathExpr): Unit =
     xpathTextArea.style.color = "green"
 
     val freeVariablesUList = getFreeVariablesUList()
@@ -111,9 +108,8 @@ object XPathSyntaxChecker {
 
     codeElement.innerHTML = ""
     addCodeString(codeElement, "\n" + codeString)
-  }
 
-  private def showFailure(parseError: P.Error): Unit = {
+  private def showFailure(parseError: P.Error): Unit =
     xpathTextArea.style.color = "red"
 
     val freeVariablesUList = getFreeVariablesUList()
@@ -125,38 +121,29 @@ object XPathSyntaxChecker {
     calledFunctionsUList.innerHTML = ""
 
     getAstPreElement().firstElementChild.innerHTML = ""
-  }
 
-  private def getXPathTextArea(): HTMLTextAreaElement = {
+  private def getXPathTextArea(): HTMLTextAreaElement =
     document.getElementById("xpathInput").ensuring(_ != null).asInstanceOf[HTMLTextAreaElement]
-  }
 
-  private def getFreeVariablesUList(): HTMLUListElement = {
+  private def getFreeVariablesUList(): HTMLUListElement =
     document.getElementById("freeVariables").ensuring(_ != null).asInstanceOf[HTMLUListElement]
-  }
 
-  private def getBoundVariablesUList(): HTMLUListElement = {
+  private def getBoundVariablesUList(): HTMLUListElement =
     document.getElementById("boundVariables").ensuring(_ != null).asInstanceOf[HTMLUListElement]
-  }
 
-  private def getCalledFunctionsUList(): HTMLUListElement = {
+  private def getCalledFunctionsUList(): HTMLUListElement =
     document.getElementById("functions").ensuring(_ != null).asInstanceOf[HTMLUListElement]
-  }
 
-  private def getAstPreElement(): HTMLPreElement = {
+  private def getAstPreElement(): HTMLPreElement =
     document.getElementById("astPre").ensuring(_ != null).asInstanceOf[HTMLPreElement]
-  }
 
-  private def addNewReadonlyListItem(targetNode: Node, text: String, cssClass: String): Unit = {
+  private def addNewReadonlyListItem(targetNode: Node, text: String, cssClass: String): Unit =
     val liElem = document.createElement("li").asInstanceOf[HTMLLIElement]
     liElem.className = cssClass
     val textNode = document.createTextNode(text)
     liElem.appendChild(textNode)
     targetNode.appendChild(liElem)
-  }
 
-  private def addCodeString(targetNode: Node, text: String): Unit = {
+  private def addCodeString(targetNode: Node, text: String): Unit =
     val textNode = document.createTextNode(text)
     targetNode.appendChild(textNode)
-  }
-}

@@ -25,57 +25,46 @@ import eu.cdevreeze.xpathparser.common
  */
 sealed trait EQName
 
-object EQName {
+object EQName:
 
-  final case class QName(qname: common.QName) extends EQName {
+  final case class QName(qname: common.QName) extends EQName:
 
     def localPart: String = qname.localPart
 
     def prefixOption: Option[String] = qname.prefixOption
 
     override def toString: String = qname.toString
-  }
 
-  final case class URIQualifiedName(ename: common.EName) extends EQName {
+  final case class URIQualifiedName(ename: common.EName) extends EQName:
 
     def namespaceUriOption: Option[String] = ename.namespaceUriOption
 
     def localPart: String = ename.localPart
 
-    override def toString: String = ename match {
+    override def toString: String = ename match
       case common.EName(None, localPart)     => s"Q{}$localPart"
       case common.EName(Some(ns), localPart) => s"Q{$ns}$localPart"
-    }
-  }
 
-  object QName {
+  object QName:
 
-    def apply(s: String): QName = {
+    def apply(s: String): QName =
       parse(s)
-    }
 
-    def parse(s: String): QName = {
+    def parse(s: String): QName =
       QName(common.QName.parse(s))
-    }
-  }
 
-  object URIQualifiedName {
+  object URIQualifiedName:
 
-    def parse(s: String): URIQualifiedName = {
+    def parse(s: String): URIQualifiedName =
       require(s.startsWith("Q{"), s"String '$s' is not a URIQualifiedName, because it does not start with 'Q{'")
       require(s.contains("}"), s"String '$s' is not a URIQualifiedName, because it does not contain '}'")
       require(!s.endsWith("}"), s"String '$s' is not a URIQualifiedName, because it ends with '}'")
 
-      if (s.startsWith("Q{}")) {
+      if s.startsWith("Q{}") then
         URIQualifiedName(common.EName.parse(s.drop(3)))
-      } else {
+      else
         // Dropping the character "Q", we have James Clark notation to parse
         URIQualifiedName(common.EName.parse(s.drop(1)))
-      }
-    }
-  }
 
-  def parse(s: String): EQName = {
-    if (s.startsWith("Q{")) URIQualifiedName.parse(s) else QName.parse(s)
-  }
-}
+  def parse(s: String): EQName =
+    if s.startsWith("Q{") then URIQualifiedName.parse(s) else QName.parse(s)

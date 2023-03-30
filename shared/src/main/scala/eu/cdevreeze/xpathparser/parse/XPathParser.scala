@@ -29,7 +29,7 @@ import cats.parse.{Parser => P}
  *
  * @author Chris de Vreeze
  */
-object XPathParser {
+object XPathParser:
 
   import Whitespace._
 
@@ -43,4 +43,3 @@ object XPathParser {
   val xpathExpr: P[XPathExpr] = P.defer {
     (P.start.soft.with1 *> XPathElemParser.expr).soft <* (whitespaces0.soft ~ P.end)
   }
-}

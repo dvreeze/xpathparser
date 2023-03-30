@@ -24,18 +24,16 @@ import cats.parse.Parser0
  *
  * @author Chris de Vreeze
  */
-object Whitespace {
+object Whitespace:
 
   val whitespace: P[Unit] = P.charIn(" \t\r\n").void
   val whitespaces0: Parser0[Unit] = whitespace.rep0.void
   val whitespaces: P[Unit] = whitespace.rep.void
 
-  implicit class SkippingWS[A](val parser: P[A]) extends AnyVal {
+  implicit class SkippingWS[A](val parser: P[A]) extends AnyVal:
 
     def skipWS: P[A] = Whitespace.skippingWS(parser)
-  }
 
   def skippingWS[A](parser: P[A]): P[A] = P.defer(whitespaces0.soft.with1 *> parser)
 
   def skippingWS[A](parser0: Parser0[A]): Parser0[A] = P.defer0(whitespaces0.soft *> parser0)
-}

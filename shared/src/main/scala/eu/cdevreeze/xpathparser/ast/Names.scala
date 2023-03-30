@@ -29,7 +29,7 @@ package eu.cdevreeze.xpathparser.ast
  *
  * @author Chris de Vreeze
  */
-object Names {
+object Names:
 
   // TODO What about names like "xml"?
 
@@ -39,17 +39,15 @@ object Names {
    * Returns true if the given string can start valid XML names. This is the same as
    * saying that the string is a valid XML name, so `canBeName(s)` is returned.
    */
-  def canBeStartOfName(s: String): Boolean = {
+  def canBeStartOfName(s: String): Boolean =
     canBeName(s)
-  }
 
   /**
    * Returns true if the given string is a valid XML name. Names starting with "xml" are
    * not excluded, and names containing non-BMP characters are not included.
    */
-  def canBeName(s: String): Boolean = {
+  def canBeName(s: String): Boolean =
     s.nonEmpty && canBeStartOfName(s.charAt(0)) && s.drop(1).forall(c => canBePartOfName(c))
-  }
 
   /**
    * Returns true if the character can be a start of an XML name.
@@ -59,7 +57,7 @@ object Names {
    * characters are excluded, such as digits, dash, dot and combining
    * diacritical marks.
    */
-  def canBeStartOfName(c: Char): Boolean = {
+  def canBeStartOfName(c: Char): Boolean =
     charEquals(c, ':') ||
       charIsInRange(c, 'A', 'Z') ||
       charEquals(c, '_') ||
@@ -75,7 +73,6 @@ object Names {
       charIsInRange(c, '\u3001', '\uD7FF') ||
       charIsInRange(c, '\uF900', '\uFDCF') ||
       charIsInRange(c, '\uFDF0', '\uFFFD')
-  }
 
   /**
    * Returns true if the character can be a part of an XML name.
@@ -91,7 +88,7 @@ object Names {
    * Note that these excluded characters are important to distinguish names from XPath language
    * elements such as operators and (string and numeric) literals.
    */
-  def canBePartOfName(c: Char): Boolean = {
+  def canBePartOfName(c: Char): Boolean =
     canBeStartOfName(c) ||
       charEquals(c, '-') ||
       charEquals(c, '.') ||
@@ -99,13 +96,9 @@ object Names {
       charEquals(c, '\u00B7') ||
       charIsInRange(c, '\u0300', '\u036F') ||
       charIsInRange(c, '\u203F', '\u2040')
-  }
 
-  private def charEquals(c: Char, otherChar: Char): Boolean = {
+  private def charEquals(c: Char, otherChar: Char): Boolean =
     (c == otherChar)
-  }
 
-  private def charIsInRange(c: Char, low: Char, high: Char): Boolean = {
+  private def charIsInRange(c: Char, low: Char, high: Char): Boolean =
     (c >= low) && (c <= high)
-  }
-}

@@ -33,16 +33,15 @@ import cats.parse.Parser0
  *
  * @author Chris de Vreeze
  */
-object NonDelimitingTerminals {
+object NonDelimitingTerminals:
 
   // TODO Is this a correct symbol separator, or should we look at whitespace and comments instead?
 
   private val symbolSeparator: Parser0[Unit] =
     (P.end | P.charWhere(c => !NCName.canBePartOfNCName(c))).void
 
-  def parseWord(s: String): P[Unit] = {
+  def parseWord(s: String): P[Unit] =
     P.string(s).soft <* symbolSeparator.peek
-  }
 
   // Numeric literals
 
@@ -198,28 +197,24 @@ object NonDelimitingTerminals {
 
   val unionWord: P[Unit] = parseWord("union")
 
-  private def isIntegerLiteral(s: String): Boolean = {
+  private def isIntegerLiteral(s: String): Boolean =
     s.nonEmpty && s.forall(c => java.lang.Character.isDigit(c))
-  }
 
-  private def isDecimalLiteral(s: String): Boolean = {
+  private def isDecimalLiteral(s: String): Boolean =
     // Note that it is important to differentiate between decimal literals on the one hand
     // and context item expressions and abbreviated reverse steps on the other hand!
 
     s.nonEmpty && (s.count(_ == '.') == 1) &&
     s.exists(c => java.lang.Character.isDigit(c)) &&
     s.forall(c => java.lang.Character.isDigit(c) || (c == '.'))
-  }
 
-  private def isDoubleLiteral(s: String): Boolean = {
+  private def isDoubleLiteral(s: String): Boolean =
     val idx = s.indexWhere(c => (c == 'e') || (c == 'E'))
 
     (idx > 0) && {
       val base = s.substring(0, idx)
       val exp = s.substring(idx + 1)
-      val expWithoutSign = if (exp.startsWith("+") || exp.startsWith("-")) exp.drop(1) else exp
+      val expWithoutSign = if exp.startsWith("+") || exp.startsWith("-") then exp.drop(1) else exp
 
       (isIntegerLiteral(base) || isDecimalLiteral(base)) && isIntegerLiteral(expWithoutSign)
     }
-  }
-}

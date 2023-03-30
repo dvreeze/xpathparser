@@ -38,7 +38,7 @@ import cats.parse.{Parser => P}
  *
  * @author Chris de Vreeze
  */
-object XPathElemParser {
+object XPathElemParser:
 
   // TODO Improve, improve, improve. Study XPath spec more closely, use cats-parse in a better way.
   // TODO Also make code complete and more robust, (slightly) improve the AST class hierarchy, etc.
@@ -887,4 +887,3 @@ object XPathElemParser {
   private val ncName: P[NCName] = NCNames.ncName.skipWS
 
   private val eqName: P[EQName] = EQNames.eqName.skipWS
-}

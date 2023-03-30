@@ -35,7 +35,7 @@ import scala.util.chaining._
  *
  * @author Chris de Vreeze
  */
-object DelimitingTerminals {
+object DelimitingTerminals:
 
   // Exclamation marks and not-equals symbol
 
@@ -119,7 +119,7 @@ object DelimitingTerminals {
 
   val bracedUriLiteral: P[BracedUriLiteral] = P.defer {
     ((P.string("Q{").soft *> P.charsWhile0(isAllowedNamespaceUriChar)).soft <* P.string("}")).map { rawNs =>
-      if (rawNs.isEmpty) BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
+      if rawNs.isEmpty then BracedUriLiteral(None) else BracedUriLiteral(Some(rawNs))
     }
   }
 
@@ -137,13 +137,12 @@ object DelimitingTerminals {
 
   val doubleVerticalBar: P[Unit] = P.string("||")
 
-  private def isAllowedNamespaceUriChar(c: Char): Boolean = {
+  private def isAllowedNamespaceUriChar(c: Char): Boolean =
     // TODO Is this correct?
 
     (c != '{') && (c != '}') && !java.lang.Character.isWhitespace(c)
-  }
 
-  object StringLiterals {
+  object StringLiterals:
 
     private def isApos(c: Char): Boolean = c == '\''
     private def isNotApos(c: Char): Boolean = !isApos(c)
@@ -156,13 +155,12 @@ object DelimitingTerminals {
 
     // Note the heavy use of backtracking here, if escaped aps/quote is found. I did not get a better alternative without backtracking working.
 
-    private def aposStringLiteralPart(oddAposCountAtEnd: Boolean): P[String] = {
+    private def aposStringLiteralPart(oddAposCountAtEnd: Boolean): P[String] =
       val p: Int => Boolean = { n =>
-        if (oddAposCountAtEnd) (n % 2 != 0) else (n % 2 == 0)
+        if oddAposCountAtEnd then (n % 2 != 0) else (n % 2 == 0)
       }
 
       (P.charsWhile0(isNotApos).soft.with1 ~ (P.charsWhile(isApos).filter(s => p(s.size)).backtrack)).string
-    }
 
     private val aposStringLiteralContent: P[String] = P.defer {
       (aposStringLiteralPart(false).rep0.soft.with1 ~ aposStringLiteralPart(true)).map {
@@ -179,13 +177,12 @@ object DelimitingTerminals {
       }
     }
 
-    private def quoteStringLiteralPart(oddQuoteCountAtEnd: Boolean): P[String] = {
+    private def quoteStringLiteralPart(oddQuoteCountAtEnd: Boolean): P[String] =
       val p: Int => Boolean = { n =>
-        if (oddQuoteCountAtEnd) (n % 2 != 0) else (n % 2 == 0)
+        if oddQuoteCountAtEnd then (n % 2 != 0) else (n % 2 == 0)
       }
 
       (P.charsWhile0(isNotQuote).soft.with1 ~ (P.charsWhile(isQuote).filter(s => p(s.size)).backtrack)).string
-    }
 
     private val quoteStringLiteralContent: P[String] = P.defer {
       (quoteStringLiteralPart(false).rep0.soft.with1 ~ quoteStringLiteralPart(true)).map {
@@ -204,5 +201,3 @@ object DelimitingTerminals {
 
     val stringLiteral: P[StringLiteral] =
       P.defer(aposStringLiteral | quoteStringLiteral)
-  }
-}

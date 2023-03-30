@@ -25,11 +25,10 @@ import cats.parse.{Parser => P}
  *
  * @author Chris de Vreeze
  */
-object NCNames {
+object NCNames:
 
   val ncName: P[NCName] =
     (P.charWhere(NCName.canBeStartOfNCName).string.soft ~ P.charsWhile0(NCName.canBePartOfNCName))
       .map {
         case (s1, s2) => NCName(s1 + s2)
       }
-}

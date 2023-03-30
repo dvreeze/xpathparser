@@ -21,29 +21,24 @@ package eu.cdevreeze.xpathparser.ast
  *
  * @author Chris de Vreeze
  */
-final case class BracedUriLiteral(namespaceOption: Option[String]) {
+final case class BracedUriLiteral(namespaceOption: Option[String]):
 
-  override def toString: String = {
+  override def toString: String =
     val ns = namespaceOption.getOrElse("")
     s"Q{$ns}"
-  }
-}
 
-object BracedUriLiteral {
+object BracedUriLiteral:
 
-  def canBeBracedUriLiteral(s: String): Boolean = {
+  def canBeBracedUriLiteral(s: String): Boolean =
     s.startsWith("Q{") && s.endsWith("}") && {
       val uri = s.drop(2).dropRight(1)
       (!uri.contains('{')) && (!uri.contains('}'))
     }
-  }
 
-  def parse(s: String): BracedUriLiteral = {
+  def parse(s: String): BracedUriLiteral =
     require(s.startsWith("Q{"), s"A braced URI literal must start with 'Q{', but found: '$s'")
     require(s.endsWith("}"), s"A braced URI literal must end with '}', but found: '$s'")
 
     val rawNs = s.drop(2).dropRight(1)
-    val nsOption = if (rawNs.isEmpty) None else Some(rawNs)
+    val nsOption = if rawNs.isEmpty then None else Some(rawNs)
     BracedUriLiteral(nsOption)
-  }
-}

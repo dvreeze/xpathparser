@@ -25,7 +25,7 @@ import org.scalatest.funsuite.AnyFunSuite
  *
  * @author Chris de Vreeze
  */
-class ExtractXPathTest extends AnyFunSuite {
+class ExtractXPathTest extends AnyFunSuite:
 
   // import XPathElemParser.stringConcatExpr
   import XPathParser.xpathExpr
@@ -81,9 +81,7 @@ class ExtractXPathTest extends AnyFunSuite {
     */
   }
 
-  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
-}

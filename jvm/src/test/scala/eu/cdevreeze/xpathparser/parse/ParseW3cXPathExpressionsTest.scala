@@ -28,11 +28,11 @@ import org.scalatest.funsuite.AnyFunSuite
  *
  * @author Chris de Vreeze
  */
-class ParseW3cXPathExpressionsTest extends AnyFunSuite {
+class ParseW3cXPathExpressionsTest extends AnyFunSuite:
 
   // See for example http://blog.echo.sh/2013/05/12/dynamically-creating-tests-with-scalatest.html.
 
-  private val testInputs: Map[String, String] = {
+  private val testInputs: Map[String, String] =
     val props = new java.util.Properties
     props.loadFromXML(classOf[ParseW3cXPathExpressionsTest].getResourceAsStream("/testXPaths.xml"))
 
@@ -43,7 +43,6 @@ class ParseW3cXPathExpressionsTest extends AnyFunSuite {
     }
 
     propMap.toMap.filter(_._1.indexOf("Comment") < 0).toMap
-  }
 
   testInputs.foreach {
     case (name, exprString) =>
@@ -56,9 +55,7 @@ class ParseW3cXPathExpressionsTest extends AnyFunSuite {
       }
   }
 
-  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
-}

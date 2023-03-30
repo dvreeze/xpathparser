@@ -80,7 +80,7 @@ import eu.cdevreeze.xpathparser.common.EName
  *
  * @author Chris de Vreeze
  */
-class ParseXPathTest extends AnyFunSuite {
+class ParseXPathTest extends AnyFunSuite:
 
   import cats.parse.{Parser => P}
 
@@ -1360,21 +1360,17 @@ class ParseXPathTest extends AnyFunSuite {
 
   // TODO Many tests with syntactically incorrect XPath expressions
 
-  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
 
-  private def assertFailure(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertFailure(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isLeft
     }
-  }
 
-  private def assertSuccessInitialParse(parseResult: Either[P.Error, (String, Expr)]): Unit = {
+  private def assertSuccessInitialParse(parseResult: Either[P.Error, (String, Expr)]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
-}

@@ -39,7 +39,7 @@ import eu.cdevreeze.xpathparser.ast.XPathExpr
  *
  * @author Chris de Vreeze
  */
-class VariableBindingTest extends AnyFunSuite {
+class VariableBindingTest extends AnyFunSuite:
 
   import cats.parse.{Parser => P}
 
@@ -264,30 +264,26 @@ class VariableBindingTest extends AnyFunSuite {
   private def assertFreeVariableNames(
       elem: XPathElem,
       expectedVarNames: Set[EQName],
-      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
+      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit =
 
     val freeVars = VariableBindingUtil.findAllFreeVariables(elem, inheritedIntroducedVarNames)
 
     assertResult(expectedVarNames) {
       freeVars.map(_.varName).toSet
     }
-  }
 
   private def assertBoundVariableNames(
       elem: XPathElem,
       expectedVarNames: Set[EQName],
-      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit = {
+      inheritedIntroducedVarNames: Set[EQName] = Set()): Unit =
 
     val boundVars = VariableBindingUtil.findAllBoundVariables(elem, inheritedIntroducedVarNames)
 
     assertResult(expectedVarNames) {
       boundVars.map(_.varName).toSet
     }
-  }
 
-  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit = {
+  private def assertSuccess(parseResult: Either[P.Error, XPathExpr]): Unit =
     assertResult(true, parseResult) {
       parseResult.isRight
     }
-  }
-}

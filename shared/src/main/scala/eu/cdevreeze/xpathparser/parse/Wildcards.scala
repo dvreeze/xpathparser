@@ -30,7 +30,7 @@ import cats.parse.{Parser => P}
  *
  * @author Chris de Vreeze
  */
-object Wildcards {
+object Wildcards:
 
   private val DT = DelimitingTerminals
 
@@ -56,4 +56,3 @@ object Wildcards {
 
   val anyWildcard: P[AnyWildcard.type] =
     P.defer(DT.asterisk).as(AnyWildcard)
-}

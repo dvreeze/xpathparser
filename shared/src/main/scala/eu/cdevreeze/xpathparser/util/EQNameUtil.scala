@@ -54,7 +54,7 @@ import eu.cdevreeze.xpathparser.common.QName
  *
  * @author Chris de Vreeze
  */
-object EQNameUtil {
+object EQNameUtil:
 
   /**
    * Finds the namespace prefixes used in QNames in the given XPath expression, taking the extra EQName producer into account.
@@ -63,10 +63,9 @@ object EQNameUtil {
    *
    * In other words, returns `findUsedEQNames(expr, extraEQNameProducer).flatMap(n => findPrefix(n))`.
    */
-  def findUsedPrefixes(expr: XPathExpr, extraEQNameProducer: XPathElem => Option[Set[EQName]]): Set[String] = {
+  def findUsedPrefixes(expr: XPathExpr, extraEQNameProducer: XPathElem => Option[Set[EQName]]): Set[String] =
     val prefixesInEQNames: Set[String] = findUsedEQNames(expr, extraEQNameProducer).flatMap(n => findPrefix(n))
     prefixesInEQNames
-  }
 
   /**
    * Finds the namespace prefixes used in QNames in the given XPath expression.
@@ -75,25 +74,23 @@ object EQNameUtil {
    *
    * In other words, returns `findUsedPrefixes(expr, e => None)`.
    */
-  def findUsedPrefixes(expr: XPathExpr): Set[String] = {
+  def findUsedPrefixes(expr: XPathExpr): Set[String] =
     findUsedPrefixes(expr, e => None)
-  }
 
   /**
    * Finds the EQNames used in the given XPath expression, taking the extra EQName producer into account.
    */
-  def findUsedEQNames(expr: XPathExpr, extraEQNameProducer: XPathElem => Option[Set[EQName]]): Set[EQName] = {
+  def findUsedEQNames(expr: XPathExpr, extraEQNameProducer: XPathElem => Option[Set[EQName]]): Set[EQName] =
     val extraEQNames = expr.findAllElemsOrSelf.flatMap(e => extraEQNameProducer(e).getOrElse(Set.empty)).toSet
 
     findUsedEQNames(expr).union(extraEQNames)
-  }
 
   /**
    * Finds the EQNames used in the given XPath expression.
    *
    * They are the EQNames in variable-references, variable bindings, function names, types, etc.
    */
-  def findUsedEQNames(expr: XPathExpr): Set[EQName] = {
+  def findUsedEQNames(expr: XPathExpr): Set[EQName] =
     // EQNames in variable-refs (note it does not matter if the var-ref is free or bound!)
 
     val eqnamesInVarRefs: Set[EQName] =
@@ -190,23 +187,20 @@ object EQNameUtil {
       .union(eqnamesInNillableElementNameAndTypeTests)
       .union(eqnamesInSchemaElementTests)
       .union(eqnamesInSchemaAttributeTests)
-  }
 
   /**
    * Returns the optional prefix of the given EQName, if it is a QName,
    * and returns None otherwise.
    */
-  def findPrefix(eqname: EQName): Option[String] = {
-    eqname match {
+  def findPrefix(eqname: EQName): Option[String] =
+    eqname match
       case EQName.URIQualifiedName(_) => None
       case EQName.QName(qn)           => qn.prefixOption
-    }
-  }
 
   /**
    * Extracts an EQName from expressions like `xs:QName('p:nm')`.
    */
-  val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] = {
+  val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] =
     case FunctionCall(
         EQName.QName(PrefixedName("xs", "QName")),
         ArgumentList(IndexedSeq(ExprSingleArgument(StringLiteral(s))))) =>
@@ -214,5 +208,3 @@ object EQNameUtil {
       Some(Set(EQName.QName(qn)))
     case _: XPathElem =>
       None
-  }
-}

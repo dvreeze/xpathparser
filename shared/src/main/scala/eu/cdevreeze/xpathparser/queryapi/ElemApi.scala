@@ -25,7 +25,7 @@ import scala.reflect.ClassTag
  *
  * @author Chris de Vreeze
  */
-trait ElemApi[E <: ElemApi[E]] {
+trait ElemApi[E <: ElemApi[E]]:
 
   /**
    * Finds all child elements.
@@ -147,12 +147,10 @@ trait ElemApi[E <: ElemApi[E]] {
    * returning an optional result.
    */
   def findElemOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): Option[A]
-}
 
-object ElemApi {
+object ElemApi:
 
   /**
    * Element predicate that returns true for each element.
    */
   val anyElem: ElemApi[_] => Boolean = { _ => true }
-}
