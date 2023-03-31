@@ -138,16 +138,16 @@ object Expr:
 sealed trait ExprSingle extends SimpleExpr
 
 final case class ForExpr(simpleForBindings: NonEmptyVector[SimpleForBinding], returnExpr: ExprSingle)
-    extends ExprSingle
-    with VariableIntroducingExpr:
+    extends ExprSingle,
+      VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleForBindings.toVector.appended(returnExpr)
 
   def variableBindings: IndexedSeq[VariableBinding] = simpleForBindings.toVector
 
 final case class LetExpr(simpleLetBindings: NonEmptyVector[SimpleLetBinding], returnExpr: ExprSingle)
-    extends ExprSingle
-    with VariableIntroducingExpr:
+    extends ExprSingle,
+      VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleLetBindings.toVector.appended(returnExpr)
 
@@ -157,8 +157,8 @@ final case class QuantifiedExpr(
     quantifier: Quantifier,
     simpleBindings: NonEmptyVector[SimpleBindingInQuantifiedExpr],
     satisfiesExpr: ExprSingle
-) extends ExprSingle
-    with VariableIntroducingExpr:
+) extends ExprSingle,
+      VariableIntroducingExpr:
 
   def children: IndexedSeq[XPathElem] = simpleBindings.toVector.prepended(quantifier).appended(satisfiesExpr)
 
@@ -443,7 +443,7 @@ final case class ArrowFunctionCall(arrowFunctionSpecifier: ArrowFunctionSpecifie
 
 sealed trait ArrowFunctionSpecifier extends XPathElem
 
-final case class EQNameAsArrowFunctionSpecifier(eqName: EQName) extends ArrowFunctionSpecifier with LeafElem
+final case class EQNameAsArrowFunctionSpecifier(eqName: EQName) extends ArrowFunctionSpecifier, LeafElem
 
 final case class VarRefAsArrowFunctionSpecifier(varRef: VarRef) extends ArrowFunctionSpecifier:
 
@@ -503,7 +503,7 @@ object SimpleMapExpr:
  */
 sealed trait PathExpr extends SimpleSimpleMapExpr
 
-case object SlashOnlyPathExpr extends PathExpr with LeafElem
+case object SlashOnlyPathExpr extends PathExpr, LeafElem
 
 final case class PathExprStartingWithSingleSlash(relativePathExpr: RelativePathExpr) extends PathExpr:
 
@@ -608,21 +608,21 @@ sealed trait KindTest extends NodeTest
 
 sealed trait NameTest extends NodeTest
 
-final case class SimpleNameTest(name: EQName) extends NameTest with LeafElem
+final case class SimpleNameTest(name: EQName) extends NameTest, LeafElem
 
 sealed trait Wildcard extends NameTest
 
-case object AnyWildcard extends Wildcard with LeafElem
+case object AnyWildcard extends Wildcard, LeafElem
 
-final case class PrefixWildcard(prefix: NCName) extends Wildcard with LeafElem
+final case class PrefixWildcard(prefix: NCName) extends Wildcard, LeafElem
 
-final case class LocalNameWildcard(localName: NCName) extends Wildcard with LeafElem
+final case class LocalNameWildcard(localName: NCName) extends Wildcard, LeafElem
 
-final case class NamespaceWildcard(bracedUriLiteral: BracedUriLiteral) extends Wildcard with LeafElem
+final case class NamespaceWildcard(bracedUriLiteral: BracedUriLiteral) extends Wildcard, LeafElem
 
 sealed trait DocumentTest extends KindTest
 
-case object SimpleDocumentTest extends DocumentTest with LeafElem
+case object SimpleDocumentTest extends DocumentTest, LeafElem
 
 final case class DocumentTestContainingElementTest(elementTest: ElementTest) extends DocumentTest:
 
@@ -634,51 +634,51 @@ final case class DocumentTestContainingSchemaElementTest(schemaElementTest: Sche
 
 sealed trait ElementTest extends KindTest
 
-case object AnyElementTest extends ElementTest with LeafElem
+case object AnyElementTest extends ElementTest, LeafElem
 
-final case class ElementNameTest(name: EQName) extends ElementTest with LeafElem
+final case class ElementNameTest(name: EQName) extends ElementTest, LeafElem
 
-final case class ElementNameAndTypeTest(name: EQName, tpe: EQName) extends ElementTest with LeafElem
+final case class ElementNameAndTypeTest(name: EQName, tpe: EQName) extends ElementTest, LeafElem
 
-final case class NillableElementNameAndTypeTest(name: EQName, tpe: EQName) extends ElementTest with LeafElem
+final case class NillableElementNameAndTypeTest(name: EQName, tpe: EQName) extends ElementTest, LeafElem
 
-final case class ElementTypeTest(tpe: EQName) extends ElementTest with LeafElem
+final case class ElementTypeTest(tpe: EQName) extends ElementTest, LeafElem
 
-final case class NillableElementTypeTest(tpe: EQName) extends ElementTest with LeafElem
+final case class NillableElementTypeTest(tpe: EQName) extends ElementTest, LeafElem
 
 sealed trait AttributeTest extends KindTest
 
-case object AnyAttributeTest extends AttributeTest with LeafElem
+case object AnyAttributeTest extends AttributeTest, LeafElem
 
-final case class AttributeNameTest(name: EQName) extends AttributeTest with LeafElem
+final case class AttributeNameTest(name: EQName) extends AttributeTest, LeafElem
 
-final case class AttributeNameAndTypeTest(name: EQName, tpe: EQName) extends AttributeTest with LeafElem
+final case class AttributeNameAndTypeTest(name: EQName, tpe: EQName) extends AttributeTest, LeafElem
 
-final case class AttributeTypeTest(tpe: EQName) extends AttributeTest with LeafElem
+final case class AttributeTypeTest(tpe: EQName) extends AttributeTest, LeafElem
 
-final case class SchemaElementTest(name: EQName) extends KindTest with LeafElem
+final case class SchemaElementTest(name: EQName) extends KindTest, LeafElem
 
-final case class SchemaAttributeTest(name: EQName) extends KindTest with LeafElem
+final case class SchemaAttributeTest(name: EQName) extends KindTest, LeafElem
 
 sealed trait PITest extends KindTest
 
-case object SimplePITest extends PITest with LeafElem
+case object SimplePITest extends PITest, LeafElem
 
 // TODO Is this correct?
-final case class TargetPITest(target: NCName) extends PITest with LeafElem
+final case class TargetPITest(target: NCName) extends PITest, LeafElem
 
 // TODO Is this correct?
 final case class DataPITest(data: StringLiteral) extends PITest:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(data)
 
-case object CommentTest extends KindTest with LeafElem
+case object CommentTest extends KindTest, LeafElem
 
-case object TextTest extends KindTest with LeafElem
+case object TextTest extends KindTest, LeafElem
 
-case object NamespaceNodeTest extends KindTest with LeafElem
+case object NamespaceNodeTest extends KindTest, LeafElem
 
-case object AnyKindTest extends KindTest with LeafElem
+case object AnyKindTest extends KindTest, LeafElem
 
 // Primary expressions
 
@@ -691,23 +691,23 @@ sealed trait PrimaryExpr extends SimplePostfixExpr
 
 sealed trait Literal extends PrimaryExpr
 
-final case class StringLiteral(value: String) extends Literal with LeafElem
+final case class StringLiteral(value: String) extends Literal, LeafElem
 
 sealed trait NumericLiteral extends Literal
 
-final case class IntegerLiteral(value: BigInt) extends NumericLiteral with LeafElem
+final case class IntegerLiteral(value: BigInt) extends NumericLiteral, LeafElem
 
-final case class DecimalLiteral(value: BigDecimal) extends NumericLiteral with LeafElem
+final case class DecimalLiteral(value: BigDecimal) extends NumericLiteral, LeafElem
 
-final case class DoubleLiteral(value: Double) extends NumericLiteral with LeafElem
+final case class DoubleLiteral(value: Double) extends NumericLiteral, LeafElem
 
-final case class VarRef(varName: EQName) extends PrimaryExpr with LeafElem
+final case class VarRef(varName: EQName) extends PrimaryExpr, LeafElem
 
 final case class ParenthesizedExpr(exprOption: Option[Expr]) extends PrimaryExpr:
 
   def children: IndexedSeq[XPathElem] = exprOption.toIndexedSeq
 
-case object ContextItemExpr extends PrimaryExpr with LeafElem
+case object ContextItemExpr extends PrimaryExpr, LeafElem
 
 final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) extends PrimaryExpr:
 
@@ -715,7 +715,7 @@ final case class FunctionCall(functionName: EQName, argumentList: ArgumentList) 
 
 sealed trait FunctionItemExpr extends PrimaryExpr
 
-final case class NamedFunctionRef(functionName: EQName, arity: BigInt) extends FunctionItemExpr with LeafElem
+final case class NamedFunctionRef(functionName: EQName, arity: BigInt) extends FunctionItemExpr, LeafElem
 
 final case class InlineFunctionExpr(
     paramListOption: Option[ParamList],
@@ -764,13 +764,13 @@ final case class PostfixLookup(keySpecifier: KeySpecifier) extends Postfix:
 
 sealed trait KeySpecifier extends XPathElem
 
-final case class NamedKeySpecifier(ncName: NCName) extends KeySpecifier with LeafElem
+final case class NamedKeySpecifier(ncName: NCName) extends KeySpecifier, LeafElem
 
 final case class PositionalKeySpecifier(integerLiteral: IntegerLiteral) extends KeySpecifier:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(integerLiteral)
 
-case object WildcardKeySpecifier extends KeySpecifier with LeafElem
+case object WildcardKeySpecifier extends KeySpecifier, LeafElem
 
 final case class ParenthesizedExprKeySpecifier(parenthesizedExpr: ParenthesizedExpr) extends KeySpecifier:
 
@@ -790,7 +790,7 @@ final case class ExprSingleArgument(exprSingle: ExprSingle) extends Argument:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(exprSingle)
 
-case object ArgumentPlaceholder extends Argument with LeafElem
+case object ArgumentPlaceholder extends Argument, LeafElem
 
 // Bindings
 
@@ -819,7 +819,7 @@ final case class SimpleBindingInQuantifiedExpr(varName: EQName, expr: ExprSingle
 
 sealed trait SequenceType extends XPathElem
 
-case object EmptySequenceType extends SequenceType with LeafElem
+case object EmptySequenceType extends SequenceType, LeafElem
 
 final case class ExactlyOneSequenceType(itemType: ItemType) extends SequenceType:
 
@@ -839,9 +839,9 @@ final case class OneOrMoreSequenceType(itemType: ItemType) extends SequenceType:
 
 sealed trait SingleType extends XPathElem
 
-final case class NonEmptySingleType(name: EQName) extends SingleType with LeafElem
+final case class NonEmptySingleType(name: EQName) extends SingleType, LeafElem
 
-final case class PotentiallyEmptySingleType(name: EQName) extends SingleType with LeafElem
+final case class PotentiallyEmptySingleType(name: EQName) extends SingleType, LeafElem
 
 sealed trait ItemType extends XPathElem
 
@@ -849,18 +849,18 @@ final case class KindTestItemType(kindTest: KindTest) extends ItemType:
 
   def children: IndexedSeq[XPathElem] = IndexedSeq(kindTest)
 
-case object AnyItemType extends ItemType with LeafElem
+case object AnyItemType extends ItemType, LeafElem
 
 sealed trait FunctionTest extends ItemType
 
-case object AnyFunctionTest extends FunctionTest with LeafElem
+case object AnyFunctionTest extends FunctionTest, LeafElem
 
 final case class TypedFunctionTest(argumentTypes: IndexedSeq[SequenceType], resultType: SequenceType)
     extends FunctionTest:
 
   def children: IndexedSeq[XPathElem] = argumentTypes.appended(resultType)
 
-final case class AtomicOrUnionType(tpe: EQName) extends ItemType with LeafElem
+final case class AtomicOrUnionType(tpe: EQName) extends ItemType, LeafElem
 
 final case class ParenthesizedItemType(itemType: ItemType) extends ItemType:
 
@@ -868,7 +868,7 @@ final case class ParenthesizedItemType(itemType: ItemType) extends ItemType:
 
 sealed trait MapTest extends ItemType
 
-case object AnyMapTest extends MapTest with LeafElem
+case object AnyMapTest extends MapTest, LeafElem
 
 final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceType) extends MapTest:
 
@@ -876,7 +876,7 @@ final case class TypedMapTest(keyType: AtomicOrUnionType, valueType: SequenceTyp
 
 sealed trait ArrayTest extends ItemType
 
-case object AnyArrayTest extends ArrayTest with LeafElem
+case object AnyArrayTest extends ArrayTest, LeafElem
 
 final case class TypedArrayTest(elementType: SequenceType) extends ArrayTest:
 
@@ -888,7 +888,7 @@ final case class TypeDeclaration(tpe: SequenceType) extends XPathElem:
 
 // Axes
 
-sealed trait ForwardAxis extends XPathElem with LeafElem
+sealed trait ForwardAxis extends XPathElem, LeafElem
 
 object ForwardAxis:
 
@@ -926,7 +926,7 @@ object ForwardAxis:
     case "following"          => Following
     case "namespace"          => Namespace
 
-sealed trait ReverseAxis extends XPathElem with LeafElem
+sealed trait ReverseAxis extends XPathElem, LeafElem
 
 object ReverseAxis:
 
@@ -954,7 +954,7 @@ object ReverseAxis:
 
 // Operators
 
-sealed trait Comp extends XPathElem with LeafElem
+sealed trait Comp extends XPathElem, LeafElem
 
 sealed trait ValueComp extends Comp
 
@@ -1034,7 +1034,7 @@ object NodeComp:
     case "<<" => Precedes
     case ">>" => Follows
 
-sealed trait AdditionOp extends XPathElem with LeafElem
+sealed trait AdditionOp extends XPathElem, LeafElem
 
 object AdditionOp:
 
@@ -1048,7 +1048,7 @@ object AdditionOp:
     case "+" => Plus
     case "-" => Minus
 
-sealed trait MultiplicativeOp extends XPathElem with LeafElem
+sealed trait MultiplicativeOp extends XPathElem, LeafElem
 
 object MultiplicativeOp:
 
@@ -1070,7 +1070,7 @@ object MultiplicativeOp:
     case "idiv" => IDiv
     case "mod"  => Mod
 
-sealed trait IntersectExceptOp extends XPathElem with LeafElem
+sealed trait IntersectExceptOp extends XPathElem, LeafElem
 
 object IntersectExceptOp:
 
@@ -1084,7 +1084,7 @@ object IntersectExceptOp:
     case "intersect" => Intersect
     case "except"    => Except
 
-sealed trait UnaryOp extends XPathElem with LeafElem
+sealed trait UnaryOp extends XPathElem, LeafElem
 
 object UnaryOp:
 
@@ -1098,7 +1098,7 @@ object UnaryOp:
     case "+" => Plus
     case "-" => Minus
 
-sealed trait StepOp extends XPathElem with LeafElem
+sealed trait StepOp extends XPathElem, LeafElem
 
 object StepOp:
 
@@ -1114,7 +1114,7 @@ object StepOp:
 
 // "Keywords" etc.
 
-sealed trait Quantifier extends XPathElem with LeafElem
+sealed trait Quantifier extends XPathElem, LeafElem
 
 object Quantifier:
 
