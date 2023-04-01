@@ -17,6 +17,7 @@
 package eu.cdevreeze.xpathparser.ast
 
 import cats.data.NonEmptyVector
+import eu.cdevreeze.xpathparser.queryapi.ElemApi
 import eu.cdevreeze.xpathparser.queryapi.ElemLike
 
 /**
@@ -51,7 +52,7 @@ import eu.cdevreeze.xpathparser.queryapi.ElemLike
  * @author
  *   Chris de Vreeze
  */
-sealed trait XPathElem extends ElemLike[XPathElem]:
+sealed trait XPathElem extends ElemApi[XPathElem], ElemLike[XPathElem]:
 
   /**
    * Returns the (immediate) child elements of this element.

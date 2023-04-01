@@ -43,7 +43,6 @@ import eu.cdevreeze.xpathparser.ast.VarRef
 import eu.cdevreeze.xpathparser.ast.VariableBinding
 import eu.cdevreeze.xpathparser.ast.XPathElem
 import eu.cdevreeze.xpathparser.ast.XPathExpr
-import eu.cdevreeze.xpathparser.common.PrefixedName
 import eu.cdevreeze.xpathparser.common.QName
 
 /**
@@ -203,7 +202,7 @@ object EQNameUtil:
    */
   val eqnameProducerFromXsQName: XPathElem => Option[Set[EQName]] =
     case FunctionCall(
-          EQName.QName(PrefixedName("xs", "QName")),
+          EQName.QName(QName.Prefixed("xs", "QName")),
           ArgumentList(IndexedSeq(ExprSingleArgument(StringLiteral(s))))
         ) =>
       val qn = QName.parse(s)

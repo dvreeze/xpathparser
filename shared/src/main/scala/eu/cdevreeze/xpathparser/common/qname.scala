@@ -22,27 +22,13 @@ package eu.cdevreeze.xpathparser.common
  * @author
  *   Chris de Vreeze
  */
-sealed trait QName extends Serializable:
+enum QName(val prefixOption: Option[String], val localPart: String):
+  case Unprefixed(override val localPart: String) extends QName(None, localPart)
+  case Prefixed(prefix: String, override val localPart: String) extends QName(Some(prefix), localPart)
 
-  def localPart: String
-  def prefixOption: Option[String]
-
-final case class UnprefixedName(override val localPart: String) extends QName:
-  require(localPart ne null) // scalastyle:off null
-
-  override def prefixOption: Option[String] = None
-
-  /** The `String` representation as it appears in XML, that is, the localPart */
-  override def toString: String = localPart
-
-final case class PrefixedName(prefix: String, override val localPart: String) extends QName:
-  require(prefix ne null) // scalastyle:off null
-  require(localPart ne null) // scalastyle:off null
-
-  override def prefixOption: Option[String] = Some(prefix)
-
-  /** The `String` representation as it appears in XML. For example, <code>xs:schema</code> */
-  override def toString: String = s"${prefix}:${localPart}"
+  override def toString: String = this match
+    case Unprefixed(localPart)       => localPart
+    case Prefixed(prefix, localPart) => s"$prefix:$localPart"
 
 object QName:
 
@@ -50,19 +36,16 @@ object QName:
   def apply(prefixOption: Option[String], localPart: String): QName =
     prefixOption
       .map { pref =>
-        PrefixedName(pref, localPart)
+        Prefixed(pref, localPart)
       }
-      .getOrElse(UnprefixedName(localPart))
+      .getOrElse(Unprefixed(localPart))
 
-  /** Creates a `PrefixedName` from a prefix and a localPart */
-  def apply(prefix: String, localPart: String): QName = PrefixedName(prefix, localPart)
-
-  /** Shorthand for `parse(s)` */
-  def apply(s: String): QName = parse(s)
+  /** Creates a `Prefixed` from a prefix and a localPart */
+  def apply(prefix: String, localPart: String): QName = Prefixed(prefix, localPart)
 
   /**
    * Parses a `String` into a `QName`. The `String` (after trimming) must conform to the `toString` format of a
-   * `PrefixedName` or `UnprefixedName`.
+   * `Prefixed` or `Unprefixed`.
    */
   def parse(s: String): QName =
     val st = s.trim
@@ -71,8 +54,8 @@ object QName:
     require(arr.size <= 2, s"Expected at most 1 colon in QName '${st}'")
 
     arr.size match
-      case 1 => UnprefixedName(st)
-      case 2 => PrefixedName(arr(0), arr(1))
+      case 1 => Unprefixed(st)
+      case 2 => Prefixed(arr(0), arr(1))
       case _ => sys.error(s"Did not expect more than 1 colon in QName '${st}'")
 
   /**
@@ -81,6 +64,6 @@ object QName:
    * With this extractor one can pattern match on arbitrary QNames, and not just on prefixed or unprefixed names.
    */
   def unapply(qname: QName): Option[(Option[String], String)] = qname match
-    case UnprefixedName(localPart)       => Some((None, localPart))
-    case PrefixedName(prefix, localPart) => Some((Some(prefix), localPart))
-    case null                            => None
+    case Unprefixed(localPart)       => Some((None, localPart))
+    case Prefixed(prefix, localPart) => Some((Some(prefix), localPart))
+    case null                        => None

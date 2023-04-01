@@ -22,9 +22,9 @@ package eu.cdevreeze.xpathparser.common
  * @author
  *   Chris de Vreeze
  */
-final case class EName(namespaceUriOption: Option[String], localPart: String):
-  require(namespaceUriOption ne null) // scalastyle:off null
-  require(localPart ne null) // scalastyle:off null
+enum EName(val namespaceUriOption: Option[String], val localPart: String):
+  case WithoutNamespace(override val localPart: String) extends EName(None, localPart)
+  case WithNamespace(namespace: String, override val localPart: String) extends EName(Some(namespace), localPart)
 
   /** Given an optional prefix, creates a `QName` from this `EName` */
   def toQName(prefixOption: Option[String]): QName =
@@ -41,11 +41,12 @@ final case class EName(namespaceUriOption: Option[String], localPart: String):
 
 object EName:
 
-  /** Creates an `EName` from a namespaceUri and a localPart */
-  def apply(namespaceUri: String, localPart: String): EName = EName(Some(namespaceUri), localPart)
+  def apply(namespaceUriOption: Option[String], localPart: String): EName = namespaceUriOption match
+    case None     => EName.WithoutNamespace(localPart)
+    case Some(ns) => EName.WithNamespace(ns, localPart)
 
-  /** Shorthand for `parse(s)` */
-  def apply(s: String): EName = parse(s)
+  /** Creates an `EName` from a namespaceUri and a localPart */
+  def apply(namespaceUri: String, localPart: String): EName = EName.WithNamespace(namespaceUri, localPart)
 
   /**
    * Parses a `String` into an `EName`. The `String` (after trimming) must conform to the `toString` format of an
@@ -59,8 +60,8 @@ object EName:
       require(idx >= 2 && idx < st.length - 1, s"Opening brace not closed or at incorrect location in EName '${st}'")
       val ns = st.substring(1, idx)
       val localPart = st.substring(idx + 1)
-      EName(Some(ns), localPart)
+      EName.WithNamespace(ns, localPart)
     else
       require(st.indexOf("{") < 0, s"No opening brace allowed unless at the beginning in EName '${st}'")
       require(st.indexOf("}") < 0, s"Closing brace without matching opening brace not allowed in EName '${st}'")
-      EName(None, st)
+      EName.WithoutNamespace(st)

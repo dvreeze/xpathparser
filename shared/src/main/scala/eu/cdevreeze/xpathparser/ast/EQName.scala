@@ -43,8 +43,8 @@ object EQName:
     def localPart: String = ename.localPart
 
     override def toString: String = ename match
-      case common.EName(None, localPart)     => s"Q{}$localPart"
-      case common.EName(Some(ns), localPart) => s"Q{$ns}$localPart"
+      case common.EName.WithoutNamespace(localPart)  => s"Q{}$localPart"
+      case common.EName.WithNamespace(ns, localPart) => s"Q{$ns}$localPart"
 
   object QName:
 
