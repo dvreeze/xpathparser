@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser.parse
 
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import cats.parse.{Parser => P}
 import eu.cdevreeze.xpathparser.ast.XPathExpr

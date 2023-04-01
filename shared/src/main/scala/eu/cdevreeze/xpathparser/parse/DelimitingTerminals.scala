@@ -18,10 +18,10 @@ package eu.cdevreeze.xpathparser.parse
 
 import eu.cdevreeze.xpathparser.ast.BracedUriLiteral
 import eu.cdevreeze.xpathparser.ast.StringLiteral
-import cats.parse.Accumulator0._
+import cats.parse.Accumulator0.*
 import cats.parse.{Parser => P}
 
-import scala.util.chaining._
+import scala.util.chaining.*
 
 /**
  * Delimiting terminal symbols. No whitespace is skipped during this tokenization. Lookahead is applied when needed to

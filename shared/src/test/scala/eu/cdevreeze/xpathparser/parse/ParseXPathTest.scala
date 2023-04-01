@@ -84,7 +84,7 @@ class ParseXPathTest extends AnyFunSuite:
 
   import cats.parse.{Parser => P}
 
-  import XPathElemParser._
+  import XPathElemParser.*
   import XPathParser.xpathExpr
 
   private def throwParseError(exprString: String): Nothing = sys.error(s"Could not parse expression: $exprString")

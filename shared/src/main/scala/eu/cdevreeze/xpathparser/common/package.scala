@@ -23,4 +23,4 @@ package eu.cdevreeze.xpathparser
  * @author
  *   Chris de Vreeze
  */
-package object common
+package common

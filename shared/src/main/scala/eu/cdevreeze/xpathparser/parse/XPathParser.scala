@@ -32,7 +32,7 @@ import cats.parse.{Parser => P}
  */
 object XPathParser:
 
-  import Whitespace._
+  import Whitespace.*
 
   /**
    * Parser for an XPath expression. Usage: `xpathExpr.parse(xpathString)`. Comments are not supported, so will lead to

@@ -154,4 +154,4 @@ object ElemApi:
   /**
    * Element predicate that returns true for each element.
    */
-  val anyElem: ElemApi[_] => Boolean = { _ => true }
+  val anyElem: ElemApi[?] => Boolean = { _ => true }

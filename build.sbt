@@ -20,7 +20,7 @@ ThisBuild / crossScalaVersions := crossScalaVer
 
 ThisBuild / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
   case (Some((3, _))) =>
-    Seq("-unchecked", "-deprecation", "-Xfatal-warnings")
+    Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings")
   case _ =>
     Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w", "-Ytasty-reader", "-Xsource:3")
 })

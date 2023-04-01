@@ -27,4 +27,4 @@ package eu.cdevreeze.xpathparser
  * @author
  *   Chris de Vreeze
  */
-package object queryapi
+package queryapi

@@ -17,7 +17,7 @@
 package eu.cdevreeze.xpathparser.parse
 
 import cats.data.NonEmptyVector
-import eu.cdevreeze.xpathparser.ast._
+import eu.cdevreeze.xpathparser.ast.*
 import cats.parse.{Parser => P}
 
 /**
@@ -44,7 +44,7 @@ object XPathElemParser:
   // TODO Improve, improve, improve. Study XPath spec more closely, use cats-parse in a better way.
   // TODO Also make code complete and more robust, (slightly) improve the AST class hierarchy, etc.
 
-  import Whitespace._
+  import Whitespace.*
 
   private val DT = DelimitingTerminals
   private val NDT = NonDelimitingTerminals

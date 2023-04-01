@@ -22,4 +22,4 @@ package eu.cdevreeze.xpathparser
  * @author
  *   Chris de Vreeze
  */
-package object parse
+package parse
