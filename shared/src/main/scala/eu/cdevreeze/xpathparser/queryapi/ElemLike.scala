@@ -39,11 +39,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElemsOfType(cls)(anyElem)
 
   final def findTopmostElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     findTopmostElems {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collect { case e: A =>
       e
     }
@@ -60,11 +60,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findTopmostElemsOrSelfOfType(cls)(anyElem)
 
   final def findTopmostElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     findTopmostElemsOrSelf {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collect { case e: A =>
       e
     }
@@ -81,11 +81,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     filterElemsOfType(cls)(anyElem)
 
   final def filterElemsOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     filterElems {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collect { case e: A =>
       e
     }
@@ -103,11 +103,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     filterElemsOrSelfOfType(cls)(anyElem)
 
   final def filterElemsOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): IndexedSeq[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     filterElemsOrSelf {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collect { case e: A =>
       e
     }
@@ -123,11 +123,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findElemOfType(cls)(anyElem)
 
   final def findElemOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): Option[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     findElem {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collectFirst { case e: A =>
       e
     }
@@ -143,11 +143,11 @@ trait ElemLike[E <: ElemLike[E]] extends ElemApi[E] { self: E =>
     findElemOrSelfOfType(cls)(anyElem)
 
   final def findElemOrSelfOfType[A <: E](cls: ClassTag[A])(p: A => Boolean): Option[A] =
-    implicit val tag = cls
+    given ClassTag[A] = cls
 
     findElemOrSelf {
       case e: A if p(e) => true
-      case e            => false
+      case _            => false
     }.collectFirst { case e: A =>
       e
     }

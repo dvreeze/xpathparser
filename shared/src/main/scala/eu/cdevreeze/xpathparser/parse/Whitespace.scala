@@ -31,9 +31,7 @@ object Whitespace:
   val whitespaces0: Parser0[Unit] = whitespace.rep0.void
   val whitespaces: P[Unit] = whitespace.rep.void
 
-  implicit class SkippingWS[A](val parser: P[A]) extends AnyVal:
-
-    def skipWS: P[A] = Whitespace.skippingWS(parser)
+  extension [A](parser: P[A]) def skipWS: P[A] = Whitespace.skippingWS(parser)
 
   def skippingWS[A](parser: P[A]): P[A] = P.defer(whitespaces0.soft.with1 *> parser)
 
