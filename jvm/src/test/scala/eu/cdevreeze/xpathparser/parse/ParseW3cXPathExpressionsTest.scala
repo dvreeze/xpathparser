@@ -33,7 +33,7 @@ class ParseW3cXPathExpressionsTest extends AnyFunSuite:
   // See for example http://blog.echo.sh/2013/05/12/dynamically-creating-tests-with-scalatest.html.
 
   private val testInputs: Map[String, String] =
-    val props = new java.util.Properties
+    val props = java.util.Properties()
     props.loadFromXML(classOf[ParseW3cXPathExpressionsTest].getResourceAsStream("/testXPaths.xml"))
 
     // Circumventing propertiesAsScalaMapConverter and its Scala version issues (CollectionConverters moved)
