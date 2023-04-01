@@ -4,7 +4,8 @@
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.0")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.2.0")
 
-addSbtPlugin("ch.epfl.scala" % "sbt-scala3-migrate" % "0.5.0")
+// Don't use this one after migration to Scala 3: addSbtPlugin("ch.epfl.scala" % "sbt-scala3-migrate" % "0.5.0")
+// Or else Scala 3 syntax will not be recognised!
 
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.2")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.7")
