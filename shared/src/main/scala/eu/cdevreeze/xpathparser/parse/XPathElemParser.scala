@@ -305,7 +305,10 @@ object XPathElemParser:
   val relativePathExpr: P[RelativePathExpr] = P.defer {
     (stepExpr.skipWS.soft ~ ((DT.slash | DT.doubleSlash).skipWS.string ~ stepExpr.skipWS).rep0).map {
       case (firstExp, opExpPairs) =>
-        RelativePathExpr(firstExp, opExpPairs.toIndexedSeq.map(kv => StepOp.parse(kv._1) -> kv._2))
+        RelativePathExpr(
+          firstExp,
+          opExpPairs.toIndexedSeq.map(kv => SingleStepNestedPathExpr(StepOp.parse(kv._1), kv._2))
+        )
     }
   }
 
@@ -366,7 +369,6 @@ object XPathElemParser:
     ((NDT.childWord | NDT.descendantWord | NDT.attributeWord | NDT.selfWord | NDT.descendantOrSelfWord |
       NDT.followingSiblingWord | NDT.followingWord | NDT.namespaceWord).skipWS.string.soft <* DT.doubleColon.skipWS)
       .map {
-
         case "child"              => ForwardAxis.Child
         case "descendant"         => ForwardAxis.Descendant
         case "attribute"          => ForwardAxis.Attribute

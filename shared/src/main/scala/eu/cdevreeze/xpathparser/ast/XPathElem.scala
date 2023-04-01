@@ -522,19 +522,23 @@ sealed trait RelativePathExpr extends PathExpr
 
 sealed trait SimpleRelativePathExpr extends RelativePathExpr
 
-final case class CompoundRelativePathExpr(init: RelativePathExpr, op: StepOp, lastStepExpr: StepExpr)
+/**
+ * A step expression preceded by a single or double slash. Not a known concept in the XPath 3.1 grammar.
+ */
+final case class SingleStepNestedPathExpr(op: StepOp, stepExpr: StepExpr) extends XPathElem:
+
+  def children: IndexedSeq[XPathElem] = IndexedSeq(op, stepExpr)
+
+final case class CompoundRelativePathExpr(firstStep: StepExpr, remainder: IndexedSeq[SingleStepNestedPathExpr])
     extends RelativePathExpr:
 
-  def children: IndexedSeq[XPathElem] = IndexedSeq(init, op, lastStepExpr)
+  def children: IndexedSeq[XPathElem] = remainder.prepended(firstStep)
 
 object RelativePathExpr:
 
-  def apply(firstExpr: StepExpr, operatorExprPairs: IndexedSeq[(StepOp, StepExpr)]): RelativePathExpr =
-    if operatorExprPairs.isEmpty then firstExpr
-    else
-      val (lastOp, lastExpr) = operatorExprPairs.last
-      // Recursive call
-      CompoundRelativePathExpr(apply(firstExpr, operatorExprPairs.init), lastOp, lastExpr)
+  def apply(firstExpr: StepExpr, remainder: IndexedSeq[SingleStepNestedPathExpr]): RelativePathExpr =
+    if remainder.isEmpty then firstExpr
+    else CompoundRelativePathExpr(firstExpr, remainder)
 
 /**
  * Single step in an absolute or relative path expression. Note that step expressions are either postfix expressions or
