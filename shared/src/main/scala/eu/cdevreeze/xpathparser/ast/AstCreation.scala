@@ -47,3 +47,35 @@ object AstCreation:
       remainder: SingleStepNestedPathExpr*
   ): PathExpr =
     RelativePathExpr(firstStep, remainder.toIndexedSeq)
+
+  def singleSlashStep(stepExpr: StepExpr): SingleStepNestedPathExpr =
+    SingleStepNestedPathExpr(StepOp.SingleSlash, stepExpr)
+
+  def doubleSlashStep(stepExpr: StepExpr): SingleStepNestedPathExpr =
+    SingleStepNestedPathExpr(StepOp.DoubleSlash, stepExpr)
+
+  // Creating axis steps, which are step expressions
+
+  def axisStep(forwardStep: ForwardStep, predicates: Predicate*): ForwardAxisStep =
+    ForwardAxisStep(forwardStep, predicates.toIndexedSeq)
+
+  def axisStep(reverseStep: ReverseStep, predicates: Predicate*): ReverseAxisStep =
+    ReverseAxisStep(reverseStep, predicates.toIndexedSeq)
+
+  def abbrevForwardStep(nodeTest: NodeTest): ForwardStep = SimpleAbbrevForwardStep(nodeTest)
+
+  def abbrevAttrAxisForwardStep(nodeTest: NodeTest): ForwardStep = AttributeAxisAbbrevForwardStep(nodeTest)
+
+  def forwardStep(forwardAxis: ForwardAxis, nodeTest: NodeTest): ForwardStep =
+    NonAbbrevForwardStep(forwardAxis, nodeTest)
+
+  val abbrevReverseStep: ReverseStep = AbbrevReverseStep
+
+  def reverseStep(reverseAxis: ReverseAxis, nodeTest: NodeTest): ReverseStep =
+    NonAbbrevReverseStep(reverseAxis, nodeTest)
+
+  def nameTest(name: EQName): NodeTest = SimpleNameTest(name)
+
+  def attrNameTest(name: EQName): NodeTest = AttributeNameTest(name)
+
+  // For the other node tests, we need to use their classes/objects directly, with no further support being provided here
